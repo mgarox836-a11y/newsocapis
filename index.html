@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Social Hub & Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Dynamic Particle Canvas Background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Cyber/Glass Ambient Spheres -->
+  <div class="bg-line line-1"></div>
+  <div class="bg-line line-2"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="bg-orb orb-4"></div>
+  <div class="bg-orb orb-5"></div>
+
+  <div class="container">
+    
+    <!-- Profile Header / HUD Frame -->
+    <header class="glass-card profile-header">
+      <div class="hud-corner corner-tl">+</div>
+      <div class="hud-corner corner-tr">+</div>
+      <div class="hud-corner corner-bl">+</div>
+      <div class="hud-corner corner-br">+</div>
+
+      <div class="header-top-bar">
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot"></span>
+          <span class="status-text">SYSTEM ONLINE</span>
+        </div>
+        <div class="badge-fps">
+          <i class="fa-solid fa-bolt"></i> 60 FPS
+        </div>
+      </div>
+
+      <div class="title-wrap">
+        <h1 class="title">CONNECT</h1>
+      </div>
+      
+      <p class="subtitle">
+        <span id="typing-text"></span><span class="cursor">|</span>
+      </p>
+
+      <div class="header-visualizer" id="visualizer">
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+        <div class="v-bar-wrap"><div class="v-bar"></div></div>
+      </div>
+
+      <div class="header-quick-socials">
+        <a href="https://instagram.com" class="quick-chip chip-insta"><i class="fa-brands fa-instagram"></i> IG</a>
+        <span class="chip-divider">•</span>
+        <a href="https://tiktok.com" class="quick-chip chip-tiktok"><i class="fa-brands fa-tiktok"></i> TikTok</a>
+        <span class="chip-divider">•</span>
+        <a href="https://tiktok-hd-enhancer-by-apis-fgtkuxmpzmi7h8gifh4a8o.streamlit.app/" class="quick-chip chip-tool"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Tool</a>
+      </div>
+    </header>
+
+    <!-- Cards Grid Section -->
+    <div class="cards-container">
+      
+      <!-- Instagram Card -->
+      <div class="glass-card card">
+        <div class="card-tag">SOCIAL</div>
+        <div class="card-icon icon-bounce">
+          <div class="neu-icon">
+            <i class="fa-brands fa-instagram"></i>
+          </div>
+        </div>
+        <div class="card-info">
+          <h2 class="card-username">Instagram</h2>
+          <p class="card-desc">Daily stories, photos & aesthetic highlights.</p>
+        </div>
+        <div class="glass-preview insta-preview">
+          <div class="preview-box box-1"><i class="fa-regular fa-image"></i></div>
+          <div class="preview-box box-2"><i class="fa-regular fa-heart"></i></div>
+          <div class="preview-box box-3"><i class="fa-regular fa-bookmark"></i></div>
+        </div>
+        <a href="https://instagram.com" class="neu-btn">
+          <span class="btn-shine"></span>
+          <span class="btn-text">FOLLOW INSTAGRAM</span>
+          <div class="btn-icon-wrap"><i class="fa-solid fa-arrow-right btn-arrow"></i></div>
+        </a>
+      </div>
+
+      <!-- TikTok Card -->
+      <div class="glass-card card">
+        <div class="card-tag">CREATIVE</div>
+        <div class="card-icon icon-bounce">
+          <div class="neu-icon">
+            <i class="fa-brands fa-tiktok"></i>
+          </div>
+        </div>
+        <div class="card-info">
+          <h2 class="card-username">TikTok</h2>
+          <p class="card-desc">Short videos, trends, and gameplay clips.</p>
+        </div>
+        <div class="glass-preview tiktok-preview">
+          <div class="fps-badge"><i class="fa-solid fa-video"></i> 4K / 60FPS HD</div>
+          <div class="equalizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+        <a href="https://tiktok.com" class="neu-btn">
+          <span class="btn-shine"></span>
+          <span class="btn-text">WATCH TIKTOK</span>
+          <div class="btn-icon-wrap"><i class="fa-solid fa-arrow-right btn-arrow"></i></div>
+        </a>
+      </div>
+
+      <!-- TikTok HD Enhancer Web Tool Card -->
+      <div class="glass-card card card-tool">
+        <div class="card-tag">AI TOOL</div>
+        <div class="card-icon icon-bounce">
+          <div class="neu-icon tool-icon">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+        </div>
+        <div class="card-info">
+          <h2 class="card-username">HD Enhancer</h2>
+          <p class="card-desc">Tingkatkan kualitas & kejernihan video TikTok Anda secara otomatis.</p>
+        </div>
+        <div class="glass-preview tool-preview">
+          <div class="preview-badge-tool">
+            <i class="fa-solid fa-sliders"></i> AI QUALITY BOOSTER
+          </div>
+          <div class="tool-specs">
+            <span><i class="fa-solid fa-check-double"></i> Auto 4K</span>
+            <span><i class="fa-solid fa-sparkles"></i> Noise Reduction</span>
+          </div>
+        </div>
+        <a href="https://tiktok-hd-enhancer-by-apis-fgtkuxmpzmi7h8gifh4a8o.streamlit.app/" class="neu-btn btn-tool">
+          <span class="btn-shine"></span>
+          <span class="btn-text">ENHANCE VIDEO</span>
+          <div class="btn-icon-wrap"><i class="fa-solid fa-arrow-right btn-arrow"></i></div>
+        </a>
+      </div>
+
+    </div>
+
+    <footer>
+      <p>© 2026 My Social Space • Built with Precision</p>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
