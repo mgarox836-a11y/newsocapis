@@ -373,6 +373,14 @@
       const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
       camera.position.set(0, 0.35, 7.5);
 
+      // Responsive camera: wider FOV + pulled back on narrow screens so the
+      // orb stays small and never swallows the whole viewport.
+      if (window.innerWidth < 768) {
+        camera.fov = 70;
+        camera.position.set(0, 0.35, 9.6);
+        camera.updateProjectionMatrix();
+      }
+
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
       renderer.setClearColor(0x000000, 0);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -388,7 +396,7 @@
       // ---------- Cinematic post-processing: bloom + gamma ----------
       const composer = new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene, camera));
-      const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.9, 0.85, 0.12);
+      const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.78, 0.85, 0.12);
       composer.addPass(bloomPass);
       composer.addPass(new ShaderPass(GammaCorrectionShader));
 
@@ -397,8 +405,9 @@
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
       // ---------- 3-point cinematic lighting (dark ink ambient + soft key + neon core) ----------
-      scene.add(new THREE.AmbientLight(0x8fa3b5, 0.3));
-      const keyLight = new THREE.DirectionalLight(0xfff4e6, 1.7);
+      const ambientLight = new THREE.AmbientLight(0x6f818f, 0.26);
+      scene.add(ambientLight);
+      const keyLight = new THREE.DirectionalLight(0xfff4e6, 1.2);
       keyLight.position.set(-5, 6, 4);
       scene.add(keyLight);
 
@@ -416,7 +425,7 @@
 
       // Soft lime aura spilling onto the backdrop
       const aura = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: radialTexture(), color: 0xa3e635, transparent: true, opacity: 0.2,
+        map: radialTexture(), color: 0xa3e635, transparent: true, opacity: 0.16,
         blending: THREE.AdditiveBlending, depthWrite: false
       }));
       aura.scale.set(12, 12, 1);
@@ -425,18 +434,19 @@
       // ---------- Frosted Glass TorusKnot orb ----------
       const orb = new THREE.Group();
       const glassMat = new THREE.MeshPhysicalMaterial({
-        color: 0xbfe6cf,
+        color: 0x3a5646,
         metalness: 0.1,
-        roughness: 0.15,
+        roughness: 0.2,
         transmission: small ? 0 : 0.9,
         thickness: 1.2,
         ior: 1.5,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.28,
-        attenuationColor: 0xdcffe9,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.3,
+        attenuationColor: 0x2c4a3c,
         attenuationDistance: 1.6,
-        emissive: 0x1f5c32,
-        emissiveIntensity: 0.14,
+        emissive: 0x16482a,
+        emissiveIntensity: 0.1,
+        envMapIntensity: 0.35,
         transparent: true,
         opacity: 1
       });
@@ -449,25 +459,26 @@
       const coreMat = new THREE.MeshStandardMaterial({
         color: 0x0b1a10,
         emissive: 0x86efac,
-        emissiveIntensity: 1.6,
-        roughness: 0.25,
-        metalness: 0
+        emissiveIntensity: 1.05,
+        roughness: 0.35,
+        metalness: 0,
+        envMapIntensity: 0.3
       });
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.42, small ? 24 : 32, small ? 20 : 28), coreMat);
-      const coreLight = new THREE.PointLight(0x86efac, 14, 8, 2);
+      const coreLight = new THREE.PointLight(0x86efac, 8, 8, 2);
       orb.add(shell, core, coreLight);
       rig.add(orb);
 
       // ---------- Elegant counter-rotating wireframe rings ----------
       const halo = new THREE.Mesh(
         new THREE.TorusGeometry(2.5, 0.016, 14, 180),
-        new THREE.MeshBasicMaterial({ color: 0xa3e635, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false })
+        new THREE.MeshBasicMaterial({ color: 0xa3e635, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false })
       );
       halo.rotation.x = 1.15;
       halo.rotation.y = 0.35;
       const halo2 = new THREE.Mesh(
         new THREE.TorusGeometry(2.85, 0.008, 12, 160),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false })
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false })
       );
       halo2.rotation.x = 1.35;
       halo2.rotation.y = -0.28;
@@ -545,18 +556,51 @@
       rig.add(stars, bokeh, dust);
 
       let desktop = true;
+
+      var DIM = 0.55;
+
+      // Keep the whole scene dark on every breakpoint: dim lights, bloom and
+      // shininess, and widen the camera so the orb never dominates the layout.
+      function applyResponsive() {
+        const vw = window.innerWidth;
+        small = vw < 768;
+        desktop = vw >= 1024;
+        const tiny = vw < 480;
+
+        camera.fov = small ? (tiny ? 78 : 70) : 55;
+        camera.position.set(0, 0.35, small ? (tiny ? 10.6 : 9.6) : 7.5);
+
+        const scale = desktop ? 1 : tiny ? 0.5 : small ? 0.68 : 0.95;
+        rig.scale.setScalar(scale);
+        rig.position.set(desktop ? 2.9 : 0, desktop ? 0.25 : 0.75, 0);
+
+        ambientLight.intensity = small ? 0.16 : 0.26;
+        keyLight.intensity = small ? 0.8 : 1.2;
+        coreLight.intensity = small ? 4.5 : 8;
+        aura.material.opacity = small ? 0.1 : 0.16;
+        halo.material.opacity = small ? 0.12 : 0.2;
+        halo2.material.opacity = small ? 0.06 : 0.12;
+
+        const useTransmission = !small;
+        if ((glassMat.transmission > 0) !== useTransmission) {
+          glassMat.needsUpdate = true;
+        }
+        glassMat.transmission = useTransmission ? 0.9 : 0;
+        glassMat.opacity = small ? 0.82 : 1;
+        glassMat.clearcoat = small ? 0.25 : 0.55;
+        glassMat.clearcoatRoughness = small ? 0.5 : 0.3;
+        glassMat.roughness = small ? 0.42 : 0.2;
+
+        bloomPass.strength = small ? 0.5 : 0.78;
+        renderer.toneMappingExposure = small ? 0.98 : 1.05;
+      }
+
       function resize() {
         const w = wrap.clientWidth, h = wrap.clientHeight;
         renderer.setSize(w, h, true);
         camera.aspect = w / h;
+        applyResponsive();
         camera.updateProjectionMatrix();
-        small = window.innerWidth < 768;
-        glassMat.transmission = small ? 0 : 0.9;
-        glassMat.opacity = small ? 0.92 : 1;
-        desktop = window.innerWidth >= 1024;
-        const scale = desktop ? 1 : (window.innerWidth < 640 ? 0.72 : 0.95);
-        rig.scale.setScalar(scale);
-        rig.position.set(desktop ? 2.9 : 0, desktop ? 0.25 : 0.9, 0);
         composer.setSize(w, h);
         bloomPass.setSize(w, h);
       }
@@ -587,12 +631,13 @@
         const pulse = 0.5 + Math.sin(ts * 1.35) * 0.5;
         core.scale.setScalar(1 + pulse * 0.22);
         core.rotation.y = -ts * 0.55;
-        coreMat.emissiveIntensity = 1.4 + pulse * 1.1;
-        coreLight.intensity = 8 + pulse * 14;
-        glassMat.emissiveIntensity = 0.1 + pulse * 0.16;
+        const dim = small ? DIM : 1;
+        coreMat.emissiveIntensity = (1.0 + pulse * 0.9) * dim;
+        coreLight.intensity = (7 + pulse * 11) * dim;
+        glassMat.emissiveIntensity = (0.06 + pulse * 0.1) * dim;
 
         // Floating
-        rig.position.y = (desktop ? 0.25 : 0.9) + Math.sin(ts * 0.55) * 0.24;
+        rig.position.y = (desktop ? 0.25 : 0.75) + Math.sin(ts * 0.55) * 0.24;
         rig.position.x = (desktop ? 2.9 : 0) + Math.cos(ts * 0.4) * 0.12;
         stars.rotation.y = -ts * 0.04;
         bokeh.rotation.y = ts * 0.03;
