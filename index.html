@@ -6,184 +6,613 @@
   <meta name="google-site-verification" content="google4c6264b6a9859481.html" />
   <meta name="description" content="Newsocapis, satu ruang tenang untuk Instagram, TikTok, dan free web tools." />
   <meta name="theme-color" content="#07090c" />
+  <meta name="color-scheme" content="dark" />
   <title>Newsocapis · Calm Surface. Clear Focus.</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#07090c',
+            surface: '#101419',
+            band: '#0b0e12',
+            accent: {
+              DEFAULT: '#b3f021',
+              ink: '#0a0c0f'
+            },
+            lime: {
+              bright: '#ccff00',
+              soft: '#a3e635'
+            },
+            mist: '#9aa1ab'
+          },
+          fontFamily: {
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+          },
+          borderRadius: {
+            card: '22px',
+            tile: '18px',
+            pill: '999px'
+          },
+          boxShadow: {
+            lift: '0 20px 50px -20px rgba(2, 4, 8, 0.55)',
+            'lift-lg': '0 34px 70px -26px rgba(2, 4, 8, 0.7)',
+            glass: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 50px -24px rgba(2, 4, 8, 0.6)',
+            'glass-hover': 'inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 34px 70px -28px rgba(2, 4, 8, 0.75), 0 0 46px -18px rgba(163, 230, 53, 0.4)',
+            accent: '0 14px 34px -12px rgba(179, 240, 33, 0.45)'
+          },
+          maxWidth: {
+            shell: '1240px'
+          }
+        }
+      }
+    }
+  </script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
-<body id="top">
+<body id="top" class="bg-ink text-white antialiased">
 
-  <header class="nav">
-    <nav class="nav-inner">
-      <a class="logo" href="#top">Newsocapis<span class="logo-dot">.</span></a>
+  <div id="progress" class="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left bg-accent" style="transform: scaleX(0)" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
 
-      <div class="nav-menu" id="navMenu">
-        <a class="nav-link" href="#top">Overview</a>
-        <a class="nav-link" href="#features">Features</a>
-        <a class="nav-link" href="#flow">Flow</a>
-        <a class="nav-link" href="#clarity">Clarity</a>
-      </div>
+  <header id="nav" class="nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/60 backdrop-blur-xl">
+    <div class="mx-auto flex h-16 w-full max-w-shell items-center justify-between gap-6 px-6 lg:px-10">
+      <a href="#top" class="text-lg font-bold tracking-tight text-white">
+        Newsocapis<span class="text-accent">.</span>
+      </a>
 
-      <div class="nav-actions">
-        <a class="btn btn-primary nav-cta" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+      <nav id="navMenu" class="nav-menu lg:flex lg:flex-1 lg:items-center lg:justify-center lg:gap-8" aria-label="Navigasi utama">
+        <a class="nav-link text-sm" href="#top">Overview</a>
+        <a class="nav-link text-sm" href="#features">Features</a>
+        <a class="nav-link text-sm" href="#flow">Flow</a>
+        <a class="nav-link text-sm" href="#clarity">Clarity</a>
+        <a class="nav-link nav-cta-mobile mt-4 inline-flex items-center justify-center gap-2 rounded-pill bg-accent px-6 py-3 text-sm font-semibold text-accent-ink lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
           Open the tools
         </a>
-        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-label="Buka menu">
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a data-magnetic class="inline-flex items-center justify-center gap-2 rounded-pill border border-transparent bg-accent px-6 py-2.5 text-sm font-semibold text-accent-ink transition-all duration-300 hover:shadow-[0_0_38px_-6px_rgba(163,230,53,0.6)] max-lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+          Open the tools
+        </a>
+        <button id="navToggle" class="burger" aria-expanded="false" aria-label="Buka menu">
           <span></span><span></span>
         </button>
       </div>
-    </nav>
+    </div>
   </header>
 
   <main>
 
-    <section class="hero">
-      <img
-        class="hero-media"
-        src="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1920&q=80"
-        alt="Langit malam penuh bintang di atas pegunungan"
-        fetchpriority="high"
-        decoding="async"
-      />
-      <div class="hero-overlay" aria-hidden="true"></div>
+    <!-- ============ HERO ============ -->
+    <section class="relative flex min-h-[100dvh] items-center overflow-hidden pt-24 pb-20">
+      <div class="absolute inset-0 bg-[radial-gradient(1000px_600px_at_78%_18%,rgba(163,230,53,0.09),transparent_62%)]" aria-hidden="true"></div>
+      <div class="animate-breathe absolute left-1/2 top-1/2 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(163,230,53,0.12),transparent_65%)] blur-2xl" aria-hidden="true"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(820px_460px_at_16%_22%,rgba(179,240,33,0.06),transparent_60%)]" aria-hidden="true"></div>
+      <div class="bg-grid absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_35%_45%,black,transparent_72%)]" aria-hidden="true"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" aria-hidden="true"></div>
 
-      <div class="hero-inner">
-        <p class="hero-eyebrow">
-          <span class="status-dot" aria-hidden="true"></span>
-          Newsocapis · Personal hub
-        </p>
+      <div id="scene" class="pointer-events-none absolute inset-0 z-[1] overflow-hidden" aria-hidden="true"></div>
 
-        <h1 class="hero-title">
-          <span class="line">Calm surface.</span>
-          <span class="line">Clear focus.</span>
-          <span class="line line-muted">All your links.</span>
-        </h1>
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[48%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
 
-        <p class="hero-sub">
-          A quiet hub for your Instagram, TikTok, and free web tools. Every link you share, kept effortless.
-        </p>
+      <div class="relative z-10 mx-auto grid w-full max-w-shell grid-cols-1 items-center gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6 lg:px-10">
+        <div>
+          <p class="hero-line inline-flex items-center gap-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-mist">
+            <span class="status-dot" aria-hidden="true"></span>
+            Newsocapis · Personal hub
+          </p>
 
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#features">
-            Explore features
-            <i class="fa-solid fa-arrow-right btn-arrow" aria-hidden="true"></i>
-          </a>
-          <a class="btn btn-ghost" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
+          <h1 class="hero-title hero-line mt-7 text-5xl font-bold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl" style="animation-delay: 0.08s">
+            <span class="block pb-[0.12em]">Calm surface.</span>
+            <span class="block pb-[0.12em]">Clear focus.</span>
+            <span class="block pb-[0.12em] text-mist">All your links.</span>
+          </h1>
+
+          <p class="hero-line mt-7 max-w-[46ch] text-base leading-relaxed text-mist md:text-lg" style="animation-delay: 0.16s">
+            A quiet hub for your Instagram, TikTok, and free web tools. Every link shared, kept effortless.
+          </p>
+
+          <div class="hero-line mt-10 flex flex-wrap items-center gap-4" style="animation-delay: 0.24s">
+            <a href="#features" data-magnetic class="group inline-flex items-center justify-center gap-2.5 rounded-pill border border-transparent bg-[#a3e635] px-7 py-3.5 text-[15px] font-semibold text-[#0a0c0f] shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_24px_-8px_rgba(163,230,53,0.55)] transition-all duration-300 hover:scale-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_0_48px_-4px_rgba(163,230,53,0.95),0_18px_44px_-12px_rgba(163,230,53,0.5)]">
+              Explore features
+              <i class="fa-solid fa-arrow-right text-sm text-[#0a0c0f]/70 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" data-magnetic class="group inline-flex items-center justify-center gap-2.5 rounded-pill border border-white/15 bg-white/[0.05] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-300 hover:border-[#a3e635] hover:bg-white/[0.1] hover:scale-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_34px_-6px_rgba(163,230,53,0.6)]">
+              <i class="fa-brands fa-instagram text-base text-accent" aria-hidden="true"></i>
+              Follow on Instagram
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-line hidden justify-center lg:flex" style="animation-delay: 0.3s">
+          <div class="relative w-full max-w-sm">
+            <div class="animate-float absolute -inset-8 rounded-full bg-accent/10 blur-3xl" aria-hidden="true"></div>
+
+            <div class="relative rounded-card border border-white/10 bg-white/[0.05] p-2 shadow-glass backdrop-blur-xl">
+              <div class="rounded-tile border border-white/10 bg-white/[0.02] p-5">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">Active hub</span>
+                  <span class="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
+                    <span class="status-dot" aria-hidden="true"></span> Live
+                  </span>
+                </div>
+
+                <div class="mt-4 space-y-2.5">
+                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent/30 bg-accent/10 text-lg text-accent"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-white">Instagram</p>
+                      <p class="truncate font-mono text-[11px] text-mist">@apisaseli</p>
+                    </div>
+                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                  </div>
+
+                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent/30 bg-accent/10 text-lg text-accent"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-white">TikTok</p>
+                      <p class="truncate font-mono text-[11px] text-mist">@apis999fps</p>
+                    </div>
+                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                  </div>
+
+                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent bg-accent text-lg text-accent-ink"><i class="fa-solid fa-toolbox" aria-hidden="true"></i></span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-white">Free Web Tools</p>
+                      <p class="truncate font-mono text-[11px] text-mist">toolapis.vercel.app</p>
+                    </div>
+                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between px-2 py-3">
+                <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">3 platforms</span>
+                <span class="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-mist">
+                  <span class="h-1 w-1 rounded-full bg-accent" aria-hidden="true"></span> ready
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-scroll absolute bottom-7 right-7 z-10 hidden flex-col items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-mist md:flex">
+        <span class="block h-10 w-px overflow-hidden">
+          <span class="scroll-hint-bar block h-full w-full bg-white/70"></span>
+        </span>
+        Scroll
+      </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section id="features" class="relative mx-auto max-w-shell px-6 py-24 md:py-32 lg:px-10">
+      <div class="pointer-events-none absolute left-[6%] top-[28%] h-80 w-80 rounded-full bg-[#a3e635]/[0.08] blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute bottom-[8%] right-[4%] h-96 w-96 rounded-full bg-[#ccff00]/[0.05] blur-3xl" aria-hidden="true"></div>
+      <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true"></div>
+
+      <div class="max-w-[60ch]">
+        <h2 class="text-3xl font-bold tracking-tight [data-reveal] md:text-[2.6rem] md:leading-[1.1]">One place for everything you share.</h2>
+        <p class="mt-4 max-w-[55ch] text-base leading-relaxed text-mist [data-reveal]" style="--reveal-delay: 0.08s">Three ways in, zero clutter. Pick a platform, tap through, done.</p>
+      </div>
+
+      <div class="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+        <article data-tilt class="tilt-card relative flex flex-col rounded-card border border-white/10 bg-white/[0.04] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-white/25 hover:shadow-glass-hover">
+          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-mist opacity-50" aria-hidden="true">01</span>
+          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent/30 bg-accent/10 text-2xl text-accent">
+            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+          </span>
+          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Instagram</h3>
+          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Daily stories, photos, and highlights.</p>
+          <ul class="mt-5 flex flex-wrap gap-2">
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Stories</li>
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Photo</li>
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Daily clips</li>
+          </ul>
+          <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
             Follow on Instagram
+            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
           </a>
-        </div>
-      </div>
+          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.09), transparent 45%);" aria-hidden="true"></div>
+        </article>
 
-      <div class="hero-scroll" aria-hidden="true">
-        <span>Scroll</span>
-        <span class="hero-scroll-line"></span>
+        <article data-tilt class="tilt-card relative flex flex-col rounded-card border border-white/10 bg-white/[0.04] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-white/25 hover:shadow-glass-hover" style="--reveal-delay: 0.08s">
+          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-mist opacity-50" aria-hidden="true">02</span>
+          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent/30 bg-accent/10 text-2xl text-accent">
+            <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
+          </span>
+          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">TikTok</h3>
+          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Short videos, trends, and gameplay clips.</p>
+          <ul class="mt-5 flex flex-wrap gap-2">
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Gameplay</li>
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Trends</li>
+            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Mobile Legends</li>
+          </ul>
+          <a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
+            Watch on TikTok
+            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+          </a>
+          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.09), transparent 45%);" aria-hidden="true"></div>
+        </article>
+
+        <article data-tilt class="tilt-card relative flex flex-col overflow-hidden rounded-card border border-accent/30 bg-accent/[0.05] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-accent/60 hover:shadow-glass-hover" style="--reveal-delay: 0.16s">
+          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-accent opacity-70" aria-hidden="true">03</span>
+          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent bg-accent text-2xl text-accent-ink">
+            <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
+          </span>
+          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Free Web Tools</h3>
+          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Free online tools for everyday quick tasks.</p>
+          <ul class="mt-5 flex flex-wrap gap-2">
+            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Free</li>
+            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Web</li>
+            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Daily use</li>
+          </ul>
+          <a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
+            Open the tools
+            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+          </a>
+          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.12), transparent 45%);" aria-hidden="true"></div>
+        </article>
       </div>
     </section>
 
-    <section class="section" id="features">
-      <div class="section-head">
-        <h2 class="section-title">One place for everything you share.</h2>
-        <p class="section-sub">Three ways in, zero clutter. Pick a platform, tap through, done.</p>
-      </div>
+    <!-- ============ FLOW ============ -->
+    <section id="flow" class="relative border-y border-white/10 bg-band py-24 md:py-32">
+      <div class="bg-grid absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_50%_0%,black,transparent_70%)]" aria-hidden="true"></div>
 
-      <div class="cards-grid">
-
-        <article class="card">
-          <span class="card-index" aria-hidden="true">01</span>
-          <span class="card-icon"><i class="fa-brands fa-instagram"></i></span>
-          <h3 class="card-title">Instagram</h3>
-          <p class="card-desc">Daily stories, photos, and highlights.</p>
-          <ul class="card-topics">
-            <li>Stories</li>
-            <li>Photo</li>
-            <li>Daily clips</li>
-          </ul>
-          <a class="card-link" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
-            Follow on Instagram <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-          </a>
-        </article>
-
-        <article class="card">
-          <span class="card-index" aria-hidden="true">02</span>
-          <span class="card-icon"><i class="fa-brands fa-tiktok"></i></span>
-          <h3 class="card-title">TikTok</h3>
-          <p class="card-desc">Short videos, trends, and gameplay clips.</p>
-          <ul class="card-topics">
-            <li>Gameplay</li>
-            <li>Trends</li>
-            <li>Mobile Legends</li>
-          </ul>
-          <a class="card-link" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">
-            Watch on TikTok <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-          </a>
-        </article>
-
-        <article class="card card--accent">
-          <span class="card-index" aria-hidden="true">03</span>
-          <span class="card-icon"><i class="fa-solid fa-toolbox"></i></span>
-          <h3 class="card-title">Free Web Tools</h3>
-          <p class="card-desc">Free online tools for everyday quick tasks.</p>
-          <ul class="card-topics">
-            <li>Free</li>
-            <li>Web</li>
-            <li>Daily use</li>
-          </ul>
-          <a class="card-link" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
-            Open the tools <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-          </a>
-        </article>
-
-      </div>
-    </section>
-
-    <section class="section section--band" id="flow">
-      <div class="section-head">
-        <h2 class="section-title">How it flows.</h2>
-        <p class="section-sub">From one link to wherever you need to go.</p>
-      </div>
-
-      <div class="steps">
-        <div class="step">
-          <span class="step-index" aria-hidden="true">01</span>
-          <h3 class="step-title">Connect</h3>
-          <p class="step-desc">Pick a platform and tap through.</p>
+      <div class="relative mx-auto max-w-shell px-6 lg:px-10">
+        <div class="max-w-[60ch]">
+          <h2 class="text-3xl font-bold tracking-tight [data-reveal] md:text-[2.6rem] md:leading-[1.1]">How it flows.</h2>
+          <p class="mt-4 text-base leading-relaxed text-mist [data-reveal]" style="--reveal-delay: 0.08s">From one link to wherever you need to go.</p>
         </div>
-        <div class="step">
-          <span class="step-index" aria-hidden="true">02</span>
-          <h3 class="step-title">Explore</h3>
-          <p class="step-desc">Stories, clips, and free tools.</p>
-        </div>
-        <div class="step">
-          <span class="step-index" aria-hidden="true">03</span>
-          <h3 class="step-title">Use</h3>
-          <p class="step-desc">Sorted in seconds, no noise.</p>
+
+        <div class="relative mt-16">
+          <div class="absolute left-0 right-0 top-[22px] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" aria-hidden="true"></div>
+
+          <div class="grid gap-12 md:grid-cols-3 md:gap-8">
+            <div class="relative [data-reveal]">
+              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">01</span>
+              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Connect</h3>
+              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Pick a platform and tap through.</p>
+            </div>
+            <div class="relative [data-reveal]" style="--reveal-delay: 0.08s">
+              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">02</span>
+              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Explore</h3>
+              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Stories, clips, and free tools, ready in one place.</p>
+            </div>
+            <div class="relative [data-reveal]" style="--reveal-delay: 0.16s">
+              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">03</span>
+              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Use</h3>
+              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Sorted in seconds, no noise.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section section--statement" id="clarity">
-      <div class="statement">
-        <p class="statement-text">No noise, no clutter. Just your links, working quietly.</p>
-        <p class="statement-sub">That is the whole point of Newsocapis.</p>
+    <!-- ============ CLARITY ============ -->
+    <section id="clarity" class="relative mx-auto max-w-shell px-6 py-24 md:py-36 lg:px-10">
+      <div class="mx-auto max-w-[74ch] text-center">
+        <p class="text-3xl font-semibold leading-[1.2] tracking-tight [data-reveal] md:text-5xl">No noise, no clutter. Just your links, <span class="text-accent">working quietly.</span></p>
+        <p class="mt-6 text-base text-mist [data-reveal]" style="--reveal-delay: 0.08s">That is the whole point of Newsocapis.</p>
+        <span class="mx-auto mt-12 block h-1 w-24 rounded-pill bg-gradient-to-r from-transparent via-accent/60 to-transparent [data-reveal]" style="--reveal-delay: 0.16s" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="mx-auto max-w-shell px-6 pb-28 lg:px-10">
+      <div class="relative overflow-hidden rounded-card border border-white/10 px-6 py-16 text-center shadow-glass md:py-24 [data-reveal]">
+        <div class="absolute inset-0 bg-[radial-gradient(720px_360px_at_50%_0%,rgba(179,240,33,0.1),transparent_65%)]" aria-hidden="true"></div>
+        <div class="bg-grid absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" aria-hidden="true"></div>
+
+        <div class="relative">
+          <h2 class="text-3xl font-bold tracking-tight md:text-5xl">Everything, in one quiet link.</h2>
+          <p class="mx-auto mt-4 max-w-[46ch] text-base leading-relaxed text-mist">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
+          <a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnetic class="group mt-9 inline-flex items-center justify-center gap-2.5 rounded-pill border border-transparent bg-accent px-8 py-4 text-[15px] font-semibold text-accent-ink transition-all duration-300 hover:shadow-[0_0_44px_-4px_rgba(163,230,53,0.6)]">
+            Open the tools
+            <i class="fa-solid fa-arrow-right text-sm text-accent-ink/70 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+          </a>
+        </div>
       </div>
     </section>
 
   </main>
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <p class="footer-meta">&copy; <span data-year>2026</span> Newsocapis · Built with precision</p>
-      <div class="footer-links">
-        <a class="footer-link" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a>
-        <a class="footer-link" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a>
-        <a class="footer-link" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a>
+  <footer class="border-t border-white/10">
+    <div class="mx-auto flex max-w-shell flex-col items-center gap-5 px-6 py-10 lg:px-10">
+      <a href="#top" class="text-lg font-bold tracking-tight text-white">Newsocapis<span class="text-accent">.</span></a>
+      <p class="font-mono text-[11px] tracking-wider text-mist">&copy; <span data-year>2026</span> Newsocapis · Built with precision</p>
+      <div class="flex gap-7 font-mono text-[11px] tracking-wider text-mist">
+        <a class="transition-colors duration-300 hover:text-accent" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a class="transition-colors duration-300 hover:text-accent" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a>
+        <a class="transition-colors duration-300 hover:text-accent" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a>
       </div>
     </div>
   </footer>
 
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+      "three/examples/jsm/postprocessing/EffectComposer.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/postprocessing/EffectComposer.js",
+      "three/examples/jsm/postprocessing/RenderPass.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/postprocessing/RenderPass.js",
+      "three/examples/jsm/postprocessing/UnrealBloomPass.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/postprocessing/UnrealBloomPass.js",
+      "three/examples/jsm/postprocessing/ShaderPass.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/postprocessing/ShaderPass.js",
+      "three/examples/jsm/shaders/GammaCorrectionShader.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/shaders/GammaCorrectionShader.js",
+      "three/examples/jsm/environments/RoomEnvironment.js": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/environments/RoomEnvironment.js"
+    }
+  }
+  </script>
   <script src="j.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+    import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+    import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+    import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+    (function () {
+      const wrap = document.getElementById('scene');
+      if (!wrap || !window.WebGLRenderingContext) return;
+
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+      camera.position.set(0, 0.35, 7.5);
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+      renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.useLegacyLights = false;
+      wrap.appendChild(renderer.domElement);
+
+      let small = window.innerWidth < 768;
+      const rig = new THREE.Group();
+      scene.add(rig);
+
+      // ---------- Cinematic post-processing: bloom + gamma ----------
+      const composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.9, 0.85, 0.12);
+      composer.addPass(bloomPass);
+      composer.addPass(new ShaderPass(GammaCorrectionShader));
+
+      // ---------- IBL environment so the frosted glass catches reflections ----------
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+      // ---------- 3-point cinematic lighting (dark ink ambient + soft key + neon core) ----------
+      scene.add(new THREE.AmbientLight(0x8fa3b5, 0.3));
+      const keyLight = new THREE.DirectionalLight(0xfff4e6, 1.7);
+      keyLight.position.set(-5, 6, 4);
+      scene.add(keyLight);
+
+      // ---------- Soft radial glow texture ----------
+      function radialTexture() {
+        const c = document.createElement('canvas'); c.width = c.height = 256;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        g.addColorStop(0, 'rgba(200,255,46,0.9)');
+        g.addColorStop(0.28, 'rgba(163,230,53,0.34)');
+        g.addColorStop(1, 'rgba(163,230,53,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+        return new THREE.CanvasTexture(c);
+      }
+
+      // Soft lime aura spilling onto the backdrop
+      const aura = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: radialTexture(), color: 0xa3e635, transparent: true, opacity: 0.2,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+      aura.scale.set(12, 12, 1);
+      rig.add(aura);
+
+      // ---------- Frosted Glass TorusKnot orb ----------
+      const orb = new THREE.Group();
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0xbfe6cf,
+        metalness: 0.1,
+        roughness: 0.15,
+        transmission: small ? 0 : 0.9,
+        thickness: 1.2,
+        ior: 1.5,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.28,
+        attenuationColor: 0xdcffe9,
+        attenuationDistance: 1.6,
+        emissive: 0x1f5c32,
+        emissiveIntensity: 0.14,
+        transparent: true,
+        opacity: 1
+      });
+      const shell = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(1.2, 0.34, small ? 150 : 230, small ? 14 : 26),
+        glassMat
+      );
+
+      // Inner neon core, glowing & breathing
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x0b1a10,
+        emissive: 0x86efac,
+        emissiveIntensity: 1.6,
+        roughness: 0.25,
+        metalness: 0
+      });
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.42, small ? 24 : 32, small ? 20 : 28), coreMat);
+      const coreLight = new THREE.PointLight(0x86efac, 14, 8, 2);
+      orb.add(shell, core, coreLight);
+      rig.add(orb);
+
+      // ---------- Elegant counter-rotating wireframe rings ----------
+      const halo = new THREE.Mesh(
+        new THREE.TorusGeometry(2.5, 0.016, 14, 180),
+        new THREE.MeshBasicMaterial({ color: 0xa3e635, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      halo.rotation.x = 1.15;
+      halo.rotation.y = 0.35;
+      const halo2 = new THREE.Mesh(
+        new THREE.TorusGeometry(2.85, 0.008, 12, 160),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      halo2.rotation.x = 1.35;
+      halo2.rotation.y = -0.28;
+      rig.add(halo, halo2);
+
+      // ---------- Floating stardust, star sparkles & bokeh particles ----------
+      function makeStarGeometry(arr) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+        return g;
+      }
+
+      function fillSphere(count, arr, radiusFn, yStretch) {
+        const st = yStretch ? yStretch : 0.65;
+        for (let i = 0; i < count; i++) {
+          const r = radiusFn();
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+          arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * st;
+          arr[i * 3 + 2] = r * Math.cos(phi) * 0.6 - 1.5;
+        }
+      }
+
+      function softCircleTexture() {
+        const c = document.createElement('canvas'); c.width = c.height = 64;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        g.addColorStop(0, 'rgba(255,255,255,1)');
+        g.addColorStop(0.38, 'rgba(255,255,255,0.5)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+        return new THREE.CanvasTexture(c);
+      }
+
+      const starCount = small ? 420 : 1100;
+      const starPos = new Float32Array(starCount * 3);
+      fillSphere(starCount, starPos, () => 5 + Math.random() * 9);
+      const stars = new THREE.Points(
+        makeStarGeometry(starPos),
+        new THREE.PointsMaterial({
+          color: 0xa3e635, size: 0.05, transparent: true, opacity: 0.6,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+
+      const bokehCount = small ? 240 : 620;
+      const bokehPos = new Float32Array(bokehCount * 3);
+      fillSphere(bokehCount, bokehPos, () => 3.6 + Math.random() * 7.5, 0.8);
+      const bokeh = new THREE.Points(
+        makeStarGeometry(bokehPos),
+        new THREE.PointsMaterial({
+          map: softCircleTexture(), color: 0xd9ffe8, size: 0.3, transparent: true, opacity: 0.4,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+
+      const dustCount = small ? 180 : 460;
+      const dustPos = new Float32Array(dustCount * 3);
+      for (let i = 0; i < dustCount; i++) {
+        const r = 4 + Math.random() * 7;
+        const theta = Math.random() * Math.PI * 2;
+        dustPos[i * 3] = Math.cos(theta) * r;
+        dustPos[i * 3 + 1] = (Math.random() - 0.5) * 9;
+        dustPos[i * 3 + 2] = (Math.random() - 0.5) * 5 - 2;
+      }
+      const dust = new THREE.Points(
+        makeStarGeometry(dustPos),
+        new THREE.PointsMaterial({
+          color: 0xffffff, size: 0.03, transparent: true, opacity: 0.4,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+
+      rig.add(stars, bokeh, dust);
+
+      let desktop = true;
+      function resize() {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        renderer.setSize(w, h, true);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        small = window.innerWidth < 768;
+        glassMat.transmission = small ? 0 : 0.9;
+        glassMat.opacity = small ? 0.92 : 1;
+        desktop = window.innerWidth >= 1024;
+        const scale = desktop ? 1 : (window.innerWidth < 640 ? 0.72 : 0.95);
+        rig.scale.setScalar(scale);
+        rig.position.set(desktop ? 2.9 : 0, desktop ? 0.25 : 0.9, 0);
+        composer.setSize(w, h);
+        bloomPass.setSize(w, h);
+      }
+      window.addEventListener('resize', resize);
+
+      let targetX = 0, targetY = 0, curX = 0, curY = 0;
+      if (!reduce) {
+        window.addEventListener('pointermove', function (e) {
+          targetX = (e.clientX / window.innerWidth - 0.5) * 0.7;
+          targetY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+        });
+      }
+
+      function frame() {
+        const t = performance.now() * 0.001;
+        const s = reduce ? 0.4 : 1;
+        const ts = t * s;
+
+        // Glass knot drift + spin
+        orb.rotation.y = ts * 0.34;
+        orb.rotation.x = Math.sin(ts * 0.18) * 0.18;
+
+        // Counter-rotating wireframe halo rings
+        halo.rotation.z = -ts * 0.26;
+        halo2.rotation.z = ts * 0.16;
+
+        // Inner core breathing / pulse
+        const pulse = 0.5 + Math.sin(ts * 1.35) * 0.5;
+        core.scale.setScalar(1 + pulse * 0.22);
+        core.rotation.y = -ts * 0.55;
+        coreMat.emissiveIntensity = 1.4 + pulse * 1.1;
+        coreLight.intensity = 8 + pulse * 14;
+        glassMat.emissiveIntensity = 0.1 + pulse * 0.16;
+
+        // Floating
+        rig.position.y = (desktop ? 0.25 : 0.9) + Math.sin(ts * 0.55) * 0.24;
+        rig.position.x = (desktop ? 2.9 : 0) + Math.cos(ts * 0.4) * 0.12;
+        stars.rotation.y = -ts * 0.04;
+        bokeh.rotation.y = ts * 0.03;
+        dust.rotation.y = -ts * 0.02;
+
+        // Responsive mouse parallax (smooth lerp)
+        curX += (targetX - curX) * 0.05;
+        curY += (targetY - curY) * 0.05;
+        rig.rotation.z = curX * 0.16;
+        rig.rotation.x = -curY * 0.14;
+        camera.position.x = curX * 0.55;
+        camera.position.y = 0.35 + curY * 0.45;
+        camera.lookAt(0, 0, 0);
+
+        composer.render();
+      }
+
+      resize();
+      renderer.setAnimationLoop(frame);
+    })();
+  </script>
 </body>
 </html>
