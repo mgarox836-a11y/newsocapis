@@ -58,6 +58,8 @@
     }
   </script>
 
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body id="top" class="bg-ink text-white antialiased">
@@ -102,8 +104,6 @@
       <div class="bg-grid absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_35%_45%,black,transparent_72%)]" aria-hidden="true"></div>
       <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" aria-hidden="true"></div>
 
-      <div id="scene" class="pointer-events-none absolute inset-0 z-[1] overflow-hidden" aria-hidden="true"></div>
-
       <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[48%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
 
       <div class="relative z-10 mx-auto grid w-full max-w-shell grid-cols-1 items-center gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6 lg:px-10">
@@ -135,62 +135,17 @@
           </div>
         </div>
 
-        <div class="hero-line hidden justify-center lg:flex" style="animation-delay: 0.3s">
-          <div class="relative w-full max-w-sm">
-            <div class="animate-float absolute -inset-8 rounded-full bg-accent/10 blur-3xl" aria-hidden="true"></div>
-
-            <div class="active-hub-3d" role="region" aria-label="Active hub">
-              <span class="active-hub-glass" aria-hidden="true"></span>
-
-              <div class="active-hub-content">
-                <div class="active-hub-inner">
-                  <div class="active-hub-head flex items-center justify-between">
-                    <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">Active hub</span>
-                    <span class="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
-                      <span class="status-dot" aria-hidden="true"></span> Live
-                    </span>
-                  </div>
-
-                  <div class="mt-4 space-y-2.5">
-                    <div class="active-hub-item">
-                      <span class="active-hub-icon"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
-                      <div class="min-w-0">
-                        <p class="text-sm font-semibold text-white">Instagram</p>
-                        <p class="truncate font-mono text-[11px] text-mist">@apisaseli</p>
-                      </div>
-                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                    </div>
-
-                    <div class="active-hub-item">
-                      <span class="active-hub-icon"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
-                      <div class="min-w-0">
-                        <p class="text-sm font-semibold text-white">TikTok</p>
-                        <p class="truncate font-mono text-[11px] text-mist">@apis999fps</p>
-                      </div>
-                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                    </div>
-
-                    <div class="active-hub-item">
-                      <span class="active-hub-icon active-hub-icon--solid"><i class="fa-solid fa-toolbox" aria-hidden="true"></i></span>
-                      <div class="min-w-0">
-                        <p class="text-sm font-semibold text-white">Free Web Tools</p>
-                        <p class="truncate font-mono text-[11px] text-mist">toolapis.vercel.app</p>
-                      </div>
-                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="active-hub-foot flex items-center justify-between px-2 py-3">
-                  <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">3 platforms</span>
-                  <span class="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-mist">
-                    <span class="h-1 w-1 rounded-full bg-accent" aria-hidden="true"></span> ready
-                  </span>
-                </div>
-              </div>
-
-              <span class="active-hub-glare" aria-hidden="true"></span>
-            </div>
+        <div class="hero-line flex justify-center" style="animation-delay: 0.3s">
+          <div class="w-full max-w-md">
+            <model-viewer
+              src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+              alt="3D Model"
+              auto-rotate
+              camera-controls
+              shadow-intensity="1"
+              touch-action="pan-y"
+              style="width: 100%; height: 450px; background-color: transparent;">
+            </model-viewer>
           </div>
         </div>
       </div>
@@ -348,54 +303,7 @@
     </div>
   </footer>
 
-  <script type="importmap">
-  {
-    "imports": {
-"three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js"
-    }
-  }
-  </script>
   <script src="j.js"></script>
-  <script type="module">
-    import * as THREE from 'three';
-
-    if (!window.WebGLRenderingContext) return;
-
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-    camera.position.set(0, 0, 6);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setCslearColor(0x000000, 1);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.domElement.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; pointer-events:none;';
-    document.body.appendChild(renderer.domElement);
-
-    const geo = new THREE.TorusKnotGeometry(1.8, 0.4, 100, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xa3e635, wireframe: true });
-    const knot = new THREE.Mesh(geo, mat);
-    scene.add(knot);
-
-    function frame() {
-      if (!reduce) knot.rotation.y += 0.005;
-      renderer.render(scene, camera);
-      requestAnimationFrame(frame);
-    }
-
-    function resize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(frame);
-  </script>
 
 </body>
 </html>
