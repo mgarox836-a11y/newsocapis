@@ -317,3 +317,4 @@ body {
     background: var(--ink);
   }
 }
+main, footer { position: relative; z-index: 10; }
