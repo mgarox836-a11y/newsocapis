@@ -104,6 +104,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
+  // ACTIVE HUB 3D TILT (pointer only)
+  // ==========================================
+  const hub = document.querySelector('.active-hub-3d');
+
+  if (hub && !reduceMotion && !coarsePointer) {
+    const tiltHub = e => {
+      const r = hub.getBoundingClientRect();
+      if (r.width === 0) return;
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - py) * 12;
+      const ry = (px - 0.5) * 12;
+      hub.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+      hub.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+      hub.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+    };
+
+    const resetHub = () => {
+      hub.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    };
+
+    hub.addEventListener('pointermove', tiltHub);
+    hub.addEventListener('pointerleave', resetHub);
+  }
+
+  // ==========================================
   // MAGNETIC BUTTONS (pointer only)
   // ==========================================
   const magnets = document.querySelectorAll('[data-magnetic]');

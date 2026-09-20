@@ -139,51 +139,57 @@
           <div class="relative w-full max-w-sm">
             <div class="animate-float absolute -inset-8 rounded-full bg-accent/10 blur-3xl" aria-hidden="true"></div>
 
-            <div class="relative rounded-card border border-white/10 bg-white/[0.05] p-2 shadow-glass backdrop-blur-xl">
-              <div class="rounded-tile border border-white/10 bg-white/[0.02] p-5">
-                <div class="flex items-center justify-between">
-                  <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">Active hub</span>
-                  <span class="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
-                    <span class="status-dot" aria-hidden="true"></span> Live
+            <div class="active-hub-3d" role="region" aria-label="Active hub">
+              <span class="active-hub-glass" aria-hidden="true"></span>
+
+              <div class="active-hub-content">
+                <div class="active-hub-inner">
+                  <div class="active-hub-head flex items-center justify-between">
+                    <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">Active hub</span>
+                    <span class="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
+                      <span class="status-dot" aria-hidden="true"></span> Live
+                    </span>
+                  </div>
+
+                  <div class="mt-4 space-y-2.5">
+                    <div class="active-hub-item">
+                      <span class="active-hub-icon"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">Instagram</p>
+                        <p class="truncate font-mono text-[11px] text-mist">@apisaseli</p>
+                      </div>
+                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                    </div>
+
+                    <div class="active-hub-item">
+                      <span class="active-hub-icon"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">TikTok</p>
+                        <p class="truncate font-mono text-[11px] text-mist">@apis999fps</p>
+                      </div>
+                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                    </div>
+
+                    <div class="active-hub-item">
+                      <span class="active-hub-icon active-hub-icon--solid"><i class="fa-solid fa-toolbox" aria-hidden="true"></i></span>
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">Free Web Tools</p>
+                        <p class="truncate font-mono text-[11px] text-mist">toolapis.vercel.app</p>
+                      </div>
+                      <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="active-hub-foot flex items-center justify-between px-2 py-3">
+                  <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">3 platforms</span>
+                  <span class="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-mist">
+                    <span class="h-1 w-1 rounded-full bg-accent" aria-hidden="true"></span> ready
                   </span>
                 </div>
-
-                <div class="mt-4 space-y-2.5">
-                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent/30 bg-accent/10 text-lg text-accent"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
-                    <div class="min-w-0">
-                      <p class="text-sm font-semibold text-white">Instagram</p>
-                      <p class="truncate font-mono text-[11px] text-mist">@apisaseli</p>
-                    </div>
-                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                  </div>
-
-                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent/30 bg-accent/10 text-lg text-accent"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
-                    <div class="min-w-0">
-                      <p class="text-sm font-semibold text-white">TikTok</p>
-                      <p class="truncate font-mono text-[11px] text-mist">@apis999fps</p>
-                    </div>
-                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                  </div>
-
-                  <div class="flex items-center gap-3.5 rounded-tile border border-white/10 bg-ink/40 p-3.5">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-accent bg-accent text-lg text-accent-ink"><i class="fa-solid fa-toolbox" aria-hidden="true"></i></span>
-                    <div class="min-w-0">
-                      <p class="text-sm font-semibold text-white">Free Web Tools</p>
-                      <p class="truncate font-mono text-[11px] text-mist">toolapis.vercel.app</p>
-                    </div>
-                    <span class="ml-auto h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                  </div>
-                </div>
               </div>
 
-              <div class="flex items-center justify-between px-2 py-3">
-                <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-mist">3 platforms</span>
-                <span class="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-mist">
-                  <span class="h-1 w-1 rounded-full bg-accent" aria-hidden="true"></span> ready
-                </span>
-              </div>
+              <span class="active-hub-glare" aria-hidden="true"></span>
             </div>
           </div>
         </div>
@@ -365,7 +371,7 @@
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setClearColor(0x000000, 1);
+    renderer.setCslearColor(0x000000, 1);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; pointer-events:none;';
     document.body.appendChild(renderer.domElement);
