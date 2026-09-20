@@ -184,13 +184,34 @@ body {
 }
 
 .nav-link {
+  position: relative;
   font-weight: 500;
   color: var(--muted);
   transition: color 0.3s var(--ease-out);
 }
 
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease-out);
+}
+
 .nav-link:hover {
   color: var(--text);
+}
+
+@media (min-width: 1024px) {
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
 }
 
 .burger {
@@ -313,6 +334,14 @@ body {
   height: 100% !important;
   cursor: grab;
   touch-action: pan-y;
+  pointer-events: none;
+}
+
+@media (pointer: fine) {
+  #hero3d canvas,
+  .hero3d canvas {
+    pointer-events: auto;
+  }
 }
 
 .hero3d canvas.dragging {
@@ -332,6 +361,21 @@ body {
 
 .hero-copy .flex-wrap {
   justify-content: center;
+}
+
+@media (min-width: 769px) {
+  .hero-copy {
+    text-align: left;
+  }
+
+  .hero-copy p {
+    margin: 0;
+    text-align: left;
+  }
+
+  .hero-copy .flex-wrap {
+    justify-content: flex-start;
+  }
 }
 
 @media (min-width: 769px) {

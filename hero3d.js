@@ -6,25 +6,35 @@
   if (!window.WebGLRenderingContext) return;
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const speed = reduce ? 0.5 : 1;
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 6);
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
+  } catch (e) {
+    return;
+  }
 
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true,
-    powerPreference: 'high-performance'
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth <= 768 ? 1 : 2));
   renderer.setClearColor(0x000000, 0);
 
   const canvas = renderer.domElement;
   canvas.setAttribute('aria-hidden', 'true');
   el.appendChild(canvas);
 
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
+
   const group = new THREE.Group();
   scene.add(group);
+
+  const inner = new THREE.Group();
+  group.add(inner);
 
   function fitObject() {
     let w = el.clientWidth;
@@ -40,7 +50,8 @@
 
     const halfH = camera.position.z * Math.tan((camera.fov * Math.PI) / 360);
     const halfW = halfH * aspect;
-    const scale = Math.max(0.25, Math.min(1, (halfW - 0.35) / 3.4, (halfH - 0.35) / 3.4));
+    let scale = Math.max(0.22, Math.min(1, (halfW - 0.35) / 3.4, (halfH - 0.35) / 3.4));
+    if (w < 640) scale = Math.min(scale, 0.72);
     group.scale.setScalar(scale);
   }
 
@@ -88,7 +99,7 @@
     color: 0xa3e635,
     wireframe: true
   }));
-  group.add(knot);
+  inner.add(knot);
 
   const glowFill = new THREE.Mesh(knotGeo.clone(), new THREE.MeshBasicMaterial({
     color: 0xa3e635,
@@ -98,7 +109,7 @@
     depthWrite: false
   }));
   glowFill.scale.multiplyScalar(0.92);
-  group.add(glowFill);
+  inner.add(glowFill);
 
   const halo = new THREE.Mesh(knotGeo.clone(), new THREE.MeshBasicMaterial({
     color: 0xb3f021,
@@ -109,7 +120,7 @@
     depthWrite: false
   }));
   halo.scale.multiplyScalar(1.07);
-  group.add(halo);
+  inner.add(halo);
 
   const ringGeo = new THREE.TorusGeometry(2.7, 0.018, 8, 160);
   const ringMat = new THREE.MeshBasicMaterial({
@@ -139,7 +150,7 @@
       a: (i * Math.PI * 2) / 3,
       r: 3.05,
       y: -0.7 + i * 0.7,
-      s: 0.45 + i * 0.12
+      s: (0.45 + i * 0.12) * speed
     });
   }
 
@@ -197,10 +208,12 @@
     last = now;
     const t = (now - start) / 1000;
 
-    if (!reduce) {
-      autoX += 0.005 * 60 * dt;
-      autoY += 0.008 * 60 * dt;
-    }
+    autoX += 0.3 * speed * dt;
+    autoY += 0.42 * speed * dt;
+
+    inner.rotation.x += 0.35 * speed * dt;
+    inner.rotation.y += 0.5 * speed * dt;
+    inner.rotation.z += 0.12 * speed * dt;
 
     if (dragging) {
       const k = 1 - Math.pow(0.4, dt);
@@ -218,10 +231,10 @@
       group.rotation.y = autoY + curRY;
     }
 
-    group.position.y = reduce ? 0 : Math.sin(t * 1.2) * 0.09;
+    group.position.y = Math.sin(t * 1.2) * 0.09 * speed;
 
-    ring1.rotation.z += dt * 0.14;
-    ring2.rotation.z -= dt * 0.1;
+    ring1.rotation.z += dt * 0.14 * speed;
+    ring2.rotation.z -= dt * 0.1 * speed;
 
     for (const s of sats) {
       s.a += dt * s.s;
