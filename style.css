@@ -288,6 +288,10 @@ body {
 
 /* ============ Hero 3D ============ */
 
+.hero-art {
+  position: relative;
+}
+
 .hero3d {
   position: relative;
   width: 100%;
@@ -308,14 +312,43 @@ body {
 }
 
 @media (max-width: 1023px) {
+  .hero-art {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
   .hero3d {
-    height: 380px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    width: 100%;
+    height: min(480px, 100vw);
+    opacity: 0.5;
+  }
+
+  .hero3d canvas {
+    cursor: default;
+    touch-action: auto;
+    pointer-events: none;
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .hero-copy .flex-wrap {
+    justify-content: center;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .hero3d {
-    height: 320px;
+    height: min(420px, 92vw);
   }
 }
 

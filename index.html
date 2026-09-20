@@ -58,6 +58,8 @@
     }
   </script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body id="top" class="bg-ink text-white antialiased">
@@ -105,7 +107,7 @@
       <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[48%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
 
       <div class="relative z-10 mx-auto grid w-full max-w-shell grid-cols-1 items-center gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6 lg:px-10">
-        <div>
+        <div class="hero-copy">
           <p class="hero-line inline-flex items-center gap-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-mist">
             <span class="status-dot" aria-hidden="true"></span>
             Newsocapis · Personal hub
@@ -133,7 +135,7 @@
           </div>
         </div>
 
-        <div class="hero-line flex justify-center" style="animation-delay: 0.3s">
+        <div class="hero-art hero-line flex justify-center" style="animation-delay: 0.3s">
           <div id="hero3d" class="hero3d" role="img" aria-label="Objek 3D neon interaktif. Seret atau sentuh untuk memutar."></div>
         </div>
       </div>
@@ -292,7 +294,7 @@
   </footer>
 
   <script src="j.js"></script>
-  <script type="module" src="hero3d.js"></script>
+  <script src="hero3d.js"></script>
 
 </body>
 </html>
