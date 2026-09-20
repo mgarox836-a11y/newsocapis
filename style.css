@@ -288,17 +288,25 @@ body {
 
 /* ============ Hero 3D ============ */
 
-.hero-art {
-  position: relative;
+.hero-grid {
+  grid-template-columns: 1fr;
+  gap: 3.5rem;
 }
 
+#hero3d,
 .hero3d {
-  position: relative;
-  width: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
   min-width: 0;
-  height: 480px;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
 }
 
+#hero3d canvas,
 .hero3d canvas {
   display: block;
   width: 100% !important;
@@ -311,44 +319,43 @@ body {
   cursor: grabbing;
 }
 
-@media (max-width: 1023px) {
-  .hero-art {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  text-align: left;
+}
 
+.hero-copy p {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+@media (min-width: 769px) {
+  .hero-grid {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #hero3d,
   .hero3d {
     position: absolute;
-    top: 50%;
     left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
-    z-index: 1;
     width: 100%;
-    height: min(480px, 100vw);
-    opacity: 0.5;
-  }
-
-  .hero3d canvas {
-    cursor: default;
-    touch-action: auto;
-    pointer-events: none;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.35;
   }
 
   .hero-copy {
-    position: relative;
-    z-index: 2;
     text-align: center;
   }
 
   .hero-copy .flex-wrap {
     justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero3d {
-    height: min(420px, 92vw);
   }
 }
 
