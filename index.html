@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" class="is-loading" data-motion="always">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var el=document.getElementById('loader');if(el&&window.START_AT_TOP_ON_LOAD!==false&&window.location.hash)history.replaceState(null,'',window.location.pathname+window.location.search);document.documentElement.classList.remove('is-loading');if(window.START_AT_TOP_ON_LOAD!==false)window.scrollTo({top:0,left:0,behavior:'instant'})},8500)</script>
+  <script>if('scrollRestoration' in history)history.scrollRestoration='auto';document.documentElement.classList.add('js')</script>
   <meta name="google-site-verification" content="google4c6264b6a9859481.html" />
   <meta name="description" content="Newsocapis, satu ruang tenang untuk Instagram, TikTok, dan free web tools." />
-  <meta name="theme-color" content="#090909" />
+  <meta name="theme-color" content="#101010" />
   <meta name="color-scheme" content="dark" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23090909'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23af50ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23af50ff'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101010'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23fffdf9' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23fffdf9'/%3E%3C/svg%3E" />
   <title>Newsocapis · Calm Surface. Clear Focus.</title>
   <link rel="canonical" href="https://newsocapis.vercel.app/" />
   <meta property="og:type" content="website" />
@@ -18,10 +18,12 @@
   <meta property="og:site_name" content="Newsocapis" />
   <meta name="twitter:card" content="summary" />
 
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400&family=Lora:ital,wght@1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=neue-montreal@400,500,700&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -30,287 +32,177 @@
       theme: {
         extend: {
           colors: {
-            ink: '#090909',
-            surface: '#0d0d0e',
-            band: '#0b0b0c',
-            accent: {
-              DEFAULT: '#af50ff',
-              ink: '#090909',
-              lav: '#e1bdff'
-            },
-            lime: {
-              bright: '#af50ff',
-              soft: '#e1bdff'
-            },
-            white: '#f7f9fa',
-            mist: '#828384',
-            steel: '#828384',
-            graphite: '#474747',
-            ash: '#6b6b6b'
+            obsidian: '#101010',
+            'graphite-veil': '#495764',
+            'bone-white': '#fffdf9',
+            'fog-blue': '#6f879c',
+            'ash-border': '#403f3f',
+            'pure-black': '#000000'
           },
           fontFamily: {
-            display: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-            serifd: ['Lora', 'Georgia', 'serif'],
-            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace']
-          },
-          borderRadius: {
-            card: '19.2px',
-            tile: '6px',
-            button: '8px',
-            pill: '1584px'
+            display: ['"Neue Montreal"', 'Inter', '"General Sans"', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+            sans: ['"Neue Montreal"', 'Inter', '"General Sans"', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif']
           },
           maxWidth: {
-            shell: '1200px'
+            shell: '1440px'
+          },
+          borderRadius: {
+            button: '5px',
+            cards: '15px'
           }
         }
       }
     }
   </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
   <link rel="stylesheet" href="style.css" />
 </head>
-<body id="top" class="bg-ink text-white antialiased">
+<body id="top" class="bg-obsidian text-bone-white antialiased">
 
-  <div id="progress" class="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left bg-accent" style="transform: scaleX(0)" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <header id="nav" class="nav fixed inset-x-0 top-0 z-50 border-b">
-    <div class="mx-auto flex h-16 w-full max-w-shell items-center justify-between gap-6 px-6 lg:px-10">
-      <a href="#top" class="brand text-lg tracking-tight text-white">
-        Newsocapis<span class="text-accent">.</span>
+  <header id="nav" class="nav fixed inset-x-0 top-0 z-50">
+    <div class="mx-auto flex w-full max-w-shell items-center justify-between gap-8 px-6 py-4 lg:px-10">
+      <a href="#top" class="brand text-bone-white">
+        Newsocapis<span class="text-fog-blue">.</span>
       </a>
 
-      <nav id="navMenu" class="nav-menu lg:flex lg:flex-1 lg:items-center lg:justify-center lg:gap-8" aria-label="Navigasi utama">
+      <nav id="navMenu" class="nav-menu lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-10" aria-label="Navigasi utama">
         <a class="nav-link" href="#top">Overview</a>
         <a class="nav-link" href="#features">Features</a>
         <a class="nav-link" href="#flow">Flow</a>
         <a class="nav-link" href="#clarity">Clarity</a>
-        <a class="nav-link nav-cta-mobile mt-4 inline-flex items-center justify-center gap-2 rounded-button bg-white/[0.08] px-6 py-3 text-sm font-medium text-white lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
-          Open the tools
-        </a>
+        <a class="nav-contact" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Open the tools</a>
       </nav>
 
-      <div class="flex items-center gap-3">
-        <a data-magnetic class="btn-nav max-lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
-          Open the tools
-        </a>
-        <button id="navToggle" class="burger" aria-expanded="false" aria-label="Buka menu">
-          <span></span><span></span>
-        </button>
-      </div>
+      <button id="navToggle" class="burger lg:hidden" aria-expanded="false" aria-label="Buka menu">
+        <span></span><span></span>
+      </button>
     </div>
   </header>
 
-  <main>
+  <main id="main">
 
     <!-- ============ HERO ============ -->
-    <section id="hero" class="hero relative flex min-h-[100dvh] items-center overflow-hidden pt-24 pb-20">
-      <div class="absolute inset-0 bg-[radial-gradient(1000px_600px_at_78%_18%,rgba(175,80,255,0.09),transparent_62%)]" aria-hidden="true"></div>
-      <div class="animate-breathe absolute left-1/2 top-1/2 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(175,80,255,0.12),transparent_65%)] blur-2xl" aria-hidden="true"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(820px_460px_at_16%_22%,rgba(225,189,255,0.05),transparent_60%)]" aria-hidden="true"></div>
-      <div class="bg-grid absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_35%_45%,black,transparent_72%)]" aria-hidden="true"></div>
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" aria-hidden="true"></div>
-
-      <div id="hero3d" class="hero3d" role="img" aria-label="Objek 3D dekoratif."></div>
-
-      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[46%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
-
-      <div class="hero-grid relative z-10 mx-auto grid w-full max-w-shell items-center px-6 lg:px-10">
-        <div class="hero-copy">
-          <p class="hero-line inline-flex items-center gap-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-mist">
-            <span class="status-dot" aria-hidden="true"></span>
-            Newsocapis · Personal hub
-          </p>
-
-          <h1 class="hero-title hero-line mt-8">
-            <span class="hero-lora block pb-[0.14em]">Calm surface.</span>
-            <span class="hero-clear block pb-[0.14em]">Clear focus.</span>
-            <span class="hero-lora block pb-[0.14em]">All your links.</span>
-          </h1>
-
-          <p class="hero-sub hero-line mt-8" style="animation-delay: 0.16s">
-            A quiet hub for your Instagram, TikTok, and free web tools. Every link shared, kept effortless.
-          </p>
-        </div>
-
-        <aside class="hero-card hero-line" style="animation-delay: 0.3s" aria-label="Newsocapis links">
-          <p class="card-label">LINK PASS</p>
-          <p class="card-route">
-            <span>NEWSOCAPIS</span>
-            <span class="card-route-arrow" aria-hidden="true"></span>
-            <span>ALL YOUR LINKS</span>
-          </p>
-          <div class="card-barcode" aria-hidden="true"></div>
-          <div class="card-ctas">
-            <a href="#features" data-magnetic class="btn-fill group">
-              Explore features
-              <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
-            </a>
-            <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" data-magnetic class="btn-ghost group">
-              <i class="fa-brands fa-instagram text-base" aria-hidden="true"></i>
-              Follow on Instagram
-            </a>
-          </div>
-        </aside>
+    <section id="hero" class="hero">
+      <div class="prism" aria-hidden="true">
+        <span class="prism-cube"></span>
+        <span class="prism-cube"></span>
+        <span class="prism-cube"></span>
+        <span class="prism-cube"></span>
+        <span class="prism-cube"></span>
+        <span class="prism-glow"></span>
       </div>
 
-      <div class="hero-scroll absolute bottom-7 right-7 z-10 hidden flex-col items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-mist md:flex">
-        <span class="block h-10 w-px overflow-hidden">
-          <span class="scroll-hint-bar block h-full w-full bg-white/70"></span>
-        </span>
-        Scroll
+      <div class="hero-inner">
+        <h1 class="hero-display">
+          <span class="block">Calm surface.</span>
+          <span class="block">Clear focus.</span>
+          <span class="block">All your links.</span>
+        </h1>
+
+        <p class="hero-sub">
+          A quiet hub for your Instagram, TikTok, and free web tools. Every link shared, kept effortless.
+        </p>
+
+        <ul class="hero-paths">
+          <li><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
+          <li><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Free web tools</a></li>
+        </ul>
       </div>
     </section>
 
     <!-- ============ FEATURES ============ -->
-    <section id="features" class="relative mx-auto max-w-shell px-6 py-24 md:py-32 lg:px-10">
-      <div class="pointer-events-none absolute left-[6%] top-[28%] h-80 w-80 rounded-full bg-[#a3e635]/[0.08] blur-3xl" aria-hidden="true"></div>
-      <div class="pointer-events-none absolute bottom-[8%] right-[4%] h-96 w-96 rounded-full bg-[#ccff00]/[0.05] blur-3xl" aria-hidden="true"></div>
-      <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true"></div>
+    <section id="features" class="section">
+      <p class="section-stmt" data-reveal>Three ways in, zero clutter. Pick a platform, tap through, done.</p>
+      <h2 class="section-display" data-reveal style="--reveal-delay: 0.07s">One place for everything you share.</h2>
 
-      <div class="max-w-[60ch]">
-        <h2 class="text-3xl font-bold tracking-tight [data-reveal] md:text-[2.6rem] md:leading-[1.1]">One place for everything you share.</h2>
-        <p class="mt-4 max-w-[55ch] text-base leading-relaxed text-mist [data-reveal]" style="--reveal-delay: 0.08s">Three ways in, zero clutter. Pick a platform, tap through, done.</p>
-      </div>
-
-      <div class="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-        <article data-tilt class="tilt-card relative flex flex-col rounded-card border border-white/10 bg-white/[0.04] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-white/25 hover:shadow-glass-hover">
-          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-mist opacity-50" aria-hidden="true">01</span>
-          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent/30 bg-accent/10 text-2xl text-accent">
-            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
-          </span>
-          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Instagram</h3>
-          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Daily stories, photos, and highlights.</p>
-          <ul class="mt-5 flex flex-wrap gap-2">
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Stories</li>
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Photo</li>
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Daily clips</li>
-          </ul>
-          <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
-            Follow on Instagram
-            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+      <div class="service-list">
+        <div class="service-row" data-reveal>
+          <a class="service-title" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-instagram service-icon" aria-hidden="true"></i>
+            Instagram
           </a>
-          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.09), transparent 45%);" aria-hidden="true"></div>
-        </article>
-
-        <article data-tilt class="tilt-card relative flex flex-col rounded-card border border-white/10 bg-white/[0.04] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-white/25 hover:shadow-glass-hover" style="--reveal-delay: 0.08s">
-          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-mist opacity-50" aria-hidden="true">02</span>
-          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent/30 bg-accent/10 text-2xl text-accent">
-            <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
-          </span>
-          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">TikTok</h3>
-          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Short videos, trends, and gameplay clips.</p>
-          <ul class="mt-5 flex flex-wrap gap-2">
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Gameplay</li>
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Trends</li>
-            <li class="rounded-pill border border-white/10 bg-white/[0.03] px-3 py-1.5 font-mono text-[11px] tracking-wider text-mist">Mobile Legends</li>
-          </ul>
-          <a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
-            Watch on TikTok
-            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+          <p class="service-label">Daily stories, photos, and highlights.</p>
+        </div>
+        <div class="service-row" data-reveal style="--reveal-delay: 0.07s">
+          <a class="service-title" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-tiktok service-icon" aria-hidden="true"></i>
+            TikTok
           </a>
-          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.09), transparent 45%);" aria-hidden="true"></div>
-        </article>
-
-        <article data-tilt class="tilt-card relative flex flex-col overflow-hidden rounded-card border border-accent/30 bg-accent/[0.05] p-7 shadow-glass backdrop-blur-xl [data-reveal] hover:border-accent/60 hover:shadow-glass-hover" style="--reveal-delay: 0.16s">
-          <span class="absolute right-6 top-6 font-mono text-sm tracking-wider text-accent opacity-70" aria-hidden="true">03</span>
-          <span class="flex h-16 w-16 items-center justify-center rounded-tile border border-accent bg-accent text-2xl text-accent-ink">
-            <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
-          </span>
-          <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Free Web Tools</h3>
-          <p class="mt-2 max-w-[30ch] text-sm leading-relaxed text-mist">Free online tools for everyday quick tasks.</p>
-          <ul class="mt-5 flex flex-wrap gap-2">
-            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Free</li>
-            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Web</li>
-            <li class="rounded-pill border border-accent/20 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] tracking-wider text-accent">Daily use</li>
-          </ul>
-          <a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" class="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 hover:text-accent">
-            Open the tools
-            <i class="fa-solid fa-arrow-right text-xs text-accent transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+          <p class="service-label">Short videos, trends, and gameplay clips.</p>
+        </div>
+        <div class="service-row" data-reveal style="--reveal-delay: 0.14s">
+          <a class="service-title" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <i class="fa-solid fa-toolbox service-icon" aria-hidden="true"></i>
+            Free Web Tools
           </a>
-          <div class="tilt-glare pointer-events-none absolute inset-0 rounded-card" style="background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(179, 240, 33, 0.12), transparent 45%);" aria-hidden="true"></div>
-        </article>
+          <p class="service-label">Free online tools for everyday quick tasks.</p>
+        </div>
       </div>
     </section>
 
     <!-- ============ FLOW ============ -->
-    <section id="flow" class="relative border-y border-white/10 bg-band py-24 md:py-32">
-      <div class="bg-grid absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_50%_0%,black,transparent_70%)]" aria-hidden="true"></div>
+    <section id="flow" class="section">
+      <p class="section-stmt" data-reveal>From one link to wherever you need to go.</p>
+      <h2 class="section-display" data-reveal style="--reveal-delay: 0.07s">How it flows.</h2>
 
-      <div class="relative mx-auto max-w-shell px-6 lg:px-10">
-        <div class="max-w-[60ch]">
-          <h2 class="text-3xl font-bold tracking-tight [data-reveal] md:text-[2.6rem] md:leading-[1.1]">How it flows.</h2>
-          <p class="mt-4 text-base leading-relaxed text-mist [data-reveal]" style="--reveal-delay: 0.08s">From one link to wherever you need to go.</p>
-        </div>
-
-        <div class="relative mt-16">
-          <div class="absolute left-0 right-0 top-[22px] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" aria-hidden="true"></div>
-
-          <div class="grid gap-12 md:grid-cols-3 md:gap-8">
-            <div class="relative [data-reveal]">
-              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">01</span>
-              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Connect</h3>
-              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Pick a platform and tap through.</p>
-            </div>
-            <div class="relative [data-reveal]" style="--reveal-delay: 0.08s">
-              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">02</span>
-              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Explore</h3>
-              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Stories, clips, and free tools, ready in one place.</p>
-            </div>
-            <div class="relative [data-reveal]" style="--reveal-delay: 0.16s">
-              <span class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-accent/40 bg-band font-mono text-sm font-medium text-accent">03</span>
-              <h3 class="mt-6 text-xl font-semibold tracking-tight text-white">Use</h3>
-              <p class="mt-2 max-w-[28ch] text-sm leading-relaxed text-mist">Sorted in seconds, no noise.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ol class="flow-list">
+        <li class="flow-item" data-reveal>
+          <span class="flow-num">01</span>
+          <h3 class="flow-title">Connect</h3>
+          <p class="flow-label">Pick a platform and tap through.</p>
+        </li>
+        <li class="flow-item" data-reveal style="--reveal-delay: 0.07s">
+          <span class="flow-num">02</span>
+          <h3 class="flow-title">Explore</h3>
+          <p class="flow-label">Stories, clips, and free tools, ready in one place.</p>
+        </li>
+        <li class="flow-item" data-reveal style="--reveal-delay: 0.14s">
+          <span class="flow-num">03</span>
+          <h3 class="flow-title">Use</h3>
+          <p class="flow-label">Sorted in seconds, no noise.</p>
+        </li>
+      </ol>
     </section>
 
     <!-- ============ CLARITY ============ -->
-    <section id="clarity" class="relative mx-auto max-w-shell px-6 py-24 md:py-36 lg:px-10">
-      <div class="mx-auto max-w-[74ch] text-center">
-        <p class="text-3xl font-semibold leading-[1.2] tracking-tight [data-reveal] md:text-5xl">No noise, no clutter. Just your links, <span class="text-accent">working quietly.</span></p>
-        <p class="mt-6 text-base text-mist [data-reveal]" style="--reveal-delay: 0.08s">That is the whole point of Newsocapis.</p>
-        <span class="mx-auto mt-12 block h-1 w-24 rounded-pill bg-gradient-to-r from-transparent via-accent/60 to-transparent [data-reveal]" style="--reveal-delay: 0.16s" aria-hidden="true"></span>
-      </div>
+    <section id="clarity" class="section">
+      <h2 class="section-display" data-reveal>No noise, no clutter. Just your links, working quietly.</h2>
+      <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">That is the whole point of Newsocapis.</p>
     </section>
 
     <!-- ============ CTA ============ -->
-    <section class="mx-auto max-w-shell px-6 pb-28 lg:px-10">
-      <div class="relative overflow-hidden rounded-card border border-white/10 px-6 py-16 text-center shadow-glass md:py-24 [data-reveal]">
-        <div class="absolute inset-0 bg-[radial-gradient(720px_360px_at_50%_0%,rgba(179,240,33,0.1),transparent_65%)]" aria-hidden="true"></div>
-        <div class="bg-grid absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" aria-hidden="true"></div>
-
-        <div class="relative">
-          <h2 class="text-3xl font-bold tracking-tight md:text-5xl">Everything, in one quiet link.</h2>
-          <p class="mx-auto mt-4 max-w-[46ch] text-base leading-relaxed text-mist">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
-          <a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnetic class="group mt-9 inline-flex items-center justify-center gap-2.5 rounded-pill border border-transparent bg-accent px-8 py-4 text-[15px] font-semibold text-accent-ink transition-all duration-300 hover:shadow-[0_0_44px_-4px_rgba(163,230,53,0.6)]">
-            Open the tools
-            <i class="fa-solid fa-arrow-right text-sm text-accent-ink/70 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
-          </a>
-        </div>
-      </div>
+    <section id="visit" class="section section-cta">
+      <h2 class="section-display" data-reveal>Everything, in one quiet link.</h2>
+      <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
+      <a class="nav-contact section-cta-button" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-reveal style="--reveal-delay: 0.18s">
+        Open the tools
+      </a>
     </section>
 
   </main>
 
-  <footer class="border-t border-white/10">
-    <div class="mx-auto flex max-w-shell flex-col items-center gap-5 px-6 py-10 lg:px-10">
-      <a href="#top" class="text-lg font-bold tracking-tight text-white">Newsocapis<span class="text-accent">.</span></a>
-      <p class="font-mono text-[11px] tracking-wider text-mist">&copy; <span data-year>2026</span> Newsocapis · Built with precision</p>
-      <div class="flex gap-7 font-mono text-[11px] tracking-wider text-mist">
-        <a class="transition-colors duration-300 hover:text-accent" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a>
-        <a class="transition-colors duration-300 hover:text-accent" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a>
-        <a class="transition-colors duration-300 hover:text-accent" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a>
+  <footer class="footer">
+    <div class="mx-auto flex max-w-shell flex-col gap-8 px-6 pt-6 pb-12 lg:flex-row lg:items-end lg:justify-between lg:px-10">
+      <div>
+        <a href="#top" class="brand text-bone-white">Newsocapis<span class="text-fog-blue">.</span></a>
+        <p class="footer-meta">&copy; <span data-year>2026</span> Newsocapis · Built with precision</p>
       </div>
+      <ul class="footer-links">
+        <li><a href="#top">Overview</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#flow">Flow</a></li>
+        <li><a href="#clarity">Clarity</a></li>
+        <li><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        <li><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
+        <li><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a></li>
+      </ul>
     </div>
   </footer>
 
-  <script src="j.js"></script>
-  <script src="./hero3d.js"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
