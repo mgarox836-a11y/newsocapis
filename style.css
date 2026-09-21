@@ -1,34 +1,44 @@
 /* ============ Design tokens ============
-   Fonts: Space Grotesk (display/body) + JetBrains Mono (metadata)
-   Accent: neon lime #b3f021, single & locked
-   Radius rule: cards 22px · tiles 18px · buttons/pills 999px
-   Theme: cinematic dark, page-level, locked.
-   Styling: Tailwind utilities in HTML; this file only carries
-   tokens, keyframes, and stateful mechanics (reveal / tilt / nav).
+   Fonts: Inter (body/display) + JetBrains Mono (metadata) + Lora Italic (display serif)
+   Accent: Signal Violet #af50ff, single & rationed (fill + glow only, never text/border)
+   Radius rule: cards 19.2px · pills 1584px · buttons 8px · small controls 6px
+   Theme: near-black #090909 canvas, shadowless (glow via radial-gradient only)
+   Styling: Tailwind utilities in HTML; this file carries tokens, keyframes,
+   and stateful mechanics (reveal / tilt / nav / hero / loader).
    ============ */
 
 :root {
-  --ink: #07090c;
-  --surface: #101419;
-  --band: #0b0e12;
+  --ink: #090909;
+  --surface: #0d0d0e;
+  --band: #0b0b0c;
 
-  --hairline: rgba(255, 255, 255, 0.07);
-  --hairline-strong: rgba(255, 255, 255, 0.16);
+  --hairline: rgba(247, 249, 250, 0.1);
+  --hairline-strong: rgba(247, 249, 250, 0.2);
 
-  --text: #eef0f2;
-  --muted: #9aa1ab;
+  --text: #f7f9fa;
+  --soft: #f0f0f0;
+  --muted: #828384;
+  --graphite: #474747;
+  --ash: #6b6b6b;
 
-  --accent: #b3f021;
-  --accent-soft: rgba(179, 240, 33, 0.06);
-  --accent-line: rgba(179, 240, 33, 0.32);
-  --accent-ink: #0a0c0f;
+  --accent: #af50ff;
+  --accent-soft: rgba(175, 80, 255, 0.08);
+  --accent-line: rgba(175, 80, 255, 0.32);
+  --accent-ink: #090909;
+  --lav: #e1bdff;
 
-  --radius-card: 22px;
-  --radius-tile: 18px;
-  --radius-pill: 999px;
+  --radius-card: 19.2px;
+  --radius-tile: 6px;
+  --radius-pill: 1584px;
+  --radius-button: 8px;
 
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-serifd: 'Lora', Georgia, serif;
+
+  --page-max: 1200px;
+  --section-gap: 120px;
+  --card-pad: 40px;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -38,14 +48,36 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 88px;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
+  margin: 0;
   font-family: var(--font-display);
   background: var(--ink);
   color: var(--text);
   overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4, p { margin: 0; }
+ul { margin: 0; padding: 0; }
+li { list-style: none; }
+
+button, input, select, textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+h1, h2, h3, h4 {
+  overflow-wrap: break-word;
 }
 
 ::selection {
@@ -54,7 +86,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid #f7f9fa;
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -66,12 +98,12 @@ body {
   background: var(--ink);
 }
 ::-webkit-scrollbar-thumb {
-  background: #242b33;
+  background: var(--graphite);
   border-radius: 999px;
   border: 3px solid var(--ink);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #303a44;
+  background: #5a5a5c;
 }
 
 /* ============ Textures ============ */
@@ -101,12 +133,14 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--accent);
+  scale: 0.8;
+  opacity: 0.45;
   animation: statusPulse 2.4s ease-out infinite;
 }
 
 @keyframes statusPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(179, 240, 33, 0.45); }
-  50% { box-shadow: 0 0 0 7px rgba(179, 240, 33, 0); }
+  0%, 100% { opacity: 0.4; scale: 0.78; }
+  50% { opacity: 1; scale: 1; }
 }
 
 .hero-line {
