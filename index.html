@@ -85,7 +85,9 @@
 
     <!-- ============ HERO ============ -->
     <section id="hero" class="hero">
-      <div id="prism" class="prism-canvas" aria-hidden="true"></div>
+      <video class="prism-video" autoplay loop muted playsinline preload="metadata" poster="assets/prism-poster.jpg" aria-hidden="true" onerror="this.remove()">
+        <source src="assets/prism.mp4" type="video/mp4" />
+      </video>
 
       <div class="hero-inner">
         <h1 class="hero-display">
@@ -195,8 +197,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./script.js"></script>
-  <script type="module" src="./prism.js"></script>
+  <script src="script.js" defer></script>
 
 </body>
 </html>
