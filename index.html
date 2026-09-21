@@ -76,24 +76,24 @@
   <div id="progress" class="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left bg-accent" style="transform: scaleX(0)" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
-  <header id="nav" class="nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/60 backdrop-blur-xl">
+  <header id="nav" class="nav fixed inset-x-0 top-0 z-50 border-b">
     <div class="mx-auto flex h-16 w-full max-w-shell items-center justify-between gap-6 px-6 lg:px-10">
-      <a href="#top" class="text-lg font-bold tracking-tight text-white">
+      <a href="#top" class="brand text-lg tracking-tight text-white">
         Newsocapis<span class="text-accent">.</span>
       </a>
 
       <nav id="navMenu" class="nav-menu lg:flex lg:flex-1 lg:items-center lg:justify-center lg:gap-8" aria-label="Navigasi utama">
-        <a class="nav-link text-sm" href="#top">Overview</a>
-        <a class="nav-link text-sm" href="#features">Features</a>
-        <a class="nav-link text-sm" href="#flow">Flow</a>
-        <a class="nav-link text-sm" href="#clarity">Clarity</a>
-        <a class="nav-link nav-cta-mobile mt-4 inline-flex items-center justify-center gap-2 rounded-pill bg-accent px-6 py-3 text-sm font-semibold text-accent-ink lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+        <a class="nav-link" href="#top">Overview</a>
+        <a class="nav-link" href="#features">Features</a>
+        <a class="nav-link" href="#flow">Flow</a>
+        <a class="nav-link" href="#clarity">Clarity</a>
+        <a class="nav-link nav-cta-mobile mt-4 inline-flex items-center justify-center gap-2 rounded-button bg-white/[0.08] px-6 py-3 text-sm font-medium text-white lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
           Open the tools
         </a>
       </nav>
 
       <div class="flex items-center gap-3">
-        <a data-magnetic class="inline-flex items-center justify-center gap-2 rounded-pill border border-transparent bg-accent px-6 py-2.5 text-sm font-semibold text-accent-ink transition-all duration-300 hover:shadow-[0_0_38px_-6px_rgba(163,230,53,0.6)] max-lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+        <a data-magnetic class="btn-nav max-lg:hidden" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
           Open the tools
         </a>
         <button id="navToggle" class="burger" aria-expanded="false" aria-label="Buka menu">
@@ -106,16 +106,16 @@
   <main>
 
     <!-- ============ HERO ============ -->
-    <section class="relative flex min-h-[100dvh] items-center overflow-hidden pt-24 pb-20">
-      <div class="absolute inset-0 bg-[radial-gradient(1000px_600px_at_78%_18%,rgba(163,230,53,0.09),transparent_62%)]" aria-hidden="true"></div>
-      <div class="animate-breathe absolute left-1/2 top-1/2 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(163,230,53,0.12),transparent_65%)] blur-2xl" aria-hidden="true"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(820px_460px_at_16%_22%,rgba(179,240,33,0.06),transparent_60%)]" aria-hidden="true"></div>
+    <section id="hero" class="hero relative flex min-h-[100dvh] items-center overflow-hidden pt-24 pb-20">
+      <div class="absolute inset-0 bg-[radial-gradient(1000px_600px_at_78%_18%,rgba(175,80,255,0.09),transparent_62%)]" aria-hidden="true"></div>
+      <div class="animate-breathe absolute left-1/2 top-1/2 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(175,80,255,0.12),transparent_65%)] blur-2xl" aria-hidden="true"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(820px_460px_at_16%_22%,rgba(225,189,255,0.05),transparent_60%)]" aria-hidden="true"></div>
       <div class="bg-grid absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_35%_45%,black,transparent_72%)]" aria-hidden="true"></div>
       <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink" aria-hidden="true"></div>
 
-      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[48%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
+      <div id="hero3d" class="hero3d" role="img" aria-label="Objek 3D dekoratif."></div>
 
-      <div id="hero3d" class="hero3d" role="img" aria-label="Objek 3D neon dekoratif."></div>
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[46%] bg-gradient-to-b from-transparent via-ink/35 to-ink" aria-hidden="true"></div>
 
       <div class="hero-grid relative z-10 mx-auto grid w-full max-w-shell items-center px-6 lg:px-10">
         <div class="hero-copy">
@@ -124,27 +124,36 @@
             Newsocapis · Personal hub
           </p>
 
-          <h1 class="hero-title hero-line mt-7 text-5xl font-bold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl" style="animation-delay: 0.08s">
-            <span class="block pb-[0.12em]">Calm surface.</span>
-            <span class="block pb-[0.12em]">Clear focus.</span>
-            <span class="block pb-[0.12em] text-mist">All your links.</span>
+          <h1 class="hero-title hero-line mt-8">
+            <span class="hero-lora block pb-[0.14em]">Calm surface.</span>
+            <span class="hero-clear block pb-[0.14em]">Clear focus.</span>
+            <span class="hero-lora block pb-[0.14em]">All your links.</span>
           </h1>
 
-          <p class="hero-line mt-7 max-w-[46ch] text-base leading-relaxed text-mist md:text-lg" style="animation-delay: 0.16s">
+          <p class="hero-sub hero-line mt-8" style="animation-delay: 0.16s">
             A quiet hub for your Instagram, TikTok, and free web tools. Every link shared, kept effortless.
           </p>
+        </div>
 
-          <div class="hero-line mt-10 flex flex-wrap items-center gap-4" style="animation-delay: 0.24s">
-            <a href="#features" data-magnetic class="group inline-flex items-center justify-center gap-2.5 rounded-pill border border-transparent bg-[#a3e635] px-7 py-3.5 text-[15px] font-semibold text-[#0a0c0f] shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_24px_-8px_rgba(163,230,53,0.55)] transition-all duration-300 hover:scale-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_0_48px_-4px_rgba(163,230,53,0.95),0_18px_44px_-12px_rgba(163,230,53,0.5)]">
+        <aside class="hero-card hero-line" style="animation-delay: 0.3s" aria-label="Newsocapis links">
+          <p class="card-label">LINK PASS</p>
+          <p class="card-route">
+            <span>NEWSOCAPIS</span>
+            <span class="card-route-arrow" aria-hidden="true"></span>
+            <span>ALL YOUR LINKS</span>
+          </p>
+          <div class="card-barcode" aria-hidden="true"></div>
+          <div class="card-ctas">
+            <a href="#features" data-magnetic class="btn-fill group">
               Explore features
-              <i class="fa-solid fa-arrow-right text-sm text-[#0a0c0f]/70 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
+              <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true"></i>
             </a>
-            <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" data-magnetic class="group inline-flex items-center justify-center gap-2.5 rounded-pill border border-white/15 bg-white/[0.05] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-300 hover:border-[#a3e635] hover:bg-white/[0.1] hover:scale-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_34px_-6px_rgba(163,230,53,0.6)]">
-              <i class="fa-brands fa-instagram text-base text-accent" aria-hidden="true"></i>
+            <a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" data-magnetic class="btn-ghost group">
+              <i class="fa-brands fa-instagram text-base" aria-hidden="true"></i>
               Follow on Instagram
             </a>
           </div>
-        </div>
+        </aside>
       </div>
 
       <div class="hero-scroll absolute bottom-7 right-7 z-10 hidden flex-col items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-mist md:flex">
