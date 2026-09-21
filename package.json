@@ -1,0 +1,28 @@
+{
+  "name": "newsocapis",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgarox836-a11y/newsocapis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mgarox836-a11y/newsocapis/issues"
+  },
+  "homepage": "https://github.com/mgarox836-a11y/newsocapis#readme",
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0"
+  }
+}
