@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="is-loading">
+<html lang="en" class="js is-loading">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var el=document.getElementById('loader');if(el&&window.START_AT_TOP_ON_LOAD!==false&&window.location.hash)history.replaceState(null,'',window.location.pathname+window.location.search);document.documentElement.classList.remove('is-loading');if(el&&window.START_AT_TOP_ON_LOAD!==false)window.scrollTo({top:0,left:0,behavior:'instant'})},8500);window.addEventListener('DOMContentLoaded',function(){var v=document.querySelector('.prism-video');if(!v||document.getElementById('hero').classList.contains('no-prism'))return;var done=false;function fail(){if(done)return;done=true;if(document.body.contains(v))v.remove();document.getElementById('hero').classList.add('no-prism')}v.addEventListener('error',fail,true);setTimeout(function(){if(v.readyState===0&&v.networkState===3)fail()},4000)})</script>
+  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var d=document.documentElement;if(d.classList.contains('js-runtime'))return;var p=document.querySelector('.preloader');if(p)p.remove();d.classList.remove('is-loading','is-locked')},3000)</script>
   <meta name="google-site-verification" content="google4c6264b6a9859481.html" />
   <meta name="description" content="Newsocapis, satu ruang tenang untuk Instagram, TikTok, dan free web tools." />
   <meta name="theme-color" content="#101010" />
@@ -18,24 +18,29 @@
   <meta property="og:site_name" content="Newsocapis" />
   <meta name="twitter:card" content="summary" />
 
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=neue-montreal@400,500,700&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <link rel="stylesheet" href="style.css" />
-  <noscript><style>#loader{display:none}</style></noscript>
 </head>
 <body id="top">
 
-  <div class="loader" id="loader" role="status" aria-label="Loading">
-    <div class="loader-inner">
-      <span class="loader-word" aria-hidden="true"><i>N</i><i>e</i><i>w</i><i>s</i><i>o</i><i>c</i><i>a</i><i>p</i><i>i</i><i>s</i><i class="ldot">.</i></span>
-      <div class="loader-bar" aria-hidden="true"><i class="loader-fill"></i></div>
-      <span class="loader-count" aria-hidden="true">000</span>
-      <span class="loader-status" aria-hidden="true">Loading links</span>
-      <button class="loader-skip" type="button" hidden>Skip</button>
+  <!-- ============ PRELOADER — minimal: brand + 1px line, curtain up ============ -->
+  <div class="preloader" data-preloader role="status" aria-label="Memuat Newsocapis">
+    <div class="preloader-panel">
+      <div class="preloader-content">
+        <p class="preloader-brand" aria-hidden="true">
+          <span style="--i: 0">N</span><span style="--i: 1">E</span><span style="--i: 2">W</span><span style="--i: 3">S</span><span style="--i: 4">O</span><span style="--i: 5">C</span><span style="--i: 6">A</span><span style="--i: 7">P</span><span style="--i: 8">I</span><span style="--i: 9">S</span>
+        </p>
+        <div class="preloader-bar" aria-hidden="true">
+          <div class="preloader-bar-fill" data-preloader-fill></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -43,7 +48,7 @@
 
   <header id="nav" class="nav">
     <div class="nav-inner">
-      <a href="#top" class="brand">
+      <a href="#top" class="brand" data-unveil>
         Newsocapis<span class="brand-dot">.</span>
       </a>
 
@@ -52,10 +57,10 @@
         <a class="nav-link" href="#features">Features</a>
         <a class="nav-link" href="#flow">Flow</a>
         <a class="nav-link" href="#clarity">Clarity</a>
-        <a class="nav-contact" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Open the tools</a>
+        <a class="nav-contact" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnet data-unveil>Open the tools</a>
       </nav>
 
-      <button id="navToggle" class="burger" aria-expanded="false" aria-label="Buka menu">
+      <button id="navToggle" class="burger" aria-expanded="false" aria-label="Buka menu" data-unveil>
         <span></span><span></span>
       </button>
     </div>
@@ -65,29 +70,23 @@
 
     <!-- ============ HERO ============ -->
     <section id="hero" class="hero">
-      <video class="prism-video" autoplay loop muted playsinline preload="auto" poster="assets/prism-poster.jpg" aria-hidden="true" onerror="this.remove();var h=document.getElementById('hero');if(h)h.classList.add('no-prism')">
-        <source src="assets/prism.mp4" type="video/mp4" />
-      </video>
-
-      <div class="prism-art" aria-hidden="true">
-        <i class="cube c1"></i><i class="cube c2"></i><i class="cube c3"></i><i class="cube c4"></i><i class="cube c5"></i>
-      </div>
+      <canvas id="hero-webgl" class="hero-webgl" aria-hidden="true"></canvas>
 
       <div class="hero-inner">
         <h1 class="hero-display">
-          <span class="block">Calm surface.</span>
-          <span class="block">Clear focus.</span>
-          <span class="block">All your links.</span>
+          <span class="block" data-unveil>Calm surface.</span>
+          <span class="block" data-unveil>Clear focus.</span>
+          <span class="block" data-unveil>All your links.</span>
         </h1>
 
-        <p class="hero-sub">
+        <p class="hero-sub" data-unveil>
           A quiet hub for your Instagram, TikTok, and free web tools. Every link shared, kept effortless.
         </p>
 
         <ul class="hero-paths">
-          <li><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
-          <li><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
-          <li><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Free web tools</a></li>
+          <li data-unveil><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li data-unveil><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
+          <li data-unveil><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Free web tools</a></li>
         </ul>
       </div>
     </section>
@@ -97,28 +96,25 @@
       <p class="section-stmt" data-reveal>Three ways in, zero clutter. Pick a platform, tap through, done.</p>
       <h2 class="section-display" data-reveal style="--reveal-delay: 0.07s">One place for everything you share.</h2>
 
-      <div class="service-list">
-        <div class="service-row" data-reveal>
-          <a class="service-title" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
-            <i class="fa-brands fa-instagram service-icon" aria-hidden="true"></i>
-            Instagram
-          </a>
-          <p class="service-label">Daily stories, photos, and highlights.</p>
-        </div>
-        <div class="service-row" data-reveal style="--reveal-delay: 0.07s">
-          <a class="service-title" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">
-            <i class="fa-brands fa-tiktok service-icon" aria-hidden="true"></i>
-            TikTok
-          </a>
-          <p class="service-label">Short videos, trends, and gameplay clips.</p>
-        </div>
-        <div class="service-row" data-reveal style="--reveal-delay: 0.14s">
-          <a class="service-title" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
-            <i class="fa-solid fa-toolbox service-icon" aria-hidden="true"></i>
-            Free Web Tools
-          </a>
-          <p class="service-label">Free online tools for everyday quick tasks.</p>
-        </div>
+      <div class="tile-list">
+        <a class="tile tile-wide" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer" data-spotlight data-reveal>
+          <i class="fa-brands fa-instagram tile-icon" aria-hidden="true"></i>
+          <span class="tile-title">Instagram</span>
+          <span class="tile-label">Daily stories, photos, and highlights.</span>
+          <span class="tile-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="15" height="15"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
+        </a>
+        <a class="tile" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer" data-spotlight data-reveal style="--reveal-delay: 0.07s">
+          <i class="fa-brands fa-tiktok tile-icon" aria-hidden="true"></i>
+          <span class="tile-title">TikTok</span>
+          <span class="tile-label">Short videos, trends, and gameplay clips.</span>
+          <span class="tile-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="15" height="15"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
+        </a>
+        <a class="tile tile-full" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-spotlight data-reveal style="--reveal-delay: 0.14s">
+          <i class="fa-solid fa-toolbox tile-icon" aria-hidden="true"></i>
+          <span class="tile-title">Free Web Tools</span>
+          <span class="tile-label">A growing set of free online tools for everyday quick tasks.</span>
+          <span class="tile-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="15" height="15"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
+        </a>
       </div>
     </section>
 
@@ -156,8 +152,9 @@
     <section id="visit" class="section section-cta">
       <h2 class="section-display" data-reveal>Everything, in one quiet link.</h2>
       <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
-      <a class="nav-contact section-cta-button" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-reveal style="--reveal-delay: 0.18s">
-        Open the tools
+      <a class="pill section-cta-button" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnet data-reveal style="--reveal-delay: 0.18s">
+        <span class="pill-label">Open the tools</span>
+        <span class="pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
       </a>
     </section>
 
@@ -166,27 +163,30 @@
   <footer class="footer">
     <div class="footer-inner">
       <div>
-        <a href="#top" class="brand">Newsocapis<span class="brand-dot">.</span></a>
+        <a href="#top" class="brand" data-unveil>Newsocapis<span class="brand-dot">.</span></a>
         <p class="footer-meta">&copy; <span data-year>2026</span> Newsocapis · Built with precision</p>
       </div>
       <ul class="footer-links">
-        <li><a href="#top">Overview</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#flow">Flow</a></li>
-        <li><a href="#clarity">Clarity</a></li>
-        <li><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
-        <li><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
-        <li><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a></li>
+        <li data-unveil><a href="#top">Overview</a></li>
+        <li data-unveil><a href="#features">Features</a></li>
+        <li data-unveil><a href="#flow">Flow</a></li>
+        <li data-unveil><a href="#clarity">Clarity</a></li>
+        <li data-unveil><a href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        <li data-unveil><a href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a></li>
+        <li data-unveil><a href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Tools</a></li>
       </ul>
     </div>
   </footer>
 
   <div id="scroll-progress" aria-hidden="true"></div>
-  <button id="back-to-top" type="button" aria-label="Back to top">
+  <button id="back-to-top" type="button" aria-label="Back to top" data-magnet>
     <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 13 V3 M4 7 L8 3 L12 7"/></svg>
   </button>
 
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer onerror="window.__gsapFailed=true"></script>
   <script src="script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer onerror="var h=document.getElementById('hero');if(h)h.classList.add('no-webgl')"></script>
+  <script src="hero-three.js" defer onerror="var h=document.getElementById('hero');if(h)h.classList.add('no-webgl')"></script>
 
 </body>
 </html>

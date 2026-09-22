@@ -1,18 +1,8 @@
 /* Newsocapis — plain JS. No frameworks, no build step.
-   Honors OS prefers-reduced-motion unless html[data-motion="always"] is
-   present (the switch overrides the OS preference — single source of truth). */
+   Preloader (≈2.3s: brand glow + 1px line, curtain slide-up) then hero
+   reveal: GSAP 3 (CDN) if present, pure-CSS keyframes otherwise, none if
+   prefers-reduced-motion (unless html[data-motion="always"]). */
 
-var LOADER_MIN_MS = 4000;
-var LOADER_MAX_MS = 7000;
-var HERO_START_OFFSET_MS = 450;
-var SKIP_IF_SEEN_THIS_SESSION = false;
-var SHOW_SKIP = false;
-
-/* START_AT_TOP_ON_LOAD=true: every fresh open/refresh starts at the hero,
-   the URL hash is ignored on first load, and the browser's scroll
-   restoration is suppressed (scrollRestoration manual is set inline in
-   <head>). In-page links still smooth-scroll and fill the hash; back/forward
-   still restores position (bfcache). false = old hash-as-target behavior. */
 var START_AT_TOP_ON_LOAD = true;
 var startAtTopFresh = true; /* true unless this is a back_forward restore */
 if (START_AT_TOP_ON_LOAD) {
@@ -31,176 +21,158 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 (function () {
   'use strict';
 
-  document.documentElement.classList.add('js');
-  document.documentElement.classList.add('js-runtime');
+  var docEl = document.documentElement;
+  docEl.classList.add('js-runtime');
 
   var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var motionAlways = document.documentElement.dataset.motion === 'always';
+  var motionAlways = docEl.dataset.motion === 'always';
   var reduceMotion = function () { return !motionAlways && mqReduce.matches; };
 
-  /* ---------------------------------------------------------------
-     Entrance retire: pure CSS. Once the last tween ends, pin is-entered
-     so a later breakpoint change can never replay it. Counted from the
-     release point (loader holds it off), never from page load.
-     --------------------------------------------------------------- */
-  var armEntranceRetire = (function () {
-    var doneFired = false;
-    var timer = null;
-    function done() {
-      if (doneFired) return;
-      doneFired = true;
-      if (timer) { window.clearTimeout(timer); timer = null; }
-      document.documentElement.classList.add('is-entered');
-    }
-    return function () {
-      var last = document.querySelector('.footer-links li');
-      if (last && !document.documentElement.classList.contains('is-entered') && !reduceMotion()) {
-        last.addEventListener('animationend', done, { once: true });
-        timer = window.setTimeout(done, 4000);
-      } else {
-        done();
-      }
-    };
-  })();
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 
   /* ---------------------------------------------------------------
-     Loader intro — preloader + cinematic shutter into the hero entrance.
-     Gates: LOADER_MIN_MS + document.fonts.ready, hard cap LOADER_MAX_MS.
-     Releases is-loading HERO_START_OFFSET_MS after the exit begins;
-     never relies on animationend alone (safety timers).
+     Preloader + Hero Reveal — minimal "Calm Surface" loading screen.
+     ≈2.3s: NEWSOCAPIS fades in with a soft glow, the 1px line fills
+     0→1 over 1.5s (rAF, easeOutQuart), then the whole pane slides up
+     (translateY(-100%), curtain curve) and the hero reveal — GSAP
+     timeline or pure-CSS fallback — plays behind. Teardown removes
+     the overlay from the DOM and unlocks scroll once the curtain
+     clears. bfcache / back-forward and reduced-motion never replay it.
      --------------------------------------------------------------- */
   (function () {
-    var loader = document.getElementById('loader');
-    if (!loader) { armEntranceRetire(); return; }
+    var preloaderEl = document.querySelector('[data-preloader]');
+    var fillEl = document.querySelector('[data-preloader-fill]');
 
-    var docEl = document.documentElement;
-    var start = Date.now();
-    var shown = 0;
-    var statusTimer = null;
-    var exiting = false;
-    var released = false;
-    var finished = false;
-    var inertEls = [];
-
-    var seen = false;
-    if (SKIP_IF_SEEN_THIS_SESSION) {
-      try { seen = sessionStorage.getItem('loader-seen') === '1'; } catch (e) { seen = false; }
-      if (!seen) { try { sessionStorage.setItem('loader-seen', '1'); } catch (e) {} }
-    }
-
-    /* reduced motion without the data-motion switch, or JS session skip:
-       never show the loader at all */
-    if (reduceMotion() || seen) { finish(); return; }
-
-    /* everything behind the loader is inert during the load phase */
-    [].forEach.call(document.body.children, function (el) {
-      if (el === loader || el.tagName === 'SCRIPT') return;
-      inertEls.push(el);
-      if ('inert' in el) el.inert = true;
-    });
-
-    var fill = loader.querySelector('.loader-fill');
-    var counter = loader.querySelector('.loader-count');
-    var status = loader.querySelector('.loader-status');
-    var msgs = ['Loading links', 'Calm surface', 'Almost there'];
-    var gi = 0;
-    if (status) {
-      status.textContent = msgs[0];
-      statusTimer = window.setInterval(function () {
-        gi = (gi + 1) % msgs.length;
-        status.textContent = msgs[gi];
-      }, 1300);
-    }
-
-    /* readiness gates — the hero video (when visible) joins fonts+min-time;
-       a removed/errored source (networkState=3) counts as ready so a dead
-       asset never traps the loader behind the LOADER_MAX_MS cap. Real file:
-       readyState hits 2+ well inside the window and becomes the main path. */
-    var fontsReady = false;
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function () { fontsReady = true; }).catch(function () { fontsReady = true; });
-    } else {
-      fontsReady = true;
-    }
-    var heroVideo = reduceMotion() ? null : document.querySelector('.prism-video');
-    function videoReady() {
-      var v = heroVideo;
-      return !v || !document.body.contains(v) || v.readyState >= 2 || v.networkState === 3 || v.error;
-    }
-    function ready() {
-      return (Date.now() - start) >= LOADER_MIN_MS && fontsReady && videoReady();
-    }
-
-    function paint(p) {
-      if (fill) fill.style.width = (p * 100).toFixed(2) + '%';
-      if (counter) counter.textContent = String(Math.round(p * 100)).padStart(3, '0');
-    }
-    function easeIO(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-
-    function tick() {
-      if (finished) return;
-      var force = (Date.now() - start) >= LOADER_MAX_MS;
-      var target = ready() || force ? 1
-        : easeIO(Math.min(1, (Date.now() - start) / LOADER_MIN_MS)) * 0.9;
-      shown += (target - shown) * 0.15;
-      if (shown > 0.995 && target === 1) shown = 1;
-      paint(shown);
-      if (force) { exit(); return; }
-      if (ready() && shown >= 0.995) { exit(); return; }
-      window.requestAnimationFrame(tick);
-    }
-
-    function release() {
-      if (released) return;
-      released = true;
-      docEl.classList.remove('is-loading');
-      if (START_AT_TOP_ON_LOAD) {
-        if (startAtTopFresh) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      } else if (window.location.hash) {
-        var t = document.getElementById(window.location.hash.slice(1));
-        if (t) t.scrollIntoView({ behavior: 'instant' });
-      }
-      armEntranceRetire();
-      if (inertEls) {
-        inertEls.forEach(function (el) { if ('inert' in el) el.inert = false; });
-      }
-    }
-
-    function exit() {
-      if (exiting) return;
-      exiting = true;
-      if (START_AT_TOP_ON_LOAD && startAtTopFresh) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      docEl.classList.add('loader-exit');
-      window.setTimeout(release, HERO_START_OFFSET_MS);
-      loader.addEventListener('animationend', function (e) {
-        if (e.animationName === 'ld-up' || e.animationName === 'ld-down') finish();
-      });
-      window.setTimeout(finish, 1500);
-    }
+    var entered = false;
 
     function finish() {
-      if (finished) return;
-      finished = true;
+      if (entered) return;
+      entered = true;
       docEl.classList.remove('is-loading');
-      docEl.classList.add('is-loaded');
-      if (statusTimer) window.clearInterval(statusTimer);
-      if (loader.parentNode) loader.parentNode.removeChild(loader);
-      release();
+      docEl.classList.add('is-entered');
     }
 
-    if (SHOW_SKIP) {
-      var skip = loader.querySelector('.loader-skip');
-      if (skip) {
-        window.setTimeout(function () { skip.hidden = false; }, 1000);
-        skip.addEventListener('click', function () { if (!exiting) exit(); });
+    function removePreloader() {
+      if (preloaderEl && preloaderEl.parentNode) {
+        preloaderEl.parentNode.removeChild(preloaderEl);
       }
+      preloaderEl = null;
     }
 
-    /* bfcache: never replay the loader on back/forward restore */
-    window.addEventListener('pageshow', function (e) { if (e.persisted && !finished) finish(); });
+    /* teardown — never keeps the overlay in the layout or scroll locked */
+    function cleanup() {
+      removePreloader();
+      finish();
+      docEl.classList.remove('is-locked');
+    }
 
-    window.requestAnimationFrame(tick);
+    /* hero/reveal choreography — plays when the curtain starts to part */
+    function reveal() {
+      var gsapOk = typeof window.gsap === 'function' && !window.__gsapFailed;
+
+      if (!gsapOk) {
+        /* pure-CSS keyframe entrance — same choreography, no library */
+        docEl.classList.add('css-entrance');
+        window.setTimeout(function () {
+          if (window.NewsocHero && window.NewsocHero.enter) window.NewsocHero.enter(1200);
+        }, 250);
+        /* let the CSS keyframes play (latest delay ≈1.2s + 0.7s), then pin */
+        window.setTimeout(finish, 1900);
+        return;
+      }
+
+      docEl.classList.add('gsap-entrance');
+
+      var tl = gsap.timeline({ onComplete: finish });
+
+      /* canvas settles from a gentle scale */
+      tl.from('#hero-webgl', { scale: 1.06, duration: 1.7, ease: 'power2.out' }, 0.25);
+
+      /* chrome */
+      tl.from('.nav-inner .brand', { y: -10, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.05);
+      tl.from('.nav-menu .nav-link', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.06 }, 0.09);
+      tl.from('.burger, .nav-menu .nav-contact', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out' }, 0.2);
+
+      /* hero display — seamless entrance: fade in + rise 20px, staggered */
+      tl.fromTo(
+        '.hero-display .block',
+        { y: 20, opacity: 0, filter: 'blur(8px)' },
+        { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, stagger: 0.12, ease: 'power3.out' },
+        0.30
+      );
+
+      tl.from('.hero-sub', { y: 22, opacity: 0, filter: 'blur(6px)', duration: 0.7, ease: 'power3.out' }, 0.80);
+      tl.from('.hero-paths li', { y: 14, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07 }, 0.90);
+
+      tl.from('.footer .brand, .footer-links li', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out', stagger: 0.04 }, 1.12);
+
+      /* camera glide — hand to the WebGL module once the hero is in motion */
+      tl.add(function () {
+        if (window.NewsocHero && window.NewsocHero.enter) window.NewsocHero.enter(1200);
+      }, 0.35);
+    }
+
+    /* ---- the 1px line fills 0→1 over 1.5s (easeOutQuart), then curtain ---- */
+    function runPreloader() {
+      var total = 1500;   /* line fill window */
+      var curtain = 800;  /* curtain slide-up duration */
+      var t0 = null;
+      var handedOff = false;
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function tick(now) {
+        if (t0 === null) t0 = now;
+        var p = Math.min(1, (now - t0) / total);
+        var v = easeOutQuart(p);
+        if (fillEl) fillEl.style.transform = 'scaleX(' + v + ')';
+        if (p < 1) { requestAnimationFrame(tick); return; }
+        window.setTimeout(handoff, 0);
+      }
+
+      function handoff() {
+        if (handedOff) return;
+        handedOff = true;
+        if (preloaderEl) preloaderEl.classList.add('is-done');
+        window.requestAnimationFrame(reveal);
+        /* curtain clears → full teardown + scroll unlock */
+        window.setTimeout(cleanup, curtain + 120);
+      }
+
+      /* hard failsafe — never leaves the overlay locked in place */
+      window.setTimeout(cleanup, 3000);
+
+      requestAnimationFrame(tick);
+    }
+
+    /* reduced motion (OS, unless data-motion="always") and back/forward
+       restores skip the preloader entirely */
+    if (reduceMotion()) {
+      cleanup();
+      return;
+    }
+
+    docEl.classList.add('is-locked');
+    try {
+      runPreloader();
+    } catch (e) {
+      cleanup();
+      reveal();
+    }
   })();
+
+  /* bfcache: never re-cue anything after a back/forward restore */
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      var stale = document.querySelector('.preloader');
+      if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+      docEl.classList.add('is-entered');
+      docEl.classList.remove('is-loading');
+      docEl.classList.remove('is-locked');
+    }
+  });
 
   /* ---------------------------------------------------------------
      Burger (button-driven): close the panel on link click and ESC.
@@ -272,7 +244,8 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Reveal-on-scroll — [data-reveal] / .is-in, honors reduced motion
+     Reveal-on-scroll — [data-reveal] / .is-in, honors reduced motion.
+     Tween is CSS (opacity/transform/filter) — off the main thread.
      --------------------------------------------------------------- */
   (function () {
     var els = document.querySelectorAll('[data-reveal]');
@@ -302,21 +275,18 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       });
     };
     window.addEventListener('load', function () { requestAnimationFrame(passVisible); }, { once: true });
+    var ticking = false;
     var onLayout = function () {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(function () { passVisible(); ticking = false; });
     };
-    var ticking = false;
     window.addEventListener('scroll', onLayout, { passive: true });
     window.addEventListener('resize', onLayout, { passive: true });
   })();
 
   /* ---------------------------------------------------------------
-     Active nav section — an IntersectionObserver (center band, so it does
-     not flicker at section seams) drives aria-current + .is-active on the
-     matching link. Purely a colour/state change, not motion: no
-     reduce-motion gate, and data-motion has no role here.
+     Active nav section — IntersectionObserver center band -> .is-active
      --------------------------------------------------------------- */
   (function () {
     var sectionsByHref = { top: 'hero', features: 'features', flow: 'flow', clarity: 'clarity' };
@@ -347,8 +317,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         .filter(function (en) { return en.isIntersecting; })
         .sort(function (a, b) { return b.intersectionRatio - a.intersectionRatio; })[0];
       if (top) { set(top.target.id); return; }
-      /* pages often end on #clarity just above the band — hold Clarity
-         when the reader is near the document bottom */
       var doc = document.documentElement;
       if (doc.scrollHeight - (doc.scrollTop + doc.clientHeight) < 120) set('clarity');
       else set('');
@@ -363,82 +331,73 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Hero video lifecycle — autoplay/muted/playsinline (attributes), pauses
-     when the tab hides or the hero leaves the viewport, tracks the
-     html[data-motion="always"] switch live, and crossfades the loop seam:
-     frame 191 does not match frame 0, so a hard rewind would jump.
+     Magnetic buttons — [data-magnet]. Fish to the pointer, max ~6px.
+     GSAP quickTo when available, rAF lerp otherwise. pointer:fine +
+     no reduced motion only. Active press uses the CSS `scale` property.
      --------------------------------------------------------------- */
   (function () {
-    var video = document.querySelector('.prism-video');
-    if (!video) return;
+    var btns = document.querySelectorAll('[data-magnet]');
+    if (!btns.length || !finePointer.matches || reduceMotion()) return;
 
-    var FADE_MS = 450;
-    var inView = true;
-    var fading = false;
-    var raf = null;
-
-    function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-    /* 0 → 1 (out) then 1 → 0 (in); opacity dips to rest*(1-0.85) at the trough */
-    function loopCurve(p) {
-      if (p < 0.5) return ease(p * 2);
-      return 1 - ease((p - 0.5) * 2);
-    }
-    function resting() {
-      return parseFloat(getComputedStyle(video).opacity) || 0.82;
+    function clampMag(dx, half) {
+      var t = Math.max(-1, Math.min(1, dx / half));
+      return t * 6;
     }
 
-    function clearFade() {
-      fading = false;
-      if (raf) { cancelAnimationFrame(raf); raf = null; }
-      video.style.opacity = '';
+    if (window.gsap) {
+      btns.forEach(function (b) {
+        var qx = gsap.quickTo(b, 'x', { duration: 0.35, ease: 'power3.out' });
+        var qy = gsap.quickTo(b, 'y', { duration: 0.35, ease: 'power3.out' });
+        b.addEventListener('pointermove', function (e) {
+          var r = b.getBoundingClientRect();
+          var halfW = Math.max(1, r.width / 2);
+          var halfH = Math.max(1, r.height / 2);
+          qx(clampMag(e.clientX - (r.left + halfW), halfW));
+          qy(clampMag(e.clientY - (r.top + halfH), halfH));
+        });
+        b.addEventListener('pointerleave', function () { qx(0); qy(0); });
+      });
+      return;
     }
 
-    function syncPlay() {
-      if (reduceMotion() || document.hidden || !inView) {
-        try { video.pause(); } catch (e) {}
-        if (fading) clearFade();
-      } else {
-        var p = video.play();
-        if (p && p.catch) p.catch(function () {});
+    /* rAF lerp fallback */
+    btns.forEach(function (b) {
+      var tx = 0, ty = 0, cx = 0, cy = 0, raf = null;
+      function loop() {
+        cx += (tx - cx) * 0.16;
+        cy += (ty - cy) * 0.16;
+        b.style.translate = cx.toFixed(2) + 'px ' + cy.toFixed(2) + 'px';
+        if (Math.abs(tx - cx) > 0.1 || Math.abs(ty - cy) > 0.1) raf = requestAnimationFrame(loop);
+        else raf = null;
       }
-    }
-
-    function fadeLoop() {
-      if (fading || reduceMotion() || document.hidden || !inView || !video.duration) return;
-      fading = true;
-      var rest = resting();
-      var t0 = performance.now();
-      var dur = FADE_MS * 2;
-      var didSeek = false;
-      function step(now) {
-        var p = Math.min(1, (now - t0) / dur);
-        if (p >= 0.5 && !didSeek) {
-          didSeek = true;
-          video.currentTime = 0; /* swap to the first frame under the fade */
-        }
-        video.style.opacity = (rest * (1 - 0.85 * loopCurve(p))).toFixed(3);
-        if (p < 1) { raf = requestAnimationFrame(step); }
-        else { clearFade(); }
-      }
-      raf = requestAnimationFrame(step);
-    }
-
-    video.addEventListener('timeupdate', function () {
-      if (video.duration && video.currentTime >= video.duration - FADE_MS / 1000 - 0.02) fadeLoop();
+      b.addEventListener('pointermove', function (e) {
+        var r = b.getBoundingClientRect();
+        var halfW = Math.max(1, r.width / 2);
+        var halfH = Math.max(1, r.height / 2);
+        tx = clampMag(e.clientX - (r.left + halfW), halfW);
+        ty = clampMag(e.clientY - (r.top + halfH), halfH);
+        if (!raf) raf = requestAnimationFrame(loop);
+      });
+      b.addEventListener('pointerleave', function () { tx = 0; ty = 0; if (!raf) raf = requestAnimationFrame(loop); });
     });
-    video.addEventListener('ended', function () { if (!fading) fadeLoop(); });
+  })();
 
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (es) {
-        es.forEach(function (en) { inView = en.isIntersecting; syncPlay(); });
-      }, { rootMargin: '120px' });
-      io.observe(video);
-    }
-    var hasListener = mqReduce.addEventListener;
-    if (hasListener) mqReduce.addEventListener('change', syncPlay);
-    else mqReduce.addListener(syncPlay);
-    document.addEventListener('visibilitychange', syncPlay);
-    syncPlay();
+  /* ---------------------------------------------------------------
+     Cursor spotlight on bento tiles — [data-spotlight].
+     Writes --mx/--my consumed by a radial-gradient overlay.
+     --------------------------------------------------------------- */
+  (function () {
+    var tiles = document.querySelectorAll('[data-spotlight]');
+    if (!tiles.length || !finePointer.matches) return;
+    tiles.forEach(function (tile) {
+      tile.addEventListener('pointermove', function (e) {
+        var r = tile.getBoundingClientRect();
+        var px = ((e.clientX - r.left) / r.width) * 100;
+        var py = ((e.clientY - r.top) / r.height) * 100;
+        tile.style.setProperty('--mx', px.toFixed(2) + '%');
+        tile.style.setProperty('--my', py.toFixed(2) + '%');
+      });
+    });
   })();
 
   /* ---------------------------------------------------------------
