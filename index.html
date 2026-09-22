@@ -25,8 +25,19 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <link rel="stylesheet" href="style.css" />
+  <noscript><style>#loader{display:none}</style></noscript>
 </head>
 <body id="top">
+
+  <div class="loader" id="loader" role="status" aria-label="Loading">
+    <div class="loader-inner">
+      <span class="loader-word" aria-hidden="true"><i>N</i><i>e</i><i>w</i><i>s</i><i>o</i><i>c</i><i>a</i><i>p</i><i>i</i><i>s</i><i class="ldot">.</i></span>
+      <div class="loader-bar" aria-hidden="true"><i class="loader-fill"></i></div>
+      <span class="loader-count" aria-hidden="true">000</span>
+      <span class="loader-status" aria-hidden="true">Loading links</span>
+      <button class="loader-skip" type="button" hidden>Skip</button>
+    </div>
+  </div>
 
   <a class="skip-link" href="#main">Skip to content</a>
 
@@ -169,6 +180,11 @@
       </ul>
     </div>
   </footer>
+
+  <div id="scroll-progress" aria-hidden="true"></div>
+  <button id="back-to-top" type="button" aria-label="Back to top">
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 13 V3 M4 7 L8 3 L12 7"/></svg>
+  </button>
 
   <script src="script.js" defer></script>
 
