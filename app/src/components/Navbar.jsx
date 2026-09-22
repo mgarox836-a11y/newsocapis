@@ -4,20 +4,18 @@ import { Menu, X } from 'lucide-react'
 const NAV_LINKS = [
   { label: 'Overview', href: '#top' },
   { label: 'Features', href: '#features' },
-  { label: 'Flow', href: '#flow' },
   { label: 'Clarity', href: '#clarity' },
 ]
 
 const TOOLS_URL = 'https://toolapis.vercel.app/'
 
 const LINK_CLASS =
-  'relative text-[14px] uppercase tracking-[0.02em] text-bone ' +
-  'after:absolute after:inset-x-0 after:-bottom-[2px] after:h-px ' +
-  'after:origin-left after:scale-x-0 after:bg-fog after:content-[""] ' +
+  'relative text-[13px] font-medium uppercase tracking-[0.02em] text-bone ' +
+  'after:absolute after:inset-x-0 after:-bottom-[3px] after:h-px ' +
+  'after:origin-left after:scale-x-0 after:bg-neon-cyan after:content-[""] ' +
   'after:transition-transform after:duration-[0.5s] after:ease-signature ' +
   'transition-colors duration-[0.5s] ease-signature ' +
-  'hover:text-fog hover:after:scale-x-100 ' +
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone'
+  'hover:text-neon-cyan hover:after:scale-x-100 focus-visible:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -32,10 +30,10 @@ export default function Navbar() {
   }, [open])
 
   return (
-    <header className="sticky top-0 z-50 bg-obsidian">
-      <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-6 md:px-12 md:py-8">
-        <a href="#top" className="text-[15px] font-medium uppercase tracking-[0.02em] text-bone">
-          Newsocapis<span className="text-fog">.</span>
+    <header className="fixed inset-x-0 top-0 z-50 bg-transparent">
+      <div className="flex w-full items-center justify-between px-6 py-6 md:px-10 md:py-8">
+        <a href="#top" className="text-[15px] font-semibold uppercase tracking-[0.02em] text-bone">
+          Newsocapis<span className="text-neon-soft">.</span>
         </a>
 
         {/* Desktop — ghost nav links, hamburger is mobile-only */}
@@ -49,7 +47,7 @@ export default function Navbar() {
             href={TOOLS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-2 border border-bone px-[15px] py-[9px] text-[14px] uppercase tracking-[0.02em] text-bone transition-[color,border-color,transform] duration-[0.5s] ease-signature hover:-translate-y-px hover:border-fog hover:text-fog focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone"
+            className="ml-2 border border-white/25 px-[15px] py-[9px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-[color,border-color,box-shadow,transform] duration-[0.5s] ease-signature hover:-translate-y-px hover:border-neon-cyan hover:text-neon-cyan hover:glow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
           >
             Open the tools
           </a>
@@ -62,7 +60,7 @@ export default function Navbar() {
           aria-expanded={open}
           aria-controls="mobile-menu"
           aria-label={open ? 'Tutup menu' : 'Buka menu'}
-          className="grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-bone transition-colors duration-[0.5s] ease-signature hover:text-fog focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone lg:hidden"
+          className="grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-bone transition-colors duration-[0.5s] ease-signature hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan lg:hidden"
         >
           {open ? <X size={24} strokeWidth={2} /> : <Menu size={24} strokeWidth={2} />}
         </button>
@@ -71,13 +69,13 @@ export default function Navbar() {
       {/* Mobile menu panel */}
       {open && (
         <nav id="mobile-menu" aria-label="Mobile" className="lg:hidden">
-          <div className="flex flex-col gap-1 px-6 pb-6">
+          <div className="flex flex-col gap-1 bg-panel/95 px-6 pb-6 backdrop-blur">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="flex min-h-[44px] items-center text-[14px] uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:text-fog focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone"
+                className="flex min-h-[44px] items-center text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
               >
                 {link.label}
               </a>
@@ -87,7 +85,7 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="mt-3 flex min-h-[44px] items-center border border-bone px-[15px] text-[14px] uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:border-fog hover:text-fog focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone"
+              className="mt-3 flex min-h-[44px] items-center border border-white/25 px-[15px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:border-neon-cyan hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
             >
               Open the tools
             </a>
