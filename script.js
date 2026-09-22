@@ -32,6 +32,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   'use strict';
 
   document.documentElement.classList.add('js');
+  document.documentElement.classList.add('js-runtime');
 
   var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var motionAlways = document.documentElement.dataset.motion === 'always';
@@ -96,6 +97,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     var exiting = false;
     var released = false;
     var finished = false;
+    var inertEls = [];
 
     var seen = false;
     if (SKIP_IF_SEEN_THIS_SESSION) {
@@ -108,7 +110,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     if (reduceMotion() || seen) { finish(); return; }
 
     /* everything behind the loader is inert during the load phase */
-    var inertEls = [];
     [].forEach.call(document.body.children, function (el) {
       if (el === loader || el.tagName === 'SCRIPT') return;
       inertEls.push(el);
@@ -136,11 +137,12 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       fontsReady = true;
     }
     var video = document.querySelector('.prism-video');
-    var videoReady = !video || video.readyState >= 2;
+    var videoReady = !video || video.readyState >= 2 || video.networkState === 3;
     if (video && !videoReady) {
       var onVideo = function () { videoReady = true; };
       video.addEventListener('loadeddata', onVideo, { once: true });
       video.addEventListener('canplay', onVideo, { once: true });
+      video.addEventListener('error', onVideo, { once: true });
     }
     function ready() {
       return (Date.now() - start) >= LOADER_MIN_MS && fontsReady && videoReady;
@@ -176,7 +178,9 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         if (t) t.scrollIntoView({ behavior: 'instant' });
       }
       armEntranceRetire();
-      inertEls.forEach(function (el) { if ('inert' in el) el.inert = false; });
+      if (inertEls) {
+        inertEls.forEach(function (el) { if ('inert' in el) el.inert = false; });
+      }
     }
 
     function exit() {

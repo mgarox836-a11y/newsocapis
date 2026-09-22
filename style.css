@@ -713,8 +713,11 @@ button {
   opacity: 0.6;
 }
 
-/* ---------- 10. REVEAL-ON-SCROLL ---------- */
-.js [data-reveal] {
+/* ---------- 10. REVEAL-ON-SCROLL ----------
+   Hidden state only applies once js-runtime (set by script.js alone, NOT by
+   the inline <head> failsafe) is present — so if script.js is blocked, every
+   reveal stays visible and the page remains fully usable. */
+.js-runtime [data-reveal] {
   opacity: 0;
   transform: translateY(24px);
   transition:
@@ -723,7 +726,7 @@ button {
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal].is-in {
+.js-runtime [data-reveal].is-in {
   opacity: 1;
   transform: none;
 }
@@ -1144,7 +1147,7 @@ html.loader-exit .prism-fallback {
     display: none;
   }
 
-  html:not([data-motion="always"]) .js [data-reveal] {
+  html:not([data-motion="always"]) .js-runtime [data-reveal] {
     opacity: 1;
     transform: none;
     transition: none;
