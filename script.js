@@ -1,7 +1,7 @@
 /* Newsocapis — plain JS. No frameworks, no build step.
-   Preloader (≈2.3s: brand glow + 1px line, curtain slide-up) then hero
-   reveal: GSAP 3 (CDN) if present, pure-CSS keyframes otherwise, none if
-   prefers-reduced-motion (unless html[data-motion="always"]). */
+   Preloader (exactly 5s: brand glow + 1px line fills the first 4s, curtain
+   slide-up over the final 1s) then hero reveal: GSAP 3 (CDN) if present,
+   pure-CSS keyframes otherwise. Motion always runs — reduced motion is ignored. */
 
 var START_AT_TOP_ON_LOAD = true;
 var startAtTopFresh = true; /* true unless this is a back_forward restore */
@@ -24,20 +24,16 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   var docEl = document.documentElement;
   docEl.classList.add('js-runtime');
 
-  var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var motionAlways = docEl.dataset.motion === 'always';
-  var reduceMotion = function () { return !motionAlways && mqReduce.matches; };
-
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 
   /* ---------------------------------------------------------------
      Preloader + Hero Reveal — minimal "Calm Surface" loading screen.
-     ≈2.3s: NEWSOCAPIS fades in with a soft glow, the 1px line fills
-     0→1 over 1.5s (rAF, easeOutQuart), then the whole pane slides up
-     (translateY(-100%), curtain curve) and the hero reveal — GSAP
-     timeline or pure-CSS fallback — plays behind. Teardown removes
-     the overlay from the DOM and unlocks scroll once the curtain
-     clears. bfcache / back-forward and reduced-motion never replay it.
+     Exactly 5s: NEWSOCAPIS fades in with a soft glow, the 1px line fills
+     0→1 over the first 4s (rAF, easeOutQuart), then the pane slides up
+     (translateY(-100%), curtain curve) during the final 1s while the hero
+     reveal — GSAP timeline or pure-CSS fallback — plays behind. Teardown
+     removes the overlay from the DOM and unlocks scroll once the curtain
+     clears. bfcache / back-forward never replay it.
      --------------------------------------------------------------- */
   (function () {
     var preloaderEl = document.querySelector('[data-preloader]');
@@ -112,10 +108,10 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       }, 0.35);
     }
 
-    /* ---- the 1px line fills 0→1 over 1.5s (easeOutQuart), then curtain ---- */
+    /* ---- the 1px line fills 0→1 over 4s (easeOutQuart), then 1s curtain ---- */
     function runPreloader() {
-      var total = 1500;   /* line fill window */
-      var curtain = 800;  /* curtain slide-up duration */
+      var total = 4000;   /* line fill window */
+      var curtain = 1000; /* curtain slide-up duration */
       var t0 = null;
       var handedOff = false;
 
@@ -137,21 +133,14 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         handedOff = true;
         if (preloaderEl) preloaderEl.classList.add('is-done');
         window.requestAnimationFrame(reveal);
-        /* curtain clears → full teardown + scroll unlock */
-        window.setTimeout(cleanup, curtain + 120);
+        /* curtain clears (~5s) → full teardown + scroll unlock */
+        window.setTimeout(cleanup, curtain + 20);
       }
 
       /* hard failsafe — never leaves the overlay locked in place */
-      window.setTimeout(cleanup, 3000);
+      window.setTimeout(cleanup, 5200);
 
       requestAnimationFrame(tick);
-    }
-
-    /* reduced motion (OS, unless data-motion="always") and back/forward
-       restores skip the preloader entirely */
-    if (reduceMotion()) {
-      cleanup();
-      return;
     }
 
     docEl.classList.add('is-locked');
@@ -219,7 +208,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       if (bar) bar.style.transform = 'scaleX(' + p + ')';
       if (backToTop) {
         var show = doc.scrollTop > 600;
-        backToTop.classList.toggle('visible', show && !reduceMotion());
+        backToTop.classList.toggle('visible', show);
       }
       ticking = false;
     }
@@ -232,7 +221,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
     if (backToTop) {
       backToTop.addEventListener('click', function () {
-        window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
 
@@ -244,7 +233,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Reveal-on-scroll — [data-reveal] / .is-in, honors reduced motion.
+     Reveal-on-scroll — [data-reveal] / .is-in.
      Tween is CSS (opacity/transform/filter) — off the main thread.
      --------------------------------------------------------------- */
   (function () {
@@ -256,7 +245,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       shown.add(el);
       el.classList.add('is-in');
     };
-    if (reduceMotion() || !('IntersectionObserver' in window)) {
+    if (!('IntersectionObserver' in window)) {
       els.forEach(show);
       return;
     }
@@ -332,12 +321,12 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
   /* ---------------------------------------------------------------
      Magnetic buttons — [data-magnet]. Fish to the pointer, max ~6px.
-     GSAP quickTo when available, rAF lerp otherwise. pointer:fine +
-     no reduced motion only. Active press uses the CSS `scale` property.
+     GSAP quickTo when available, rAF lerp otherwise. pointer:fine only.
+     Active press uses the CSS `scale` property.
      --------------------------------------------------------------- */
   (function () {
     var btns = document.querySelectorAll('[data-magnet]');
-    if (!btns.length || !finePointer.matches || reduceMotion()) return;
+    if (!btns.length || !finePointer.matches) return;
 
     function clampMag(dx, half) {
       var t = Math.max(-1, Math.min(1, dx / half));

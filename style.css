@@ -546,6 +546,11 @@ button {
   align-items: center;
   overflow: hidden;
   padding: 120px 0 calc(var(--section-gap) / 2);
+  /* whole-hero mask — the bottom 15% of the section (canvas, washes, scrim,
+     text) dissolves into the section below. One mask on the container beats
+     any overlay or stacking-context trick for a seamless edge. */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0) 100%);
   /* no solid backdrop — the canvas shows through with no opaque layer on
      top; body supplies the base tone and only the alpha washes remain for
      a static ambience when WebGL is unavailable */
@@ -553,32 +558,6 @@ button {
     radial-gradient(46% 40% at 82% 24%, rgba(155, 107, 255, 0.06), transparent 70%),
     radial-gradient(52% 42% at 12% 78%, rgba(42, 216, 255, 0.05), transparent 70%),
     radial-gradient(40% 34% at 60% 96%, rgba(255, 63, 194, 0.04), transparent 72%);
-}
-
-/* a faint fog-blue pool at the hero floor — the prism's light lingering
-   below it, handed to the first section's own top glow. Breathes very
-   slowly (10s) so the ambient reads alive, never blinking. */
-.hero::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: min(720px, 88vw);
-  aspect-ratio: 3 / 1;
-  translate: -50% 45%;
-  z-index: 2;
-  pointer-events: none;
-  background: radial-gradient(closest-side, rgba(111, 135, 156, 0.055), transparent 70%);
-  animation: glow-breathe 10s var(--ease-signature) infinite;
-}
-
-@keyframes glow-breathe {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.55;
-  }
 }
 
 /* Calm Surface — Three.js WebGL backdrop. Canvas sits in front of the
@@ -594,6 +573,12 @@ button {
   display: block;
   opacity: 1 !important;
   pointer-events: none;
+  /* bulletproof seam: the canvas pixels themselves dissolve into the obsidian
+     below, so no overlay gradient or stacking context can ever draw a hard cut */
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 /* readability scrim — a soft obsidian pool behind the text column so the
@@ -1018,8 +1003,9 @@ html.css-entrance:not(.is-entered) .hero-webgl {
 /* ---------- 11b. PRELOADER — minimal & modern "Calm Surface" ----------
    One opaque #0a0a0c pane, dead center: wide-tracked NEWSOCAPIS wordmark
    (fade-in + soft glow, staggered by --i) and a 1px neon line that fills in
-   1.5s. At 1.5s the whole pane slides up (translateY(-100%), fast-out/long-
-   landing curve) and teardown removes it + unlocks scroll. Total ≈ 2.3s.
+   over the first 4s. At 4s the whole pane slides up (translateY(-100%),
+   fast-out/long-landing curve) during the final 1s and teardown removes it
+   + unlocks scroll. Total exactly 5s.
    ------------------------------------------------------------------------ */
 .preloader {
   position: fixed;
@@ -1031,8 +1017,8 @@ html.css-entrance:not(.is-entered) .hero-webgl {
   pointer-events: auto;
   will-change: transform;
   transition:
-    transform 0.8s var(--ease-curtain),
-    visibility 0s 0.8s;
+    transform 1s var(--ease-curtain),
+    visibility 0s 1s;
 }
 
 html.js .preloader {
@@ -1091,7 +1077,7 @@ html.js .preloader {
   }
 }
 
-/* 1px loading line — fills 0→1 in 1.5s (rAF, script.js) */
+/* 1px loading line — fills 0→1 in 4s (rAF, script.js) */
 .preloader-bar {
   position: relative;
   width: min(200px, 46vw);
@@ -1299,56 +1285,4 @@ html.js .preloader {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-/* ---------- 14. REDUCED MOTION ----------
-   The data-motion switch: html[data-motion="always"] overrides the OS
-   reduced-motion preference, so the entrance keeps running when the
-   switch is on. Everything follows this single source of truth.
-   ------------------------------------------------------------------------ */
-@media (prefers-reduced-motion: reduce) {
-  html:not([data-motion="always"]) {
-    scroll-behavior: auto;
-  }
-
-  html:not([data-motion="always"]) *,
-  html:not([data-motion="always"]) *::before,
-  html:not([data-motion="always"]) *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0s !important;
-  }
-
-  html:not([data-motion="always"]) .js-runtime [data-reveal] {
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: none;
-  }
-
-  /* the preloader only appears in the motion path (script.js skips it too) */
-  html:not([data-motion="always"]) .preloader,
-  html:not([data-motion="always"]) .preloader * {
-    display: none !important;
-  }
-
-  /* the Three.js hero pauses itself via JS (reduce-motion aware): it renders
-     a single static frame and never runs the animation loop */
-  html:not([data-motion="always"]) .hero-webgl {
-    animation: none;
-  }
-
-  /* new ambient loops freeze to their resting state (no drifted offset) */
-  html:not([data-motion="always"]) body::after {
-    animation: none;
-  }
-
-  html:not([data-motion="always"]) .hero::after {
-    animation: none;
-  }
-
-  html:not([data-motion="always"]) #back-to-top {
-    display: none;
-  }
 }

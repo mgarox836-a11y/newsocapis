@@ -1,8 +1,8 @@
 /* Newsocapis — Calm Surface hero background.
    Three.js 0.160 floating glass cards + wavy mesh + neon orbs.
    Classic script (global THREE), so it runs from file:// and http(s) alike —
-   no ES-module CORS restrictions. Honors OS prefers-reduced-motion unless
-   html[data-motion="always"] is present.
+   no ES-module CORS restrictions. Motion always runs — reduced motion is
+   ignored by design.
    Cleanup: rAF is cancelled, listeners removed, and GPU resources disposed on
    real unload (pagehide) only; a bfcache restore re-arms the loop instead. */
 
@@ -20,26 +20,12 @@
 
   if (typeof THREE === 'undefined') { fail(); return; }
 
-  /* ---------- motion gates ---------- */
-  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var motionAlways = document.documentElement.getAttribute('data-motion') === 'always';
-  function reduceMotion() {
-    try { return !motionAlways && mq.matches; } catch (e) { return false; }
-  }
-
   /* ---------- adaptive quality ---------- */
   var isMobile =
     /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || '') ||
     window.innerWidth < 768;
   var maxPx = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
   var PARTICLE_COUNT = isMobile ? 280 : 520;
-  /* honor the live data-motion switch (same source of truth as script.js) */
-  if (window.MutationObserver) {
-    new MutationObserver(function () {
-      motionAlways = document.documentElement.getAttribute('data-motion') === 'always';
-    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
-  }
-
   /* ---------- scene bootstrap ---------- */
   var renderer;
   try {
@@ -54,13 +40,18 @@
     });
   } catch (e) { fail(); return; }
 
+  /* truly transparent backing — force a clear color with zero alpha so the
+     canvas never paints an opaque slab behind the artwork. scene.background
+     stays null (default), so every frame clears to transparent. */
+  renderer.setClearColor(0x000000, 0);
+
   var scene = new THREE.Scene();
   scene.background = null;
   var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 80);
   /* boot far back at a high angle for the preloader: the render loop eases
      the camera forward during the intro, then NewsocHero.enter() glides it
-     to rest (z=9). Reduced-motion boots straight at rest. */
-  var introEnabled = !reduceMotion();
+     to rest (z=9). */
+  var introEnabled = true;
   camera.position.set(0, introEnabled ? 2.4 : 0, introEnabled ? 22 : 9);
   camera.lookAt(0, 0, 0);
   var intro = { on: introEnabled };
@@ -344,7 +335,7 @@
   function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
   function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
   function enterCamera(ms) {
-    if (camStarted || reduceMotion() || disposed) return;
+    if (camStarted || disposed) return;
     camStarted = true;
     intro.on = false;
     var fromZ = camera.position.z;
@@ -429,7 +420,7 @@
   });
 
   window.addEventListener('pageshow', function (e) {
-    if (e.persisted && !pageHidden && !reduceMotion()) startLoop();
+    if (e.persisted && !pageHidden) startLoop();
   });
 
   /* ---------- render loop ---------- */
@@ -500,13 +491,6 @@
   }
 
   function startLoop() {
-    if (reduceMotion()) {
-      /* static hero — the reduced-motion build of the same scene, framed at rest */
-      camera.position.z = 9;
-      camera.position.y = 0;
-      renderFrame();
-      return;
-    }
     if (rafId === null) rafId = requestAnimationFrame(animate);
   }
 
@@ -549,10 +533,8 @@
   /* auto-reveal safety — if script.js never hands off NewsocHero.enter()
      (slow CDN, racy teardown), glide the camera in + fly the cards up
      anyway, so the hero is never left on the dormant intro frame */
-  if (!reduceMotion()) {
-    revealTimer = window.setTimeout(function () {
-      revealTimer = null;
-      if (!camStarted) enterCamera(1200);
-    }, 4300);
-  }
+  revealTimer = window.setTimeout(function () {
+    revealTimer = null;
+    if (!camStarted) enterCamera(1200);
+  }, 4300);
 })();
