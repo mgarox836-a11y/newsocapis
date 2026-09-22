@@ -385,24 +385,10 @@ button {
   background: var(--surface-obsidian-canvas);
 }
 
-/* prism artifact — video layer constrained to ~40% width, vertically centered,
-   with the headline bleeding across it. Fallbacks: static CSS artifact when
-   the video fails (.no-prism) or under reduced motion without the
-   data-motion switch. RGB channels exist only inside this artifact. */
-.prism-video {
-  position: absolute;
-  top: 50%;
-  left: 56%;
-  width: clamp(260px, 40vw, 560px);
-  translate: -50% -50%;
-  object-fit: contain;
-  z-index: 0;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0.82;
-}
-
-.prism-fallback {
+/* prism artifact — the signature CSS glass-cube cluster with RGB-split
+   edges (~40% width, vertically centered; the headline bleeds across it).
+   This IS the prism: no video layer. RGB channels exist only here. */
+.prism-art {
   position: absolute;
   top: 50%;
   left: 56%;
@@ -410,16 +396,11 @@ button {
   aspect-ratio: 4 / 3;
   translate: -50% -50%;
   z-index: 0;
-  display: none;
   pointer-events: none;
   isolation: isolate;
 }
 
-.hero.no-prism .prism-fallback {
-  display: block;
-}
-
-.prism-fallback .cube {
+.prism-art .cube {
   position: absolute;
   border-radius: var(--radius-cards);
   background:
@@ -428,7 +409,7 @@ button {
   border: 1px solid rgba(255, 253, 249, 0.26);
 }
 
-.prism-fallback .cube::before {
+.prism-art .cube::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -437,7 +418,7 @@ button {
   border-left: 1px solid rgba(255, 253, 249, 0.4);
 }
 
-.prism-fallback .cube::after {
+.prism-art .cube::after {
   content: '';
   position: absolute;
   top: -2px;
@@ -448,16 +429,16 @@ button {
   animation: prism-shimmer 6.65s var(--ease-signature) infinite;
 }
 
-.prism-fallback .c1 { width: 38%; height: 44%; left: 6%; top: 6%; rotate: -7deg; }
-.prism-fallback .c1::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-cyan), var(--color-prism-lime)); }
-.prism-fallback .c2 { width: 30%; height: 34%; right: 4%; top: 0; rotate: 5deg; }
-.prism-fallback .c2::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
-.prism-fallback .c3 { width: 34%; height: 42%; left: 14%; bottom: 2%; rotate: 4deg; }
-.prism-fallback .c3::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
-.prism-fallback .c4 { width: 26%; height: 30%; right: 0; bottom: 6%; rotate: -5deg; }
-.prism-fallback .c4::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
-.prism-fallback .c5 { width: 22%; height: 26%; left: 0; top: 0; rotate: 8deg; }
-.prism-fallback .c5::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
+.prism-art .c1 { width: 38%; height: 44%; left: 6%; top: 6%; rotate: -7deg; }
+.prism-art .c1::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-cyan), var(--color-prism-lime)); }
+.prism-art .c2 { width: 30%; height: 34%; right: 4%; top: 0; rotate: 5deg; }
+.prism-art .c2::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
+.prism-art .c3 { width: 34%; height: 42%; left: 14%; bottom: 2%; rotate: 4deg; }
+.prism-art .c3::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
+.prism-art .c4 { width: 26%; height: 30%; right: 0; bottom: 6%; rotate: -5deg; }
+.prism-art .c4::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
+.prism-art .c5 { width: 22%; height: 26%; left: 0; top: 0; rotate: 8deg; }
+.prism-art .c5::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
 
 @keyframes prism-shimmer {
   0%, 100% { opacity: 0.25; scale: 1; }
@@ -527,14 +508,9 @@ button {
     padding: 112px 0 80px;
   }
 
-  .prism-video,
-  .prism-fallback {
+  .prism-art {
     left: 50%;
     width: min(88vw, 460px);
-  }
-
-  .prism-video {
-    opacity: 0.6;
   }
 
   .hero-display {
@@ -553,17 +529,13 @@ button {
 }
 
 @media (max-width: 480px) {
-  .prism-fallback {
+  .prism-art {
     opacity: 0.32;
   }
 
-  .prism-fallback .c4,
-  .prism-fallback .c5 {
+  .prism-art .c4,
+  .prism-art .c5 {
     display: none;
-  }
-
-  .prism-video {
-    opacity: 0.45;
   }
 }
 
@@ -1042,8 +1014,7 @@ html.loader-exit .loader-word::before {
   100% { opacity: 0; scale: 2.4; }
 }
 
-html.loader-exit .prism-video,
-html.loader-exit .prism-fallback {
+html.loader-exit .prism-art {
   animation: art-settle 1.6s var(--ent-line) 0.6s backwards;
 }
 
@@ -1151,14 +1122,6 @@ html.loader-exit .prism-fallback {
     opacity: 1;
     transform: none;
     transition: none;
-  }
-
-  html:not([data-motion="always"]) .prism-video {
-    display: none;
-  }
-
-  html:not([data-motion="always"]) .prism-fallback {
-    display: block;
   }
 
   html:not([data-motion="always"]) #back-to-top {

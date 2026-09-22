@@ -39,23 +39,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   var reduceMotion = function () { return !motionAlways && mqReduce.matches; };
 
   /* ---------------------------------------------------------------
-     Reduced-motion: the hero background is a VIDEO, so CSS cannot
-     pause it. Paused it holds its first frame (the poster). Live matcher.
-     --------------------------------------------------------------- */
-  (function () {
-    var v = document.querySelector('.prism-video');
-    if (!v) return;
-    function sync() {
-      if (reduceMotion()) { try { v.pause(); } catch (e) {} }
-      else { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-    }
-    sync();
-    var hasListener = mqReduce.addEventListener;
-    if (hasListener) mqReduce.addEventListener('change', sync);
-    else mqReduce.addListener(sync);
-  })();
-
-  /* ---------------------------------------------------------------
      Entrance retire: pure CSS. Once the last tween ends, pin is-entered
      so a later breakpoint change can never replay it. Counted from the
      release point (loader holds it off), never from page load.
@@ -82,9 +65,9 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
   /* ---------------------------------------------------------------
      Loader intro — preloader + cinematic shutter into the hero entrance.
-     Gates: LOADER_MIN_MS + document.fonts.ready + hero video ready, hard
-     cap LOADER_MAX_MS. Releases is-loading HERO_START_OFFSET_MS after the
-     exit begins; never relies on animationend alone (safety timers).
+     Gates: LOADER_MIN_MS + document.fonts.ready, hard cap LOADER_MAX_MS.
+     Releases is-loading HERO_START_OFFSET_MS after the exit begins;
+     never relies on animationend alone (safety timers).
      --------------------------------------------------------------- */
   (function () {
     var loader = document.getElementById('loader');
@@ -136,16 +119,8 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     } else {
       fontsReady = true;
     }
-    var video = document.querySelector('.prism-video');
-    var videoReady = !video || video.readyState >= 2 || video.networkState === 3;
-    if (video && !videoReady) {
-      var onVideo = function () { videoReady = true; };
-      video.addEventListener('loadeddata', onVideo, { once: true });
-      video.addEventListener('canplay', onVideo, { once: true });
-      video.addEventListener('error', onVideo, { once: true });
-    }
     function ready() {
-      return (Date.now() - start) >= LOADER_MIN_MS && fontsReady && videoReady;
+      return (Date.now() - start) >= LOADER_MIN_MS && fontsReady;
     }
 
     function paint(p) {
