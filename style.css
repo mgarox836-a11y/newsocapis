@@ -549,6 +549,21 @@ button {
   }
 }
 
+@media (max-width: 480px) {
+  .prism-fallback {
+    opacity: 0.32;
+  }
+
+  .prism-fallback .c4,
+  .prism-fallback .c5 {
+    display: none;
+  }
+
+  .prism-video {
+    opacity: 0.45;
+  }
+}
+
 /* ---------- 8. SECTIONS ---------- */
 .section {
   max-width: var(--page-max-width);
