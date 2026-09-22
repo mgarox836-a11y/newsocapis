@@ -540,6 +540,10 @@ button {
 }
 
 /* ---------- 8. SECTIONS ---------- */
+section[id] {
+  scroll-margin-top: 76px;
+}
+
 .section {
   max-width: var(--page-max-width);
   margin-inline: auto;
@@ -701,6 +705,22 @@ button {
 .js-runtime [data-reveal].is-in {
   opacity: 1;
   transform: none;
+}
+
+/* display headings draw in with the entrance's wipe language while the
+   rest of a section lifts in — one scroll grammar, two registers */
+.js-runtime [data-reveal].section-display {
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+  transition:
+    opacity var(--dur) var(--ease-signature),
+    clip-path 0.9s var(--ent-line);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js-runtime [data-reveal].section-display.is-in {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
 }
 
 /* ---------- 11. ENTRANCE ----------
