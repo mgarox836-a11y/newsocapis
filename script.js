@@ -313,6 +313,56 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
+     Active nav section — an IntersectionObserver (center band, so it does
+     not flicker at section seams) drives aria-current + .is-active on the
+     matching link. Purely a colour/state change, not motion: no
+     reduce-motion gate, and data-motion has no role here.
+     --------------------------------------------------------------- */
+  (function () {
+    var sectionsByHref = { top: 'hero', features: 'features', flow: 'flow', clarity: 'clarity' };
+    var links = {};
+    [].forEach.call(document.querySelectorAll('.nav-link'), function (a) {
+      var key = (a.getAttribute('href') || '').replace(/^#/, '');
+      if (key in sectionsByHref) links[sectionsByHref[key]] = a;
+    });
+
+    var current = null;
+    var set = function (sectionId) {
+      if (sectionId === current) return;
+      if (current && links[current]) {
+        links[current].removeAttribute('aria-current');
+        links[current].classList.remove('is-active');
+      }
+      current = sectionId;
+      if (current && links[current]) {
+        links[current].setAttribute('aria-current', 'true');
+        links[current].classList.add('is-active');
+      }
+    };
+
+    if (!('IntersectionObserver' in window) || !links.hero) return;
+
+    var band = new IntersectionObserver(function (entries) {
+      var top = entries
+        .filter(function (en) { return en.isIntersecting; })
+        .sort(function (a, b) { return b.intersectionRatio - a.intersectionRatio; })[0];
+      if (top) { set(top.target.id); return; }
+      /* pages often end on #clarity just above the band — hold Clarity
+         when the reader is near the document bottom */
+      var doc = document.documentElement;
+      if (doc.scrollHeight - (doc.scrollTop + doc.clientHeight) < 120) set('clarity');
+      else set('');
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    Object.keys(sectionsByHref).forEach(function (key) {
+      var el = document.getElementById(sectionsByHref[key]);
+      if (el) band.observe(el);
+    });
+
+    set('hero');
+  })();
+
+  /* ---------------------------------------------------------------
      Hero video lifecycle — autoplay/muted/playsinline (attributes), pauses
      when the tab hides or the hero leaves the viewport, tracks the
      html[data-motion="always"] switch live, and crossfades the loop seam:
