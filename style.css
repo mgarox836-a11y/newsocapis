@@ -546,10 +546,10 @@ button {
   align-items: center;
   overflow: hidden;
   padding: 120px 0 calc(var(--section-gap) / 2);
-  background: var(--surface-obsidian-canvas);
-  /* ambient neon wash behind the WebGL canvas (alpha) — an intentional,
-     static backdrop even when hardware acceleration is unavailable */
-  background-image:
+  /* no solid backdrop — the canvas shows through with no opaque layer on
+     top; body supplies the base tone and only the alpha washes remain for
+     a static ambience when WebGL is unavailable */
+  background:
     radial-gradient(46% 40% at 82% 24%, rgba(155, 107, 255, 0.06), transparent 70%),
     radial-gradient(52% 42% at 12% 78%, rgba(42, 216, 255, 0.05), transparent 70%),
     radial-gradient(40% 34% at 60% 96%, rgba(255, 63, 194, 0.04), transparent 72%);
@@ -566,7 +566,7 @@ button {
   width: min(720px, 88vw);
   aspect-ratio: 3 / 1;
   translate: -50% 45%;
-  z-index: 0;
+  z-index: 2;
   pointer-events: none;
   background: radial-gradient(closest-side, rgba(111, 135, 156, 0.055), transparent 70%);
   animation: glow-breathe 10s var(--ease-signature) infinite;
@@ -581,16 +581,18 @@ button {
   }
 }
 
-/* Calm Surface — Three.js WebGL backdrop. Canvas sits behind the headline
-   (z-index 0, text z-index 10), absolute over the hero. A left-weighted
-   vignette scrim keeps the display readable while the glass + neon drift. */
+/* Calm Surface — Three.js WebGL backdrop. Canvas sits in front of the
+   background/overlays (z-index 1) but behind the headline (z-index 10).
+   Force-visible guarantees: an explicit z-index above the solid layer and
+   opacity pinned to 1 so no reveal/preloader state can ever hide it. */
 .hero-webgl {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: 1;
   display: block;
+  opacity: 1 !important;
   pointer-events: none;
 }
 

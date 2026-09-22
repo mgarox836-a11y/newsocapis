@@ -442,10 +442,17 @@
     rafId = requestAnimationFrame(animate);
     if (pageHidden || !inView) return;
 
-    /* frame delta — intro + creative timers stay refresh-rate-proof */
-    if (lastT === null) lastT = now;
-    var dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
+    /* frame delta — intro + creative timers stay refresh-rate-proof.
+       Guarded: a malformed rAF timestamp (undefined/NaN) must never poison
+       `clock`, or the wavy sheet / camera / all sine motion go NaN and the
+       whole canvas renders blank. */
+    var dt = 0.016;
+    if (typeof now === 'number' && isFinite(now)) {
+      if (typeof lastT === 'number' && isFinite(lastT)) {
+        dt = Math.min(0.05, Math.max(0, (now - lastT) / 1000));
+      }
+      lastT = now;
+    }
     clock += dt;
 
     /* smooth parallax (lerp toward the pointer) */
@@ -500,7 +507,7 @@
       renderFrame();
       return;
     }
-    if (rafId === null) animate();
+    if (rafId === null) rafId = requestAnimationFrame(animate);
   }
 
   /* ---------- dispose ---------- */
