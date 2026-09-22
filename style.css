@@ -1,25 +1,49 @@
+/* =============================================================================
+   Newsocapis — Vivid+Co surface
+   Tokens per DESIGN.md (Quick Start). Plain CSS. No frameworks, no build step.
+   Neue Montreal is commercially licensed and not bundled here; Inter
+   (Google Fonts, weights 400 & 700) is the substitute. To swap in licensed
+   Neue Montreal files, load their woff2 via @font-face and move 'Neue Montreal'
+   to the front of --font-neue-montreal.
+   ============================================================================= */
+
+/* ---------- 1. TOKENS ---------- */
 :root {
+  /* Colors */
   --color-bone-white: #fffdf9;
   --color-obsidian: #101010;
   --color-graphite-veil: #495764;
   --color-ash-border: #403f3f;
   --color-fog-blue: #6f879c;
   --color-pure-black: #000000;
+  /* prism channels exist ONLY inside the artifact — never on UI */
   --color-prism-red: #ff2a2a;
   --color-prism-cyan: #2a7fff;
   --color-prism-lime: #2aff2a;
 
-  --font-neue-montreal: 'Neue Montreal', 'Inter', 'General Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Typography — Font Families */
+  --font-neue-montreal: 'Inter', 'Neue Montreal', 'General Sans', ui-sans-serif,
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+  /* Typography — Scale */
   --text-caption: 15px;
   --leading-caption: 1.2;
   --tracking-caption: 0.15px;
+  --text-body-sm: 18px;
+  --leading-body-sm: 1.5;
+  --tracking-body-sm: 0px;
+  --text-body: 20px;
+  --leading-body: 1.2;
+  --tracking-body: -0.2px;
   --text-body-lg: 22px;
   --leading-body-lg: 1.2;
   --tracking-body-lg: -0.22px;
   --text-heading-sm: 33px;
   --leading-heading-sm: 1.2;
   --tracking-heading-sm: -0.33px;
+  --text-heading: 36px;
+  --leading-heading: 1.5;
+  --tracking-heading: 0px;
   --text-heading-lg: 56px;
   --leading-heading-lg: 1.13;
   --tracking-heading-lg: -0.56px;
@@ -30,25 +54,53 @@
   --leading-display: 1;
   --tracking-display: -2.72px;
 
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --spacing-unit: 4px;
   --spacing-16: 16px;
   --spacing-20: 20px;
-  --spacing-32: 32px;
   --spacing-40: 40px;
   --spacing-56: 56px;
+  --spacing-60: 60px;
   --spacing-64: 64px;
   --spacing-72: 72px;
   --spacing-108: 108px;
 
+  /* Layout */
   --page-max-width: 1440px;
   --section-gap: 108px;
+  --card-padding: 20px;
   --element-gap: 7px;
 
-  --radius-button: 5px;
-  --radius-cards: 15px;
+  /* Border Radius */
+  --radius-md: 5px;
+  --radius-xl: 15px;
   --radius-full: 9999px;
+  /* Resolved conflict: only the Contact button in the nav gets 5px; every
+     other button/CTA is 0px. Cards 15px, tags 9999px (rare). */
+  --radius-nav: 5px;
+  --radius-cards: 15px;
+  --radius-tags: 9999px;
+  --radius-buttons: 0px;
 
+  /* Surfaces */
+  --surface-obsidian-canvas: #101010;
+  --surface-graphite-veil: #495764;
+  --surface-bone-card: #fffdf9;
+
+  /* Motion */
   --ease-signature: cubic-bezier(0.52, 0.01, 0, 1);
   --dur: 0.5s;
+}
+
+/* ---------- 2. BASE ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
@@ -64,13 +116,15 @@ html {
 body {
   margin: 0;
   font-family: var(--font-neue-montreal);
-  font-weight: 400;
-  font-size: 20px;
-  background: var(--color-obsidian);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  background: var(--surface-obsidian-canvas);
   color: var(--color-bone-white);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -79,7 +133,7 @@ a {
 
 h1, h2, h3, h4, p {
   margin: 0;
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
 }
 
 ul, ol {
@@ -91,9 +145,19 @@ li {
   list-style: none;
 }
 
-button {
+/* <button>/<input> must inherit the font — no UA defaults */
+button, input, select, textarea {
   font: inherit;
   letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  cursor: pointer;
 }
 
 ::selection {
@@ -120,6 +184,59 @@ button {
   border: 3px solid var(--color-obsidian);
 }
 
+/* no box-shadow anywhere in this system */
+
+/* ---------- 3. SHARED LAYOUT ---------- */
+.nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 50;
+  background: transparent;
+}
+
+.nav-inner {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-40);
+  padding: 16px clamp(20px, 6vw, 40px);
+}
+
+.footer-inner {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-40);
+  padding: 24px clamp(20px, 6vw, 40px) 48px;
+}
+
+@media (min-width: 1024px) {
+  .footer-inner {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+/* ---------- 4. BRAND ---------- */
+.brand {
+  display: inline-block;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-bone-white);
+}
+
+.brand-dot {
+  color: var(--color-fog-blue);
+}
+
+/* ---------- 5. SKIP LINK ---------- */
 .skip-link {
   position: fixed;
   top: 12px;
@@ -127,7 +244,7 @@ button {
   z-index: 100;
   padding: 9px 15px;
   border: 1px solid var(--color-bone-white);
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-buttons);
   background: var(--color-obsidian);
   color: var(--color-bone-white);
   font-size: 14px;
@@ -135,25 +252,14 @@ button {
   letter-spacing: 0.02em;
   text-decoration: none;
   transform: translateY(-200%);
-  transition: transform 0.5s var(--ease-signature);
+  transition: transform var(--dur) var(--ease-signature);
 }
 
 .skip-link:focus-visible {
   transform: translateY(0);
 }
 
-.nav {
-  background: transparent;
-}
-
-.brand {
-  display: inline-block;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
+/* ---------- 6. NAV ---------- */
 .nav-menu {
   display: none;
 }
@@ -165,7 +271,7 @@ button {
   text-transform: uppercase;
   text-decoration: none;
   color: var(--color-bone-white);
-  transition: color 0.5s var(--ease-signature);
+  transition: color var(--dur) var(--ease-signature);
 }
 
 .nav-link:hover {
@@ -178,14 +284,14 @@ button {
   justify-content: center;
   padding: 9px 15px;
   border: 1px solid var(--color-bone-white);
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-nav);
   background: transparent;
   color: var(--color-bone-white);
   font-size: 14px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: color 0.5s var(--ease-signature), background-color 0.5s var(--ease-signature);
+  transition: color var(--dur) var(--ease-signature), background-color var(--dur) var(--ease-signature);
 }
 
 .nav-contact:hover {
@@ -198,10 +304,9 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: 0;
   background: transparent;
   cursor: pointer;
 }
@@ -210,7 +315,7 @@ button {
   width: 18px;
   height: 1px;
   background: var(--color-bone-white);
-  transition: transform 0.5s var(--ease-signature), opacity 0.5s var(--ease-signature);
+  transition: transform var(--dur) var(--ease-signature), opacity var(--dur) var(--ease-signature);
 }
 
 .nav.is-open .burger span:nth-child(1) {
@@ -253,13 +358,18 @@ button {
 
   .nav-link {
     padding: 10px 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .nav-contact {
     margin-top: 12px;
+    min-height: 44px;
   }
 }
 
+/* ---------- 7. HERO ---------- */
 .hero {
   position: relative;
   min-height: 100dvh;
@@ -302,6 +412,10 @@ button {
   letter-spacing: -0.02em;
 }
 
+.hero-display span {
+  display: block;
+}
+
 .hero-sub {
   max-width: 440px;
   margin: var(--spacing-56) auto 0;
@@ -327,7 +441,7 @@ button {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: color 0.5s var(--ease-signature);
+  transition: color var(--dur) var(--ease-signature);
 }
 
 .hero-paths a:hover {
@@ -351,6 +465,7 @@ button {
   }
 }
 
+/* ---------- 8. SECTIONS ---------- */
 .section {
   max-width: var(--page-max-width);
   margin-inline: auto;
@@ -384,7 +499,7 @@ button {
 }
 
 .service-row {
-  padding-block: var(--spacing-20) var(--spacing-32);
+  padding-block: var(--spacing-20) calc(var(--spacing-unit) * 8);
 }
 
 .service-title {
@@ -396,7 +511,7 @@ button {
   line-height: var(--leading-heading-sm);
   letter-spacing: var(--tracking-heading-sm);
   text-decoration: none;
-  transition: color 0.5s var(--ease-signature);
+  transition: color var(--dur) var(--ease-signature);
 }
 
 .service-title:hover {
@@ -444,7 +559,7 @@ button {
 .flow-label {
   margin-top: var(--spacing-16);
   max-width: 30ch;
-  color: var(--color-fog-blue);
+  color: var(--color-bone-white);
   font-size: var(--text-body);
   line-height: var(--leading-body);
 }
@@ -463,6 +578,7 @@ button {
   margin-top: var(--spacing-64);
 }
 
+/* ---------- 9. FOOTER ---------- */
 .footer {
   border-top: 1px solid var(--color-ash-border);
   background: var(--color-obsidian);
@@ -487,13 +603,14 @@ button {
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
   text-decoration: none;
-  transition: opacity 0.5s var(--ease-signature);
+  transition: opacity var(--dur) var(--ease-signature);
 }
 
 .footer-links a:hover {
   opacity: 0.6;
 }
 
+/* ---------- 10. REVEAL-ON-SCROLL ---------- */
 .js [data-reveal] {
   opacity: 0;
   transform: translateY(24px);
@@ -508,6 +625,7 @@ button {
   transform: none;
 }
 
+/* ---------- 11. REDUCED MOTION ---------- */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
