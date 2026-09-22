@@ -295,7 +295,8 @@ button {
 }
 
 .nav-contact:hover {
-  background: rgba(255, 253, 249, 0.08);
+  border-color: var(--color-fog-blue);
+  color: var(--color-fog-blue);
 }
 
 .burger {
@@ -372,27 +373,92 @@ button {
 /* ---------- 7. HERO ---------- */
 .hero {
   position: relative;
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   align-items: center;
-  justify-content: center;
   overflow: hidden;
   padding: 120px 0 96px;
-  background: var(--color-obsidian);
+  background: var(--surface-obsidian-canvas);
 }
 
+/* prism artifact — video layer constrained to ~40% width, vertically centered,
+   with the headline bleeding across it. Fallbacks: static CSS artifact when
+   the video fails (.no-prism) or under reduced motion without the
+   data-motion switch. RGB channels exist only inside this artifact. */
 .prism-video {
   position: absolute;
   top: 50%;
-  left: 50%;
-  width: 80%;
-  max-width: 800px;
-  transform: translate(-50%, -50%);
+  left: 56%;
+  width: clamp(260px, 40vw, 560px);
+  translate: -50% -50%;
   object-fit: contain;
   z-index: 0;
   pointer-events: none;
   mix-blend-mode: screen;
-  opacity: 0.8;
+  opacity: 0.82;
+}
+
+.prism-fallback {
+  position: absolute;
+  top: 50%;
+  left: 56%;
+  width: clamp(260px, 40vw, 560px);
+  aspect-ratio: 4 / 3;
+  translate: -50% -50%;
+  z-index: 0;
+  display: none;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.hero.no-prism .prism-fallback {
+  display: block;
+}
+
+.prism-fallback .cube {
+  position: absolute;
+  border-radius: var(--radius-cards);
+  background:
+    linear-gradient(135deg, rgba(73, 87, 100, 0.5), rgba(16, 16, 16, 0.88)),
+    var(--surface-obsidian-canvas);
+  border: 1px solid rgba(255, 253, 249, 0.26);
+}
+
+.prism-fallback .cube::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border-top: 1px solid rgba(255, 253, 249, 0.55);
+  border-left: 1px solid rgba(255, 253, 249, 0.4);
+}
+
+.prism-fallback .cube::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 6px;
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  animation: prism-shimmer 6.65s var(--ease-signature) infinite;
+}
+
+.prism-fallback .c1 { width: 38%; height: 44%; left: 6%; top: 6%; rotate: -7deg; }
+.prism-fallback .c1::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-cyan), var(--color-prism-lime)); }
+.prism-fallback .c2 { width: 30%; height: 34%; right: 4%; top: 0; rotate: 5deg; }
+.prism-fallback .c2::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
+.prism-fallback .c3 { width: 34%; height: 42%; left: 14%; bottom: 2%; rotate: 4deg; }
+.prism-fallback .c3::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
+.prism-fallback .c4 { width: 26%; height: 30%; right: 0; bottom: 6%; rotate: -5deg; }
+.prism-fallback .c4::after { left: -3px; background: linear-gradient(180deg, var(--color-prism-red), var(--color-prism-cyan)); }
+.prism-fallback .c5 { width: 22%; height: 26%; left: 0; top: 0; rotate: 8deg; }
+.prism-fallback .c5::after { right: -3px; background: linear-gradient(180deg, var(--color-prism-lime), var(--color-prism-red)); }
+
+@keyframes prism-shimmer {
+  0%, 100% { opacity: 0.25; scale: 1; }
+  50% { opacity: 0.95; scale: 1.12; }
 }
 
 .hero-inner {
@@ -402,14 +468,19 @@ button {
   max-width: var(--page-max-width);
   margin-inline: auto;
   padding-inline: clamp(20px, 6vw, 64px);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .hero-display {
   color: var(--color-bone-white);
-  font-size: var(--text-display);
+  font-size: clamp(44px, 9.5vw, var(--text-display));
   line-height: var(--leading-display);
   letter-spacing: -0.02em;
+  max-width: 80%;
+  overflow-wrap: break-word;
 }
 
 .hero-display span {
@@ -418,10 +489,9 @@ button {
 
 .hero-sub {
   max-width: 440px;
-  margin: var(--spacing-56) auto 0;
-  text-align: left;
+  margin-top: var(--spacing-56);
   color: var(--color-bone-white);
-  font-size: var(--text-body-lg);
+  font-size: clamp(var(--text-body-sm), 1.6vw, var(--text-body-lg));
   line-height: 1.5;
   letter-spacing: 0.01em;
 }
@@ -429,13 +499,14 @@ button {
 .hero-paths {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--element-gap) var(--spacing-40);
   margin-top: var(--spacing-72);
 }
 
 .hero-paths a {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-fog-blue);
   font-size: 14px;
   letter-spacing: 0.02em;
@@ -449,19 +520,32 @@ button {
 }
 
 @media (max-width: 940px) {
-  .hero-display {
-    font-size: clamp(52px, 13.5vw, 88px);
+  .hero {
+    padding: 112px 0 80px;
   }
 
-  .hero-sub {
-    text-align: center;
-    margin-inline: auto;
+  .prism-video,
+  .prism-fallback {
+    left: 50%;
+    width: min(88vw, 460px);
   }
 
   .prism-video {
-    width: min(88vw, 460px);
-    max-width: none;
-    opacity: 0.72;
+    opacity: 0.6;
+  }
+
+  .hero-display {
+    font-size: clamp(38px, 11vw, 64px);
+    max-width: 100%;
+  }
+
+  .hero-sub {
+    font-size: var(--text-body-sm);
+  }
+
+  .hero-paths {
+    gap: 8px 20px;
+    margin-top: var(--spacing-56);
   }
 }
 
@@ -576,6 +660,7 @@ button {
 
 .section-cta-button {
   margin-top: var(--spacing-64);
+  border-radius: var(--radius-buttons);
 }
 
 /* ---------- 9. FOOTER ---------- */
@@ -643,5 +728,13 @@ button {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  html:not([data-motion="always"]) .prism-video {
+    display: none;
+  }
+
+  html:not([data-motion="always"]) .prism-fallback {
+    display: block;
   }
 }
