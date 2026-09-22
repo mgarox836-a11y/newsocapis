@@ -112,15 +112,23 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       }, 1300);
     }
 
-    /* readiness gates */
+    /* readiness gates — the hero video (when visible) joins fonts+min-time;
+       a removed/errored source (networkState=3) counts as ready so a dead
+       asset never traps the loader behind the LOADER_MAX_MS cap. Real file:
+       readyState hits 2+ well inside the window and becomes the main path. */
     var fontsReady = false;
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(function () { fontsReady = true; }).catch(function () { fontsReady = true; });
     } else {
       fontsReady = true;
     }
+    var heroVideo = reduceMotion() ? null : document.querySelector('.prism-video');
+    function videoReady() {
+      var v = heroVideo;
+      return !v || !document.body.contains(v) || v.readyState >= 2 || v.networkState === 3 || v.error;
+    }
     function ready() {
-      return (Date.now() - start) >= LOADER_MIN_MS && fontsReady;
+      return (Date.now() - start) >= LOADER_MIN_MS && fontsReady && videoReady();
     }
 
     function paint(p) {
@@ -302,6 +310,85 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     var ticking = false;
     window.addEventListener('scroll', onLayout, { passive: true });
     window.addEventListener('resize', onLayout, { passive: true });
+  })();
+
+  /* ---------------------------------------------------------------
+     Hero video lifecycle — autoplay/muted/playsinline (attributes), pauses
+     when the tab hides or the hero leaves the viewport, tracks the
+     html[data-motion="always"] switch live, and crossfades the loop seam:
+     frame 191 does not match frame 0, so a hard rewind would jump.
+     --------------------------------------------------------------- */
+  (function () {
+    var video = document.querySelector('.prism-video');
+    if (!video) return;
+
+    var FADE_MS = 450;
+    var inView = true;
+    var fading = false;
+    var raf = null;
+
+    function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+    /* 0 → 1 (out) then 1 → 0 (in); opacity dips to rest*(1-0.85) at the trough */
+    function loopCurve(p) {
+      if (p < 0.5) return ease(p * 2);
+      return 1 - ease((p - 0.5) * 2);
+    }
+    function resting() {
+      return parseFloat(getComputedStyle(video).opacity) || 0.82;
+    }
+
+    function clearFade() {
+      fading = false;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      video.style.opacity = '';
+    }
+
+    function syncPlay() {
+      if (reduceMotion() || document.hidden || !inView) {
+        try { video.pause(); } catch (e) {}
+        if (fading) clearFade();
+      } else {
+        var p = video.play();
+        if (p && p.catch) p.catch(function () {});
+      }
+    }
+
+    function fadeLoop() {
+      if (fading || reduceMotion() || document.hidden || !inView || !video.duration) return;
+      fading = true;
+      var rest = resting();
+      var t0 = performance.now();
+      var dur = FADE_MS * 2;
+      var didSeek = false;
+      function step(now) {
+        var p = Math.min(1, (now - t0) / dur);
+        if (p >= 0.5 && !didSeek) {
+          didSeek = true;
+          video.currentTime = 0; /* swap to the first frame under the fade */
+        }
+        video.style.opacity = (rest * (1 - 0.85 * loopCurve(p))).toFixed(3);
+        if (p < 1) { raf = requestAnimationFrame(step); }
+        else { clearFade(); }
+      }
+      raf = requestAnimationFrame(step);
+    }
+
+    video.addEventListener('timeupdate', function () {
+      if (video.duration && video.currentTime >= video.duration - FADE_MS / 1000 - 0.02) fadeLoop();
+    });
+    video.addEventListener('ended', function () { if (!fading) fadeLoop(); });
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (en) { inView = en.isIntersecting; syncPlay(); });
+      }, { rootMargin: '120px' });
+      io.observe(video);
+    }
+    var hasListener = mqReduce.addEventListener;
+    if (hasListener) mqReduce.addEventListener('change', syncPlay);
+    else mqReduce.addListener(syncPlay);
+    document.addEventListener('visibilitychange', syncPlay);
+    syncPlay();
   })();
 
   /* ---------------------------------------------------------------

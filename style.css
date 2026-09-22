@@ -385,9 +385,26 @@ button {
   background: var(--surface-obsidian-canvas);
 }
 
-/* prism artifact — the signature CSS glass-cube cluster with RGB-split
-   edges (~40% width, vertically centered; the headline bleeds across it).
-   This IS the prism: no video layer. RGB channels exist only here. */
+/* prism artifact — video layer constrained to ~40% width, vertically centered
+   with the headline bleeding across it; mix-blend-mode:screen lets the dark
+   render read as light on obsidian. CSS glass-cube cluster (.prism-art) is the
+   fallback for a failed/blocked video (.hero.no-prism) or reduced motion —
+   same geometry, RGB channels exist only inside this artifact. */
+.prism-video {
+  position: absolute;
+  top: 50%;
+  left: 56%;
+  width: clamp(260px, 40vw, 560px);
+  aspect-ratio: 4 / 3;
+  translate: -50% -50%;
+  object-fit: cover;
+  z-index: 0;
+  background: var(--surface-obsidian-canvas);
+  mix-blend-mode: screen;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
 .prism-art {
   position: absolute;
   top: 50%;
@@ -396,8 +413,13 @@ button {
   aspect-ratio: 4 / 3;
   translate: -50% -50%;
   z-index: 0;
+  display: none;
   pointer-events: none;
   isolation: isolate;
+}
+
+.hero.no-prism .prism-art {
+  display: block;
 }
 
 .prism-art .cube {
@@ -508,9 +530,14 @@ button {
     padding: 112px 0 80px;
   }
 
+  .prism-video,
   .prism-art {
     left: 50%;
     width: min(88vw, 460px);
+  }
+
+  .prism-video {
+    opacity: 0.6;
   }
 
   .hero-display {
@@ -536,6 +563,10 @@ button {
   .prism-art .c4,
   .prism-art .c5 {
     display: none;
+  }
+
+  .prism-video {
+    opacity: 0.45;
   }
 }
 
@@ -1034,6 +1065,7 @@ html.loader-exit .loader-word::before {
   100% { opacity: 0; scale: 2.4; }
 }
 
+html.loader-exit .prism-video,
 html.loader-exit .prism-art {
   animation: art-settle 1.6s var(--ent-line) 0.6s backwards;
 }
@@ -1142,6 +1174,15 @@ html.loader-exit .prism-art {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  /* a video cannot be CSS-paused reliably; swap it for the static artifact */
+  html:not([data-motion="always"]) .prism-video {
+    display: none;
+  }
+
+  html:not([data-motion="always"]) .prism-art {
+    display: block;
   }
 
   html:not([data-motion="always"]) #back-to-top {

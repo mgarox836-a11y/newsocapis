@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var el=document.getElementById('loader');if(el&&window.START_AT_TOP_ON_LOAD!==false&&window.location.hash)history.replaceState(null,'',window.location.pathname+window.location.search);document.documentElement.classList.remove('is-loading');if(el&&window.START_AT_TOP_ON_LOAD!==false)window.scrollTo({top:0,left:0,behavior:'instant'})},8500)</script>
+  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var el=document.getElementById('loader');if(el&&window.START_AT_TOP_ON_LOAD!==false&&window.location.hash)history.replaceState(null,'',window.location.pathname+window.location.search);document.documentElement.classList.remove('is-loading');if(el&&window.START_AT_TOP_ON_LOAD!==false)window.scrollTo({top:0,left:0,behavior:'instant'})},8500);window.addEventListener('DOMContentLoaded',function(){var v=document.querySelector('.prism-video');if(!v||document.getElementById('hero').classList.contains('no-prism'))return;var done=false;function fail(){if(done)return;done=true;if(document.body.contains(v))v.remove();document.getElementById('hero').classList.add('no-prism')}v.addEventListener('error',fail,true);setTimeout(function(){if(v.readyState===0&&v.networkState===3)fail()},4000)})</script>
   <meta name="google-site-verification" content="google4c6264b6a9859481.html" />
   <meta name="description" content="Newsocapis, satu ruang tenang untuk Instagram, TikTok, dan free web tools." />
   <meta name="theme-color" content="#101010" />
@@ -65,6 +65,10 @@
 
     <!-- ============ HERO ============ -->
     <section id="hero" class="hero">
+      <video class="prism-video" autoplay loop muted playsinline preload="auto" poster="assets/prism-poster.jpg" aria-hidden="true" onerror="this.remove();var h=document.getElementById('hero');if(h)h.classList.add('no-prism')">
+        <source src="assets/prism.mp4" type="video/mp4" />
+      </video>
+
       <div class="prism-art" aria-hidden="true">
         <i class="cube c1"></i><i class="cube c2"></i><i class="cube c3"></i><i class="cube c4"></i><i class="cube c5"></i>
       </div>
