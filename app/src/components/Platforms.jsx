@@ -9,7 +9,7 @@ const PLATFORM_LINKS = [
 const ROW_CLASS =
   'group flex w-full items-center justify-between gap-6 border-b border-white/10 py-5 ' +
   'transition-[border-color] duration-[0.5s] ease-signature ' +
-  'hover:border-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan'
+  'hover:border-grape-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft'
 
 export default function Platforms() {
   return (
@@ -25,7 +25,7 @@ export default function Platforms() {
             <li key={link.label}>
               <a href={link.href} target="_blank" rel="noopener noreferrer" className={ROW_CLASS}>
                 <span>
-                  <span className="block text-[clamp(1.5rem,3vw,2rem)] font-medium tracking-[-0.02em] text-bone transition-colors duration-[0.5s] ease-signature group-hover:text-neon-cyan">
+                  <span className="block text-[clamp(1.5rem,3vw,2rem)] font-medium tracking-[-0.02em] text-bone transition-colors duration-[0.5s] ease-signature group-hover:text-grape-soft">
                     {link.label}
                   </span>
                   <span className="mt-1 block text-[clamp(0.9rem,1.5vw,1.05rem)] text-slate-mute">
@@ -35,7 +35,7 @@ export default function Platforms() {
                 <ArrowUpRight
                   size={22}
                   strokeWidth={2}
-                  className="shrink-0 text-slate-mute transition-[color,transform] duration-[0.5s] ease-signature group-hover:text-neon-cyan group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  className="shrink-0 text-slate-mute transition-[color,transform] duration-[0.5s] ease-signature group-hover:text-grape-soft group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 />
               </a>
             </li>

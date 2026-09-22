@@ -12,10 +12,10 @@ const TOOLS_URL = 'https://toolapis.vercel.app/'
 const LINK_CLASS =
   'relative text-[13px] font-medium uppercase tracking-[0.02em] text-bone ' +
   'after:absolute after:inset-x-0 after:-bottom-[3px] after:h-px ' +
-  'after:origin-left after:scale-x-0 after:bg-neon-cyan after:content-[""] ' +
+  'after:origin-left after:scale-x-0 after:bg-grape-soft after:content-[""] ' +
   'after:transition-transform after:duration-[0.5s] after:ease-signature ' +
   'transition-colors duration-[0.5s] ease-signature ' +
-  'hover:text-neon-cyan hover:after:scale-x-100 focus-visible:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan'
+  'hover:text-grape-soft hover:after:scale-x-100 focus-visible:text-grape-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -47,7 +47,7 @@ export default function Navbar() {
             href={TOOLS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-2 border border-white/25 px-[15px] py-[9px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-[color,border-color,box-shadow,transform] duration-[0.5s] ease-signature hover:-translate-y-px hover:border-neon-cyan hover:text-neon-cyan hover:glow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
+            className="ml-2 border border-white/25 px-[15px] py-[9px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-[color,border-color,box-shadow,transform] duration-[0.5s] ease-signature hover:-translate-y-px hover:border-grape-soft hover:text-grape-soft hover:glow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft"
           >
             Open the tools
           </a>
@@ -60,7 +60,7 @@ export default function Navbar() {
           aria-expanded={open}
           aria-controls="mobile-menu"
           aria-label={open ? 'Tutup menu' : 'Buka menu'}
-          className="grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-bone transition-colors duration-[0.5s] ease-signature hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan lg:hidden"
+          className="grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-bone transition-colors duration-[0.5s] ease-signature hover:text-grape-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft lg:hidden"
         >
           {open ? <X size={24} strokeWidth={2} /> : <Menu size={24} strokeWidth={2} />}
         </button>
@@ -75,7 +75,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="flex min-h-[44px] items-center text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
+                className="flex min-h-[44px] items-center text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:text-grape-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft"
               >
                 {link.label}
               </a>
@@ -85,7 +85,7 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="mt-3 flex min-h-[44px] items-center border border-white/25 px-[15px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:border-neon-cyan hover:text-neon-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
+              className="mt-3 flex min-h-[44px] items-center border border-white/25 px-[15px] text-[13px] font-medium uppercase tracking-[0.02em] text-bone transition-colors duration-[0.5s] ease-signature hover:border-grape-soft hover:text-grape-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grape-soft"
             >
               Open the tools
             </a>
