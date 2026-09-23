@@ -648,12 +648,14 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--color-fog-blue);
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 500;
   font-size: 14px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-transform: none;
   text-decoration: none;
-  transition: color var(--dur) var(--ease-signature);
+  transition: all 0.3s ease;
 }
 
 .hero-paths a::after {
@@ -675,7 +677,18 @@ button {
 }
 
 .hero-paths a:hover {
-  color: var(--color-bone-white);
+  color: #ffffff !important;
+}
+
+.hero ul li a,
+.hero-paths li a,
+.hero-links li a,
+.bottom-links a {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+  text-shadow: none !important;
+  letter-spacing: 0.5px !important;
 }
 
 @media (max-width: 940px) {
@@ -810,6 +823,24 @@ section[id] {
 #clarity,
 .section-cta {
   text-align: center;
+}
+
+#clarity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#clarity .section-display,
+#clarity .section-stmt {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  text-align: center;
+}
+
+#clarity .section-stmt {
+  margin-top: var(--stack-gap) !important;
 }
 
 #clarity .section-stmt,
@@ -1114,7 +1145,6 @@ html.js .preloader {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-end;
   gap: var(--spacing-20);
   min-height: 240px;
   padding: clamp(24px, 3vw, 36px);
@@ -1160,7 +1190,9 @@ html.js .preloader {
 
 .tile-icon {
   color: var(--color-fog-blue);
-  font-size: 20px;
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 4px;
   transition:
     color var(--dur) var(--ease-signature),
     transform var(--dur) var(--ease-signature);
