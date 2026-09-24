@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var d=document.documentElement;if(d.classList.contains('js-runtime'))return;var p=document.querySelector('.preloader');if(p)p.remove();d.classList.remove('is-loading','is-locked')},3000)</script>
+  <script>if('scrollRestoration' in history)history.scrollRestoration='manual';document.documentElement.classList.add('js');setTimeout(function(){var d=document.documentElement;if(d.classList.contains('js-runtime'))return;var p=document.querySelector('.preloader');if(p)p.remove();d.classList.remove('is-loading','is-locked')},2500)</script>
   <meta name="google-site-verification" content="google4c6264b6a9859481.html" />
   <meta name="description" content="Newsocapis, satu ruang tenang untuk Instagram, TikTok, dan free web tools." />
   <meta name="theme-color" content="#101010" />
@@ -184,9 +184,13 @@
   </button>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer onerror="window.__gsapFailed=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js" defer></script>
   <script src="script.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer onerror="var h=document.getElementById('hero');if(h)h.classList.add('no-webgl')"></script>
   <script src="hero-three.js" defer onerror="var h=document.getElementById('hero');if(h)h.classList.add('no-webgl')"></script>
+  <script src="cursor.js" defer></script>
+  <script src="hero-scroll.js" defer></script>
 
 </body>
 </html>

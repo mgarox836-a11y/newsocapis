@@ -1,6 +1,6 @@
 /* Newsocapis — plain JS. No frameworks, no build step.
-   Preloader (exactly 5s: brand glow + 1px line fills the first 4s, curtain
-   slide-up over the final 1s) then hero reveal: GSAP 3 (CDN) if present,
+   Preloader (~2.2s total: brand glow + 1px line fills the first 1.5s, curtain
+   slide-up over the final 0.7s) then hero reveal: GSAP 3 (CDN) if present,
    pure-CSS keyframes otherwise. Motion always runs — reduced motion is ignored. */
 
 var START_AT_TOP_ON_LOAD = true;
@@ -28,9 +28,9 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
   /* ---------------------------------------------------------------
      Preloader + Hero Reveal — minimal "Calm Surface" loading screen.
-     Exactly 5s: NEWSOCAPIS fades in with a soft glow, the 1px line fills
-     0→1 over the first 4s (rAF, easeOutQuart), then the pane slides up
-     (translateY(-100%), curtain curve) during the final 1s while the hero
+     ~2.2s: NEWSOCAPIS fades in with a soft glow, the 1px line fills 0→1
+     over the first 1.5s (rAF, easeOutQuart), then the pane slides up
+     (translateY(-100%), curtain curve) during the final 0.7s while the hero
      reveal — GSAP timeline or pure-CSS fallback — plays behind. Teardown
      removes the overlay from the DOM and unlocks scroll once the curtain
      clears. bfcache / back-forward never replay it.
@@ -89,15 +89,43 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       tl.from('.nav-menu .nav-link', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.06 }, 0.09);
       tl.from('.burger, .nav-menu .nav-contact', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out' }, 0.2);
 
-      /* hero display — seamless entrance: fade in + rise 20px, staggered */
-      tl.fromTo(
-        '.hero-display .block',
-        { y: 20, opacity: 0, filter: 'blur(8px)' },
-        { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, stagger: 0.12, ease: 'power3.out' },
-        0.30
-      );
+      /* hero display — masked char reveal (SplitText 3D rise) when the plugin
+         is present; seamless blur-rise otherwise */
+      if (window.SplitText) {
+        var blockSpans = gsap.utils.toArray('.hero-display .block').map(function (el) {
+          return new window.SplitText(el, { type: 'chars', charsClass: 'spl-char' });
+        });
+        var chars = blockSpans.reduce(function (acc, sp) { return acc.concat(sp.chars); }, []);
+        gsap.set(chars, {
+          yPercent: 115, rotateY: 14, opacity: 0, filter: 'blur(6px)',
+          transformPerspective: 800, transformOrigin: '50% 100% 0'
+        });
+        tl.to(chars, {
+          yPercent: 0, rotateY: 0, opacity: 1, filter: 'blur(0px)',
+          duration: 0.9, ease: 'expo.out', stagger: 0.018
+        }, 0.30);
+      } else {
+        tl.fromTo(
+          '.hero-display .block',
+          { y: 20, opacity: 0, filter: 'blur(8px)' },
+          { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, stagger: 0.12, ease: 'power3.out' },
+          0.30
+        );
+      }
 
-      tl.from('.hero-sub', { y: 22, opacity: 0, filter: 'blur(6px)', duration: 0.7, ease: 'power3.out' }, 0.80);
+      if (window.SplitText) {
+        var subSp = new window.SplitText('.hero-sub', { type: 'words', wordsClass: 'spl-word' });
+        gsap.set(subSp.words, {
+          yPercent: 60, rotateY: 8, opacity: 0, filter: 'blur(5px)',
+          transformPerspective: 700, transformOrigin: '50% 100% 0'
+        });
+        tl.to(subSp.words, {
+          yPercent: 0, rotateY: 0, opacity: 1, filter: 'blur(0px)',
+          duration: 0.7, ease: 'power3.out', stagger: 0.045
+        }, 0.80);
+      } else {
+        tl.from('.hero-sub', { y: 22, opacity: 0, filter: 'blur(6px)', duration: 0.7, ease: 'power3.out' }, 0.80);
+      }
       tl.from('.hero-paths li', { y: 14, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07 }, 0.90);
 
       tl.from('.footer .brand, .footer-links li', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out', stagger: 0.04 }, 1.12);
@@ -108,10 +136,10 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       }, 0.35);
     }
 
-    /* ---- the 1px line fills 0→1 over 4s (easeOutQuart), then 1s curtain ---- */
+    /* ---- the 1px line fills 0→1 over 1.5s (easeOutQuart), then 0.7s curtain ---- */
     function runPreloader() {
-      var total = 4000;   /* line fill window */
-      var curtain = 1000; /* curtain slide-up duration */
+      var total = 1500;   /* line fill window */
+      var curtain = 700;  /* curtain slide-up duration */
       var t0 = null;
       var handedOff = false;
 
@@ -133,12 +161,12 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         handedOff = true;
         if (preloaderEl) preloaderEl.classList.add('is-done');
         window.requestAnimationFrame(reveal);
-        /* curtain clears (~5s) → full teardown + scroll unlock */
+        /* curtain clears (~2.2s → ever-sooner teardown) → unlock */
         window.setTimeout(cleanup, curtain + 20);
       }
 
       /* hard failsafe — never leaves the overlay locked in place */
-      window.setTimeout(cleanup, 5200);
+      window.setTimeout(cleanup, 2600);
 
       requestAnimationFrame(tick);
     }
@@ -320,7 +348,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Magnetic buttons — [data-magnet]. Fish to the pointer, max ~6px.
+     Magnetic buttons — [data-magnet]. Fish to the pointer, max ~14px.
      GSAP quickTo when available, rAF lerp otherwise. pointer:fine only.
      Active press uses the CSS `scale` property.
      --------------------------------------------------------------- */
@@ -330,7 +358,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
     function clampMag(dx, half) {
       var t = Math.max(-1, Math.min(1, dx / half));
-      return t * 6;
+      return t * 14;
     }
 
     if (window.gsap) {

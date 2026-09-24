@@ -1,6 +1,8 @@
-/* Newsocapis — Calm Surface hero background.
-   Three.js 0.160 floating glass cards + wavy mesh + neon orbs.
-   Classic script (global THREE), so it runs from file:// and http(s) alike —
+/* Newsocapis — "Prism Aperture" Calm Surface hero.
+   Three.js 0.160 floating prism-glass cards + wavy mesh + neon orbs,
+   cinematic post-processing (bloom / radial CA / vignette / grain),
+   spring-physics camera, and a scroll-scrubbed burst hand-off.
+   Classic script (global THREE) so it runs from file:// and http(s) alike —
    no ES-module CORS restrictions. Motion always runs — reduced motion is
    ignored by design.
    Cleanup: rAF is cancelled, listeners removed, and GPU resources disposed on
@@ -29,8 +31,6 @@
   /* ---------- scene bootstrap ---------- */
   var renderer;
   try {
-    /* no failIfMajorPerformanceCaveat: software GL (SwiftShader in VMs/RDP)
-       must keep working instead of throwing and hiding the whole canvas */
     renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       alpha: true,
@@ -40,17 +40,16 @@
     });
   } catch (e) { fail(); return; }
 
-  /* truly transparent backing — force a clear color with zero alpha so the
-     canvas never paints an opaque slab behind the artwork. scene.background
-     stays null (default), so every frame clears to transparent. */
   renderer.setClearColor(0x000000, 0);
+
+  /* one place to catch a bad prism-glass compile → drop to physical glass */
+  var glassActive = true;
+  var fallbackMats = [];
+  renderer.debug.onShaderError = function () { glassFallback(); };
 
   var scene = new THREE.Scene();
   scene.background = null;
   var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 80);
-  /* boot far back at a high angle for the preloader: the render loop eases
-     the camera forward during the intro, then NewsocHero.enter() glides it
-     to rest (z=9). */
   var introEnabled = true;
   camera.position.set(0, introEnabled ? 2.4 : 0, introEnabled ? 22 : 9);
   camera.lookAt(0, 0, 0);
@@ -64,6 +63,24 @@
     bone: new THREE.Color(0xfffdf9)
   };
 
+  /* ---------- render targets + post pipeline (custom, classic-script-safe) ----------
+     sceneRT   — full-buffer scene (refraction backdrop sampled by the glass).
+     backRT    — same scene with the cards hidden, rendered right before the
+                 cards so the prism glass refracts THIS frame's backdrop.
+     bloomA/B  — half-res ping-pong buffers for the bloom glow. */
+  function makeRT(w, h) {
+    return new THREE.WebGLRenderTarget(Math.max(2, w | 0), Math.max(2, h | 0), {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      depthBuffer: true,
+      stencilBuffer: false
+    });
+  }
+  var backRT = makeRT(2, 2);
+  var sceneRT = makeRT(2, 2);
+  var bloomA = makeRT(2, 2);
+  var bloomB = makeRT(2, 2);
+
   /* ---------- lights + environment (glass transmission needs an envmap) ---------- */
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
   var keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
@@ -75,8 +92,6 @@
 
   var pmrem = new THREE.PMREMGenerator(renderer);
   try {
-    /* lightbox environment — a substitute for RoomEnvironment so no extra
-       module import is needed (classic-script friendly) */
     scene.environment = pmrem.fromScene(makeEnvScene(), 0.04).texture;
   } catch (e) { /* envmap is an enhancement, never a blocker */ }
 
@@ -101,7 +116,6 @@
     return s;
   }
 
-  /* ---------- helpers ---------- */
   function tinted(light, x, y, z) {
     light.position.set(x, y, z);
     return light;
@@ -140,36 +154,9 @@
     return t;
   }
 
-  /* ---------- 1. floating glass cards ---------- */
-  var cardGroup = new THREE.Group();
-  scene.add(cardGroup);
-
-  var CARD_SPECS = [
-    { w: 1.9, h: 2.6, x: 2.1, y: 1.6, z: -1.6, ry: 0.45, rz: -0.12, tint: NEON.cyan, edge: NEON.cyan, speed: 0.55, amp: 0.28, phase: 0.0 },
-    { w: 1.6, h: 2.3, x: 4.7, y: 0.5, z: -2.5, ry: -0.5, rz: 0.1, tint: NEON.magenta, edge: NEON.magenta, speed: 0.42, amp: 0.34, phase: 1.4 },
-    { w: 1.7, h: 2.4, x: -3.0, y: 1.0, z: -2.2, ry: 0.8, rz: 0.06, tint: NEON.purple, edge: NEON.purple, speed: 0.6, amp: 0.26, phase: 2.2 },
-    { w: 1.4, h: 2.1, x: 6.1, y: -1.4, z: -2.0, ry: 0.25, rz: -0.2, tint: NEON.green, edge: NEON.green, speed: 0.48, amp: 0.3, phase: 3.1 },
-    { w: 1.5, h: 2.2, x: 0.7, y: -1.9, z: -2.9, ry: -0.35, rz: 0.16, tint: NEON.cyan, edge: NEON.bone, speed: 0.36, amp: 0.22, phase: 4.0 },
-    { w: 1.8, h: 2.5, x: -5.4, y: -1.0, z: -3.1, ry: -0.55, rz: 0.05, tint: NEON.purple, edge: NEON.purple, speed: 0.52, amp: 0.32, phase: 0.8 },
-    { w: 1.3, h: 2.0, x: 3.7, y: 2.3, z: -3.6, ry: 0.5, rz: -0.18, tint: NEON.bone, edge: NEON.magenta, speed: 0.5, amp: 0.3, phase: 5.2 }
-  ];
-
-  var glassMaterials = [];
-  var cardGeometries = [];
-
-  CARD_SPECS.forEach(function (spec) {
-    var geo = new THREE.ExtrudeGeometry(roundedRectShape(spec.w, spec.h, 0.14), {
-      depth: 0.12,
-      bevelEnabled: true,
-      bevelThickness: 0.03,
-      bevelSize: 0.03,
-      bevelSegments: 2,
-      curveSegments: 6
-    });
-    geo.translate(0, 0, -0.09);
-    cardGeometries.push(geo);
-
-    var mat = new THREE.MeshPhysicalMaterial({
+  /* ---------- primitive glass — drop-in physical fallback ---------- */
+  function makePhysicalGlass(spec) {
+    return new THREE.MeshPhysicalMaterial({
       color: spec.tint.clone().multiplyScalar(0.55),
       emissive: spec.tint,
       emissiveIntensity: 0.16,
@@ -186,18 +173,133 @@
       side: THREE.DoubleSide,
       depthWrite: false
     });
-    glassMaterials.push(mat);
+  }
+
+  function glassFallback() {
+    if (!glassActive) return;
+    glassActive = false;
+    CARD_SPECS.forEach(function (spec, i) {
+      var card = cardGroup.children[i];
+      if (!card) return;
+      var m = makePhysicalGlass(spec);
+      fallbackMats.push(m);
+      card.material = m;
+      if (introEnabled) m.opacity = card.userData.lift != null ? 0 : 0.9;
+    });
+    /* prune unused uniforms so the glass mats are gc-able on dispose */
+    glassMats.length = 0;
+  }
+
+  /* ---------- 1. prism glass cards ---------- */
+  var cardGroup = new THREE.Group();
+  scene.add(cardGroup);
+
+  var CARD_SPECS = [
+    { w: 1.9, h: 2.6, x: 2.1, y: 1.6, z: -1.6, ry: 0.45, rz: -0.12, tint: NEON.cyan, edge: NEON.cyan, speed: 0.55, amp: 0.28, phase: 0.0 },
+    { w: 1.6, h: 2.3, x: 4.7, y: 0.5, z: -2.5, ry: -0.5, rz: 0.1, tint: NEON.magenta, edge: NEON.magenta, speed: 0.42, amp: 0.34, phase: 1.4 },
+    { w: 1.7, h: 2.4, x: -3.0, y: 1.0, z: -2.2, ry: 0.8, rz: 0.06, tint: NEON.purple, edge: NEON.purple, speed: 0.6, amp: 0.26, phase: 2.2 },
+    { w: 1.4, h: 2.1, x: 6.1, y: -1.4, z: -2.0, ry: 0.25, rz: -0.2, tint: NEON.green, edge: NEON.green, speed: 0.48, amp: 0.3, phase: 3.1 },
+    { w: 1.5, h: 2.2, x: 0.7, y: -1.9, z: -2.9, ry: -0.35, rz: 0.16, tint: NEON.cyan, edge: NEON.bone, speed: 0.36, amp: 0.22, phase: 4.0 },
+    { w: 1.8, h: 2.5, x: -5.4, y: -1.0, z: -3.1, ry: -0.55, rz: 0.05, tint: NEON.purple, edge: NEON.purple, speed: 0.52, amp: 0.32, phase: 0.8 },
+    { w: 1.3, h: 2.0, x: 3.7, y: 2.3, z: -3.6, ry: 0.5, rz: -0.18, tint: NEON.bone, edge: NEON.magenta, speed: 0.5, amp: 0.3, phase: 5.2 }
+  ];
+
+  var glassMats = [];
+  var cardGeometries = [];
+
+  var GLASS_VERT = [
+    'varying vec3 vWorldPos;',
+    'varying vec3 vNormal;',
+    'varying vec2 vUv;',
+    'void main() {',
+    '  vec4 wp = modelMatrix * vec4(position, 1.0);',
+    '  vWorldPos = wp.xyz;',
+    '  vNormal = normalize(normalMatrix * normal);',
+    '  vUv = uv;',
+    '  gl_Position = projectionMatrix * viewMatrix * wp;',
+    '}'
+  ].join('\n');
+
+  var GLASS_FRAG = [
+    'precision highp float;',
+    'uniform sampler2D tRefract;',
+    'uniform vec3 uTint;',
+    'uniform vec3 uEmissive;',
+    'uniform float uEmissiveIntensity;',
+    'uniform float uIOR;',
+    'uniform float uThickness;',
+    'uniform float uChroma;',
+    'uniform float uEdgeGlow;',
+    'uniform float uOpacity;',
+    'uniform vec2 uRes;',
+    'varying vec3 vWorldPos;',
+    'varying vec3 vNormal;',
+    'varying vec2 vUv;',
+    'float fresnelSchlick(float f, float f0) { return f0 + (1.0 - f0) * pow(max(1.0 - f, 0.0), 5.0); }',
+    'void main() {',
+    '  vec3 n = normalize(vNormal);',
+    '  vec3 v = normalize(cameraPosition - vWorldPos);',
+    '  float f = 1.0 - abs(dot(n, v));',
+    '  float fres = fresnelSchlick(f, 0.04);',
+    '  vec3 ref = refract(-v, n, 1.0 / uIOR);',
+    '  if (dot(ref, ref) < 1e-4) ref = n;',
+    '  ref = normalize(ref);',
+    '  vec3 worldSample = vWorldPos + ref * (uThickness * 0.35 + fres * 0.6);',
+    '  vec4 clip = projectionMatrix * viewMatrix * vec4(worldSample, 1.0);',
+    '  vec2 refUv = (clip.xy / clip.w) * 0.5 + 0.5;',
+    '  vec2 baseUv = gl_FragCoord.xy * uRes;',
+    '  vec2 disp = refUv - baseUv;',
+    '  vec3 col;',
+    '  col.r = texture2D(tRefract, clamp(refUv + disp * uChroma, 0.0, 1.0)).r;',
+    '  col.g = texture2D(tRefract, clamp(refUv, 0.0, 1.0)).g;',
+    '  col.b = texture2D(tRefract, clamp(refUv - disp * uChroma, 0.0, 1.0)).b;',
+    '  float dens = exp(-uThickness * (0.35 + 0.65 * fres));',
+    '  vec3 body = mix(uTint * dens * 1.15, col, clamp(dens + 0.15, 0.0, 1.0));',
+    '  vec3 glow = uEmissive * uEmissiveIntensity * (0.35 + 0.65 * fres);',
+    '  vec3 outCol = body + glow + uTint * uEdgeGlow * pow(fres, 2.5) * 1.2;',
+    '  gl_FragColor = vec4(outCol, uOpacity);',
+    '}'
+  ].join('\n');
+
+  CARD_SPECS.forEach(function (spec, index) {
+    var geo = new THREE.ExtrudeGeometry(roundedRectShape(spec.w, spec.h, 0.14), {
+      depth: 0.12,
+      bevelEnabled: true,
+      bevelThickness: 0.03,
+      bevelSize: 0.03,
+      bevelSegments: 2,
+      curveSegments: 6
+    });
+    geo.translate(0, 0, -0.09);
+    cardGeometries.push(geo);
+
+    var mat = new THREE.ShaderMaterial({
+      uniforms: {
+        tRefract: { value: backRT.texture },
+        uTint: { value: spec.tint.clone() },
+        uEmissive: { value: spec.tint.clone() },
+        uEmissiveIntensity: { value: index === 6 ? 0.5 : 0.35 },
+        uIOR: { value: 1.45 },
+        uThickness: { value: 1.1 + (index % 3) * 0.25 },
+        uChroma: { value: 1.6 },
+        uEdgeGlow: { value: 0.6 },
+        uOpacity: { value: introEnabled ? 0 : 0.92 },
+        uRes: { value: new THREE.Vector2(1, 1) }
+      },
+      vertexShader: GLASS_VERT,
+      fragmentShader: GLASS_FRAG,
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    glassMats.push(mat);
 
     var card = new THREE.Mesh(geo, mat);
     card.position.set(spec.x, spec.y, spec.z);
     card.rotation.set(0, spec.ry, spec.rz);
     card.userData.spec = spec;
-    /* dormant during the preloader intro — staggered back in by enter();
-       lift offsets below rest so the cards "fly up" at the seamless entrance */
     if (introEnabled) {
-      card.scale.setScalar(0.92);
       card.userData.lift = -1.4;
-      mat.opacity = 0;
     } else {
       card.userData.lift = 0;
     }
@@ -217,10 +319,14 @@
     cardGroup.add(card);
   });
 
+  function setGlassOpacity(mat, v) {
+    if (mat.uniforms && mat.uniforms.uOpacity) mat.uniforms.uOpacity.value = v;
+    else mat.opacity = v;
+  }
+
   /* ---------- 2. wavy mesh — the "calm surface" ---------- */
   var sheet = new THREE.PlaneGeometry(44, 24, 96, 56);
   var sheetPos = sheet.attributes.position;
-  /* store resting positions so waves never drift away */
   sheet.setAttribute('aBase', new THREE.BufferAttribute(sheetPos.array.slice(), 3));
   var sheetMat = new THREE.MeshBasicMaterial({
     color: NEON.cyan,
@@ -305,6 +411,111 @@
     return m;
   });
 
+  /* ---------- post-processing passes (bright → gaussian bloom → composite) ---------- */
+  var postScene = new THREE.Scene();
+  var postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  var postQuad = new THREE.PlaneGeometry(2, 2);
+
+  var FS_VERT = [
+    'varying vec2 vUv;',
+    'void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }'
+  ].join('\n');
+
+  var FS_BRIGHT = [
+    'uniform sampler2D tScene;',
+    'varying vec2 vUv;',
+    'void main() {',
+    '  vec3 c = texture2D(tScene, vUv).rgb;',
+    '  float l = dot(c, vec3(0.299, 0.587, 0.114));',
+    '  float f = smoothstep(0.68, 0.84, l);',
+    '  gl_FragColor = vec4(c * f, 1.0);',
+    '}'
+  ].join('\n');
+
+  var FS_BLUR = [
+    'uniform sampler2D tSource;',
+    'uniform vec2 uDir;',
+    'varying vec2 vUv;',
+    'void main() {',
+    '  vec2 off = uDir;',
+    '  vec3 col = texture2D(tSource, vUv).rgb * 0.227027;',
+    '  col += texture2D(tSource, vUv + off).rgb * 0.1945946;',
+    '  col += texture2D(tSource, vUv - off).rgb * 0.1945946;',
+    '  col += texture2D(tSource, vUv + off * 2.0).rgb * 0.1216216;',
+    '  col += texture2D(tSource, vUv - off * 2.0).rgb * 0.1216216;',
+    '  col += texture2D(tSource, vUv + off * 3.0).rgb * 0.054054;',
+    '  col += texture2D(tSource, vUv - off * 3.0).rgb * 0.054054;',
+    '  col += texture2D(tSource, vUv + off * 4.0).rgb * 0.016216;',
+    '  col += texture2D(tSource, vUv - off * 4.0).rgb * 0.016216;',
+    '  gl_FragColor = vec4(col, 1.0);',
+    '}'
+  ].join('\n');
+
+  var FS_COMPOSITE = [
+    'uniform sampler2D tScene;',
+    'uniform sampler2D tBloom;',
+    'uniform float uTime;',
+    'uniform float uChroma;',
+    'uniform float uVignette;',
+    'uniform float uGrain;',
+    'uniform float uBloom;',
+    'varying vec2 vUv;',
+    'float hash12(vec2 p) {',
+    '  vec3 p3 = fract(vec3(p.xyx) * 0.1031);',
+    '  p3 += dot(p3, p3.yzx + 33.33);',
+    '  return fract((p3.x + p3.y) * p3.z);',
+    '}',
+    'void main() {',
+    '  vec2 uv = vUv;',
+    '  vec2 c = uv - 0.5;',
+    '  float d = length(c);',
+    '  vec2 caOff = c * d * uChroma;',
+    '  vec3 col;',
+    '  col.r = texture2D(tScene, uv + caOff).r;',
+    '  col.g = texture2D(tScene, uv).g;',
+    '  col.b = texture2D(tScene, uv - caOff).b;',
+    '  col += texture2D(tBloom, uv).rgb * uBloom;',
+    '  float vig = smoothstep(1.0, 0.4, d);',
+    '  col *= mix(uVignette, 1.0, vig);',
+    '  float g = (hash12(uv * 1600.0 + vec2(uTime * 7.0, uTime * 13.0)) - 0.5) * uGrain * 2.0;',
+    '  col += g;',
+    '  float a = texture2D(tScene, uv).a;',
+    '  gl_FragColor = vec4(col, a);',
+    '}'
+  ].join('\n');
+
+  var brightMat = new THREE.ShaderMaterial({
+    uniforms: { tScene: { value: null } },
+    vertexShader: FS_VERT,
+    fragmentShader: FS_BRIGHT
+  });
+  var brightMesh = new THREE.Mesh(postQuad, brightMat);
+  postScene.add(brightMesh);
+
+  var blurMat = new THREE.ShaderMaterial({
+    uniforms: { tSource: { value: null }, uDir: { value: new THREE.Vector2(1, 0) } },
+    vertexShader: FS_VERT,
+    fragmentShader: FS_BLUR
+  });
+  var blurMesh = new THREE.Mesh(postQuad, blurMat);
+  postScene.add(blurMesh);
+
+  var compositeMat = new THREE.ShaderMaterial({
+    uniforms: {
+      tScene: { value: null },
+      tBloom: { value: null },
+      uTime: { value: 0 },
+      uChroma: { value: 0.0035 },
+      uVignette: { value: 0.72 },
+      uGrain: { value: 0.045 },
+      uBloom: { value: 0.6 }
+    },
+    vertexShader: FS_VERT,
+    fragmentShader: FS_COMPOSITE
+  });
+  var compositeMesh = new THREE.Mesh(postQuad, compositeMat);
+  postScene.add(compositeMesh);
+
   /* ---------- sizing / resize ---------- */
   var W = 1;
   var H = 1;
@@ -319,17 +530,29 @@
     camera.updateProjectionMatrix();
     renderer.setSize(W, H, false);
     renderer.setPixelRatio(maxPx);
+
+    var dpr = renderer.getPixelRatio() || maxPx;
+    var bw = Math.round(W * dpr);
+    var bh = Math.round(H * dpr);
+    backRT.setSize(bw, bh);
+    sceneRT.setSize(bw, bh);
+    var bhalfW = Math.max(2, bw >> 1);
+    var bhalfH = Math.max(2, bh >> 1);
+    bloomA.setSize(bhalfW, bhalfH);
+    bloomB.setSize(bhalfW, bhalfH);
+
+    var inv = new THREE.Vector2(1 / bw, 1 / bh);
+    glassMats.forEach(function (m) { m.uniforms.uRes.value.copy(inv); });
   }
 
   window.addEventListener('resize', resize, { passive: true });
   resize();
 
   /* ---------- initial camera glide ----------
-     The preloader drives the hero z from the deep high-angle offset toward
-     the rest position (9) with an expo-out settle, plus a staggered slide-in
-     of the glass cards. Self-contained (no GSAP dep). */
-  var camRaf = null;
+     The glide is pure state; animate() consumes it so the spring-driven
+     camera never fights a second writer. */
   var camStarted = false;
+  var glide = null;
   var revealRaFs = [];
   var revealTimer = null;
   function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
@@ -338,21 +561,14 @@
     if (camStarted || disposed) return;
     camStarted = true;
     intro.on = false;
-    var fromZ = camera.position.z;
-    var fromY = camera.position.y;
-    var t0 = performance.now();
-    var dur = ms || 1200;
-    function step(now) {
-      var p = Math.min(1, (now - t0) / dur);
-      var e = easeOutExpo(p);
-      camera.position.z = fromZ + (9 - fromZ) * e;
-      camera.position.y = fromY + (0 - fromY) * e;
-      if (p < 1) { camRaf = requestAnimationFrame(step); }
-      else { camRaf = null; }
-    }
-    camRaf = requestAnimationFrame(step);
+    glide = {
+      t0: performance.now(),
+      dur: ms || 1200,
+      fromZ: camera.position.z,
+      fromY: camera.position.y
+    };
 
-    /* staggered glass cards fly up from below + fade into their resting float */
+    var t0 = glide.t0;
     cardGroup.children.forEach(function (card, i) {
       var cStart = t0 + (0.05 + i * 0.05) * 1000;
       var mat = card.material;
@@ -361,16 +577,14 @@
       function cStep(now) {
         var p = Math.min(1, Math.max(0, (now - cStart) / 650));
         var e = easeOutQuart(p);
-        card.scale.setScalar(0.92 + 0.08 * e);
         card.userData.lift = liftStart * (1 - e);
-        mat.opacity = 0.9 * e;
+        setGlassOpacity(mat, 0.92 * e);
         if (p < 1) {
           handle.id = requestAnimationFrame(cStep);
         } else {
           handle.id = null;
-          card.scale.setScalar(1);
           card.userData.lift = 0;
-          mat.opacity = 0.9;
+          setGlassOpacity(mat, 0.92);
         }
       }
       handle.id = requestAnimationFrame(cStep);
@@ -378,22 +592,34 @@
     });
   }
 
-  /* public handle — wired by script.js entrance */
-  window.NewsocHero = {
-    enter: enterCamera
-  };
+  /* ---------- spring physics (camera inertia = premium pointer follow) ---------- */
+  var spring = { x: 0, y: 0, vx: 0, vy: 0 };
+  var SPRING_STIFFNESS = 120;
+  var SPRING_DAMPING = 0.0008;
 
-  /* ---------- pointer parallax ---------- */
-  var pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+  var springTarget = { x: 0, y: 0 };
   function onPointerMove(e) {
-    pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
-    pointer.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+    springTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
+    springTarget.y = -((e.clientY / window.innerHeight) * 2 - 1);
   }
   if (window.PointerEvent) {
     window.addEventListener('pointermove', onPointerMove, { passive: true });
   } else {
     window.addEventListener('mousemove', onPointerMove, { passive: true });
   }
+
+  function stepSpring(s, target, dt) {
+    s.vx += (target.x - s.x) * SPRING_STIFFNESS * dt;
+    s.vy += (target.y - s.y) * SPRING_STIFFNESS * dt;
+    var m = Math.pow(SPRING_DAMPING, dt);
+    s.vx *= m;
+    s.vy *= m;
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+  }
+
+  /* scroll-scrubbed "card burst" — consumed by animate() */
+  var burst = { p: 0 };
 
   /* ---------- lifecycle (pause when hidden / off-screen) ---------- */
   var inView = true;
@@ -414,7 +640,6 @@
   window.addEventListener('pagehide', function (e) {
     if (rafId !== null) cancelAnimationFrame(rafId);
     rafId = null;
-    /* dispose fully only on a real leave; keep the context alive for bfcache */
     if (e && e.persisted) return;
     dispose();
   });
@@ -423,20 +648,48 @@
     if (e.persisted && !pageHidden) startLoop();
   });
 
-  /* ---------- render loop ---------- */
+  /* ---------- render ---------- */
   function renderFrame() {
-    renderer.render(scene, camera);
+    if (glassActive) {
+      cardGroup.visible = false;
+      renderer.setRenderTarget(backRT);
+      renderer.render(scene, camera);
+      cardGroup.visible = true;
+      renderer.setRenderTarget(sceneRT);
+      renderer.render(scene, camera);
+    } else {
+      renderer.setRenderTarget(sceneRT);
+      renderer.render(scene, camera);
+    }
+
+    brightMat.uniforms.tScene.value = sceneRT.texture;
+    renderer.setRenderTarget(bloomA);
+    renderer.render(postScene, postCam);
+
+    blurMat.uniforms.uDir.value.set(1 / Math.max(1, bloomA.width), 0);
+    blurMat.uniforms.tSource.value = bloomA.texture;
+    renderer.setRenderTarget(bloomB);
+    renderer.render(postScene, postCam);
+
+    blurMat.uniforms.uDir.value.set(0, 1 / Math.max(1, bloomB.height));
+    blurMat.uniforms.tSource.value = bloomB.texture;
+    renderer.setRenderTarget(bloomA);
+    renderer.render(postScene, postCam);
+
+    compositeMat.uniforms.tScene.value = sceneRT.texture;
+    compositeMat.uniforms.tBloom.value = bloomA.texture;
+    compositeMat.uniforms.uTime.value = clock;
+    renderer.setRenderTarget(null);
+    renderer.render(postScene, postCam);
   }
 
   var lastT = null;
+  // Animate loop — always re-arms, but a disposed renderer must never bis' again
   function animate(now) {
+    if (disposed) { rafId = null; return; }
     rafId = requestAnimationFrame(animate);
     if (pageHidden || !inView) return;
 
-    /* frame delta — intro + creative timers stay refresh-rate-proof.
-       Guarded: a malformed rAF timestamp (undefined/NaN) must never poison
-       `clock`, or the wavy sheet / camera / all sine motion go NaN and the
-       whole canvas renders blank. */
     var dt = 0.016;
     if (typeof now === 'number' && isFinite(now)) {
       if (typeof lastT === 'number' && isFinite(lastT)) {
@@ -446,45 +699,67 @@
     }
     clock += dt;
 
-    /* smooth parallax (lerp toward the pointer) */
-    pointer.x += (pointer.tx - pointer.x) * 0.045;
-    pointer.y += (pointer.ty - pointer.y) * 0.045;
+    var bp = burst.p;
 
-    /* camera drift + parallax */
+    if (!intro.on) stepSpring(spring, springTarget, dt);
+
     if (intro.on) {
-      /* preloader intro — slow zoom from the high corner, keyed to clock */
       var introP = Math.min(1, clock / 3.0);
       var ki = 1 - Math.pow(1 - introP, 2);
       camera.position.z = 22 - (22 - 12) * ki;
       camera.position.y = 2.4 - (2.4 - 0.6) * ki;
       camera.position.x = Math.sin(clock * 0.18) * 0.18;
+      camera.lookAt(0, 0, 0);
+    } else if (glide) {
+      var gp = Math.min(1, (performance.now() - glide.t0) / glide.dur);
+      var ge = easeOutExpo(gp);
+      camera.position.z = glide.fromZ + (9 - glide.fromZ) * ge;
+      camera.position.y = glide.fromY + (0 - glide.fromY) * ge;
+      if (gp >= 1) glide = null;
     } else {
-      camera.position.x = pointer.x * 0.85 + Math.sin(clock * 0.18) * 0.18;
-      camera.position.y = pointer.y * 0.5 + Math.cos(clock * 0.14) * 0.12;
+      camera.position.y = spring.y * 0.5 + Math.cos(clock * 0.14) * 0.12;
+      camera.position.z = bp > 0.001 ? 9 - bp * 4.2 : 9;
     }
-    camera.lookAt(0, 0, 0);
+    if (!intro.on) {
+      camera.position.x = spring.x * 0.85 + Math.sin(clock * 0.18) * 0.18 + bp * 0.5;
+      camera.lookAt(0, bp > 0.001 ? 0.25 : 0, bp > 0.001 ? -1.2 : 0);
+    }
 
-    /* card group — slow auto-turn plus pointer response */
-    cardGroup.rotation.y = pointer.x * 0.22 + Math.sin(clock * 0.05) * 0.05;
-    cardGroup.rotation.x = -pointer.y * 0.06;
+    cardGroup.rotation.y = spring.x * 0.22 + Math.sin(clock * 0.05) * 0.05;
+    cardGroup.rotation.x = -spring.y * 0.06;
 
-    /* floating sine motion per card (+ the enter lift that eases to 0) */
-    cardGroup.children.forEach(function (card) {
+    cardGroup.children.forEach(function (card, i) {
       var s = card.userData.spec;
-      card.position.y = s.y + Math.sin(clock * s.speed + s.phase) * s.amp + (card.userData.lift || 0);
-      card.rotation.z = s.rz + Math.sin(clock * s.speed * 0.8 + s.phase) * 0.05;
+      var dir = card.userData.burstDir;
+      if (!dir) {
+        var a = (i / CARD_SPECS.length) * Math.PI * 2;
+        dir = card.userData.burstDir = {
+          x: Math.cos(a),
+          y: Math.sin(a) * 0.6,
+          rz: (Math.random() * 2 - 1) * 1.4,
+          z: 2.0 + ((i * 37) % 5) * 0.5
+        };
+      }
+      card.position.x = s.x + dir.x * bp * 3.0 + Math.sin(clock * s.speed + s.phase) * s.amp * 0.4;
+      card.position.y = s.y + Math.sin(clock * s.speed + s.phase) * s.amp + dir.y * bp * 2.2 + (card.userData.lift || 0);
+      card.position.z = s.z - dir.z * bp * 2.6;
+      card.rotation.y = s.ry + dir.rz * bp;
+      card.rotation.z = s.rz + Math.sin(clock * s.speed * 0.8 + s.phase) * 0.05 + bp * 0.18;
+      card.scale.setScalar(1 + bp * 0.06);
     });
 
-    /* soft orbs breathing */
     orbs.forEach(function (orb) {
       var k = 1 + Math.sin(clock * orb.userData.speed + orb.userData.op) * 0.18;
-      orb.scale.setScalar(k);
+      orb.scale.setScalar(k + bp * 0.4);
       orb.material.opacity = orb.userData.op * (0.75 + 0.25 * Math.sin(clock * orb.userData.speed));
     });
 
-    /* particles slow drift */
-    stars.rotation.y = clock * 0.02;
+    stars.rotation.y = clock * 0.02 + bp * 1.6;
     stars.position.y = 0.2 + Math.sin(clock * 0.3) * 0.15;
+    stars.scale.setScalar(1 + bp * 0.35);
+
+    wave.position.y = -2.6 + bp * 0.7;
+    sheetMat.opacity = 0.16 + bp * 0.12;
 
     ripple();
     renderFrame();
@@ -494,13 +769,20 @@
     if (rafId === null) rafId = requestAnimationFrame(animate);
   }
 
+  /* ---------- public handle ---------- */
+  window.NewsocHero = {
+    enter: enterCamera,
+    scrollBurst: function (p) {
+      burst.p = Math.min(1, Math.max(0, p || 0));
+    }
+  };
+
   /* ---------- dispose ---------- */
   var disposed = false;
   function dispose() {
     if (disposed) return;
     disposed = true;
     if (rafId !== null) cancelAnimationFrame(rafId);
-    if (camRaf !== null) cancelAnimationFrame(camRaf);
     if (revealTimer !== null) clearTimeout(revealTimer);
     revealRaFs.forEach(function (cancel) { cancel(); });
     revealRaFs = [];
@@ -513,7 +795,16 @@
     pGeo.dispose();
     pMat.dispose();
     cardGeometries.forEach(function (g) { g.dispose(); });
-    glassMaterials.forEach(function (m) { m.dispose(); });
+    glassMats.forEach(function (m) { m.dispose(); });
+    fallbackMats.forEach(function (m) { m.dispose(); });
+    brightMat.dispose();
+    blurMat.dispose();
+    compositeMat.dispose();
+    postQuad.dispose();
+    backRT.dispose();
+    sceneRT.dispose();
+    bloomA.dispose();
+    bloomB.dispose();
     if (pmrem) pmrem.dispose();
     renderer.dispose();
   }
@@ -530,9 +821,7 @@
 
   startLoop();
 
-  /* auto-reveal safety — if script.js never hands off NewsocHero.enter()
-     (slow CDN, racy teardown), glide the camera in + fly the cards up
-     anyway, so the hero is never left on the dormant intro frame */
+  /* auto-reveal safety — if script.js never hands off NewsocHero.enter() */
   revealTimer = window.setTimeout(function () {
     revealTimer = null;
     if (!camStarted) enterCamera(1200);

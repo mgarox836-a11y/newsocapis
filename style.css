@@ -153,20 +153,32 @@ body::after {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 38;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.035;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain-drift 9s var(--ease-signature) infinite alternate;
+  animation: grain-steps 1s steps(12) infinite;
 }
 
-@keyframes grain-drift {
-  from {
+@keyframes grain-steps {
+  0% {
     translate: 0 0;
   }
-  to {
-    translate: 1.5% 1.5%;
+  20% {
+    translate: -1.2% -0.9%;
+  }
+  40% {
+    translate: 1% 1.1%;
+  }
+  60% {
+    translate: -0.8% 1.2%;
+  }
+  80% {
+    translate: 0.9% -1%;
+  }
+  100% {
+    translate: 0 0;
   }
 }
 
@@ -370,6 +382,7 @@ button {
 .nav-contact:hover {
   border-color: var(--color-fog-blue);
   color: var(--color-fog-blue);
+  box-shadow: 0 0 16px rgba(42, 216, 255, 0.16);
 }
 
 .nav-contact:active {
@@ -432,6 +445,7 @@ button {
 .pill:hover {
   border-color: transparent;
   color: var(--color-bone-white);
+  box-shadow: 0 0 24px rgba(42, 216, 255, 0.2);
 }
 
 .pill:active {
@@ -598,6 +612,17 @@ button {
   display: none;
 }
 
+/* when WebGL is off the post pipeline's vignette disappears with the canvas —
+   replace it with a single CSS vignette so the composition holds */
+.hero.no-webgl::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 56%, rgba(0, 0, 0, 0.55) 100%);
+}
+
 .hero-inner {
   position: relative;
   z-index: 10;
@@ -613,9 +638,9 @@ button {
 
 .hero-display {
   color: var(--color-bone-white);
-  font-size: clamp(44px, 9.5vw, var(--text-display));
-  line-height: var(--leading-display);
-  letter-spacing: -0.02em;
+  font-size: clamp(44px, 10.5vw, 168px);
+  line-height: 1.0;
+  letter-spacing: -0.035em;
   max-width: 80%;
   overflow-wrap: break-word;
   text-wrap: balance;
@@ -623,8 +648,23 @@ button {
   padding: 0.08em 0 0.16em;
 }
 
-.hero-display span {
+.hero-display .block {
   display: block;
+}
+
+/* SplitText layers — per-char bottom-up mask + subtle 3D, per-word subhead */
+.hero-display .spl-char {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+}
+
+.hero-sub .spl-word {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
 }
 
 .hero-sub {
@@ -754,9 +794,9 @@ section[id] {
 .section-display {
   margin-top: var(--spacing-40);
   color: var(--color-bone-white);
-  font-size: var(--text-display-sm);
+  font-size: clamp(44px, 7.5vw, 132px);
   line-height: var(--leading-display-sm);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   text-wrap: balance;
   /* descender headroom — clip-path reveal clips to the border-box, so give
      the glyphs padding inside it or 'g/y/p/q' get cut at rest */
@@ -1048,8 +1088,8 @@ html.css-entrance:not(.is-entered) .hero-webgl {
   pointer-events: auto;
   will-change: transform;
   transition:
-    transform 1s var(--ease-curtain),
-    visibility 0s 1s;
+    transform 0.7s var(--ease-curtain),
+    visibility 0s 0.7s;
 }
 
 html.js .preloader {
@@ -1159,10 +1199,10 @@ html.js .preloader {
     transform var(--dur) var(--ease-signature);
 }
 
-@supports (backdrop-filter: blur(14px)) {
+@supports (backdrop-filter: blur(18px)) {
   .tile {
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
     background: linear-gradient(180deg, rgba(73, 87, 100, 0.1), rgba(16, 16, 16, 0.5));
   }
 }
@@ -1182,8 +1222,23 @@ html.js .preloader {
   transition: opacity var(--dur) var(--ease-signature);
 }
 
+/* prism glow ring — halo that hugs the cursor inside the frosted glass */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(42, 216, 255, 0.16), rgba(155, 107, 255, 0.06) 45%, transparent 62%);
+  transition: opacity var(--dur) var(--ease-signature);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .tile:hover::before { opacity: 1; }
+  .tile:hover::before,
+  .tile:hover::after {
+    opacity: 1;
+  }
 }
 
 .tile > * { position: relative; z-index: 1; }
@@ -1195,12 +1250,14 @@ html.js .preloader {
   margin-bottom: 4px;
   transition:
     color var(--dur) var(--ease-signature),
-    transform var(--dur) var(--ease-signature);
+    transform var(--dur) var(--ease-signature),
+    filter var(--dur) var(--ease-signature);
 }
 
 .tile:hover .tile-icon {
   color: var(--color-bone-white);
   transform: translateY(-2px);
+  filter: drop-shadow(0 0 12px rgba(42, 216, 255, 0.55));
 }
 
 .tile-title {
@@ -1247,6 +1304,69 @@ html.js .preloader {
   .tile-wide,
   .tile-full { grid-column: auto; }
   .tile-full { min-height: 180px; }
+}
+
+/* ---------- 12b. FLUID CURSOR (difference-blend dot + ring) ---------- */
+html.has-cursor * {
+  cursor: none !important;
+}
+
+html.has-cursor .cur-dot,
+html.has-cursor .cur-ring {
+  cursor: none;
+}
+
+.cur-dot,
+.cur-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  will-change: translate, transform;
+}
+
+html.has-cursor .cur-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--color-bone-white);
+  translate: -3.5px -3.5px;
+}
+
+html.has-cursor .cur-ring {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-bone-white);
+  translate: -17px -17px;
+  transition: transform 0.3s var(--ease-signature);
+}
+
+html.has-cursor.cursor-hot .cur-ring {
+  transform: scale(2.6);
+}
+
+html.has-cursor.cursor-hot .cur-dot {
+  transform: scale(0.4);
+}
+
+body.is-loading .cur-dot,
+body.is-loading .cur-ring {
+  opacity: 0;
+}
+
+@media (max-width: 900px) {
+  .cur-dot,
+  .cur-ring {
+    display: none;
+  }
+
+  /* keep the native cursor on narrow layouts */
+  html.has-cursor,
+  html.has-cursor * {
+    cursor: auto !important;
+  }
 }
 
 /* ---------- 13. SCROLL PROGRESS + BACK-TO-TOP ---------- */
@@ -1300,6 +1420,7 @@ html.js .preloader {
   border-color: var(--color-fog-blue);
   color: var(--color-fog-blue);
   transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(155, 107, 255, 0.28);
 }
 
 #back-to-top:active {
