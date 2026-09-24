@@ -1,0 +1,10 @@
+.agents/
+.claude/
+.opencode/
+.kombai/
+_ref/
+backup-optimization.patch
+skills-lock.json
+DESIGN.md
+README.md
+PROMPT.md
