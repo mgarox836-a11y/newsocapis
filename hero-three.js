@@ -507,7 +507,7 @@
       uTime: { value: 0 },
       uChroma: { value: 0.0035 },
       uVignette: { value: 0.72 },
-      uGrain: { value: 0.045 },
+      uGrain: { value: 0.012 },
       uBloom: { value: 0.6 }
     },
     vertexShader: FS_VERT,
