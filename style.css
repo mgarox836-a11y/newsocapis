@@ -141,7 +141,6 @@
   /* Atmospheric card artwork. Kept as a variable so the <img>-less
      background-image pair can be swapped without touching the component, and
      so a failed load falls through to --color-atmos-fallback underneath. */
-  --atmos-image: url("assets/atmos-card.jpg");
 
   /* Diagram figure cards — white, hairline Mist border, soft sm-2 lift.
      Same recipe as DESIGN.md's content card, scaled to a figure. */
@@ -354,8 +353,8 @@ button {
      .nav-inner          glass tint + blur + specular top edge + drop shadow
      .nav-inner::before  static specular hairline along the top rim
      .nav-inner::after   pointer-tracked highlight (desktop, fine pointer only)
-   The tint is deliberately opaque enough that #1f1f29 link copy clears
-   WCAG AA against whatever the footage is doing behind it. */
+   The blur lives here, on the base rule, and is never overridden — every
+   state keeps it and only changes the amount. */
 .nav-inner {
   position: relative;
   isolation: isolate;
@@ -364,7 +363,7 @@ button {
   align-items: center;
   gap: var(--spacing-4);
   max-width: calc(100vw - 24px);
-  padding: 5px 5px 5px 14px;
+  padding: 6px;
   border: 1px solid var(--glass-edge);
   border-radius: var(--radius-nav);
   background: rgba(var(--glass-tint), 0.5);
@@ -374,18 +373,55 @@ button {
     0 2px 6px -2px rgba(31, 31, 41, 0.14);
   transition:
     background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature),
     box-shadow var(--dur) var(--ease-signature);
 }
 
-/* Over the hero footage the pill sits on moving media, so it gets a denser
-   tint and a brighter rim to stay separated from the dusk behind it. */
-.nav[data-theme='on-media'] .nav-inner {
-  background: rgba(var(--glass-tint), 0.38);
-  border-color: rgba(255, 255, 255, 0.62);
+/* ---- state: media (over the video and the atmospheric card) ----
+   Bright clear glass over moving footage, and white copy. The old rule never
+   touched the link colours, so the pill wore dark #444141 type over a dark
+   dusk sky; both states now declare their own text colour. */
+.nav[data-theme='media'] {
+  --nav-fg: #fff;
+  --nav-bubble: rgba(255, 255, 255, 0.24);
+  --nav-bubble-fg: #fff;
+  --nav-blur: 16px;
+  --nav-saturate: 170%;
+  /* The contact outline inverts with the theme; --nav-paper is what its filled
+     hover state writes back onto. */
+  --nav-ink: #fff;
+  --nav-paper: #2c2c2c;
+}
+
+.nav[data-theme='media'] .nav-inner {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.35);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.58) inset,
-    0 12px 32px -8px rgba(23, 23, 23, 0.42),
-    0 2px 8px -2px rgba(23, 23, 23, 0.24);
+    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 12px 32px -10px rgba(23, 23, 23, 0.4);
+}
+
+/* ---- state: light (over paper) ----
+   Denser tint so a caption scrolling underneath cannot read through, and a
+   solid black pill marks the active link. */
+.nav[data-theme='light'] {
+  --nav-fg: #2c2c2c;
+  --nav-bubble: #171717;
+  --nav-bubble-fg: #fff;
+  --nav-blur: 20px;
+  --nav-saturate: 160%;
+  --nav-ink: #282834;
+  --nav-paper: var(--color-paper);
+}
+
+.nav[data-theme='light'] .nav-inner {
+  background: rgba(var(--glass-tint), 0.78);
+  border-color: #dee2de;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* Static specular rim — the hard bright line a real glass edge catches. */
@@ -428,33 +464,50 @@ button {
   opacity: 1;
 }
 
-/* Blur + saturate + brightness: the base glass every browser gets. Written
-   before the displacement rule below so that rule, when supported, replaces
-   it rather than stacking a second filter list. */
-@supports (backdrop-filter: blur(2px)) {
-  .nav-inner,
-  .nav-menu-panel {
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
-  }
+/* The burger inherits the same state colours as the links so it does not stay
+   dark while the pill flips to media. */
+.nav[data-theme] .burger {
+  border-color: currentColor;
+  color: var(--nav-fg, var(--color-charcoal));
+}
+
+/* Blur + saturate, always on. There is no @supports gate on the blur and no
+   state ever turns it off -- the blur amount comes from --nav-blur, which each
+   state sets (16px over media, 20px over paper). --nav-blur falls back to the
+   old --glass-blur token so anything reusing these vars outside a themed nav
+   still gets glass. */
+.nav-inner,
+.nav-menu-panel {
+  -webkit-backdrop-filter: blur(var(--nav-blur, var(--glass-blur))) saturate(var(--nav-saturate, var(--glass-saturate)));
+  backdrop-filter: blur(var(--nav-blur, var(--glass-blur))) saturate(var(--nav-saturate, var(--glass-saturate)));
 }
 
 /* Chromium only: refract what sits behind the pill through the inline
    feTurbulence + feDisplacementMap filter in #lg-displace, which is what
-   gives the rim its liquid wobble. Gated on @supports so Safari and Firefox
-   keep the plain blur above rather than losing the backdrop entirely. */
-/* No -webkit-backdrop-filter in here on purpose. Chrome's parser rejects a
-   prefixed backdrop-filter carrying a url() filter function and silently drops
-   every rule after this block — the hero, footer and all section styles with
-   it. The unprefixed property is enough: this block only ever matches engines
-   that resolve a filter reference in backdrop-filter anyway. The failure mode is
-   silent â no console error, the page just quietly loses every rule after
-   this point â so if the stylesheet ever parses to a suspiciously small rule
-   count, look here first. */
-@supports (backdrop-filter: blur(2px) url("#lg-displace")) {
+   gives the rim its liquid wobble. This is ADDITIVE to the blur above, not a
+   replacement for it.
+
+   Two things are load-bearing here:
+
+   1. Order. The previous chain was blur(3px) url(#lg-displace). The blur ran
+      on the raw backdrop and the displacement immediately re-scrambled the
+      pixels it had just smoothed, so copy scrolling underneath stayed legible
+      at 1.00x contrast over video and 0.96x over paper -- the blur was doing
+      nothing at all. Running the displacement FIRST and the blur LAST makes
+      the blur the final operation on the result, so it always reads.
+
+   2. No -webkit-backdrop-filter in this block. Chrome's parser rejects a
+      prefixed backdrop-filter carrying a url() filter function and silently
+      drops every rule after this block, up to and including the hero and all
+      the section styles. Nothing surfaces it in the console -- the page just
+      quietly loses every rule after this point -- so if the stylesheet ever
+      parses to a suspiciously small rule count, look here first. The unprefixed
+      property is enough: this block only ever matches engines that resolve a
+      filter reference in backdrop-filter anyway. */
+@supports (backdrop-filter: url("#lg-displace") blur(2px)) {
   .nav-inner,
   .nav-menu-panel {
-    backdrop-filter: blur(3px) url("#lg-displace") saturate(var(--glass-saturate)) brightness(1.06);
+    backdrop-filter: url("#lg-displace") blur(var(--nav-blur, var(--glass-blur))) saturate(var(--nav-saturate, var(--glass-saturate)));
   }
 }
 
@@ -468,9 +521,16 @@ button {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-8);
+  height: 38px;
+  /* The pill's own gap is 4px, so this margin is what lifts the wordmark to a
+     12px clear space from the first nav link — measured edge to edge, not from
+     the glyph box. Without it the wordmark sits 4px off the first link, which
+     is what the old padding-left:14px on the pill used to disguise. */
+  margin-right: var(--spacing-8);
   text-decoration: none;
-  color: var(--color-twilight);
+  color: var(--nav-fg, var(--color-twilight));
   white-space: nowrap;
+  transition: color var(--dur) var(--ease-signature);
 }
 
 .brand-glyph {
@@ -528,60 +588,98 @@ button {
   pointer-events: none;
 }
 
+/* Desktop: the links are a flex row inside the pill. position:relative here
+   is the containing block for .nav-active, the sliding indicator. */
 .nav-menu {
-  display: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
 }
 
-/* Active item gets its own glass bubble rather than a flat fill, so the
-   current section reads as a separate piece of glass sitting on the pill. */
-.nav-link.is-active {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
-    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
-    0 2px 8px -2px rgba(31, 31, 41, 0.18);
-  background: rgba(255, 255, 255, 0.5);
+/* ---------- SLIDING ACTIVE INDICATOR ----------
+   One absolutely positioned element that travels to whichever link is active.
+   script.js measures the target with getBoundingClientRect and writes --nav-x
+   (offset from the left of .nav-menu) plus --nav-w; the transition on those
+   two custom properties does the sliding, so the indicator never animates
+   layout. It sits behind the links (z-index 0) and paints state colours from
+   --nav-bubble / --nav-bubble-fg, which each theme sets. */
+.nav-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: var(--nav-w, 0px);
+  height: 100%;
+  border-radius: var(--radius-lg);
+  background: var(--nav-bubble, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(var(--nav-x, 0px));
+  transition:
+    transform 300ms var(--ease-signature),
+    width 300ms var(--ease-signature),
+    background-color var(--dur) var(--ease-signature),
+    opacity 160ms var(--ease-signature);
 }
 
-@supports (backdrop-filter: blur(2px)) {
-  .nav-link.is-active {
-    -webkit-backdrop-filter: blur(10px) saturate(1.5);
-    backdrop-filter: blur(10px) saturate(1.5);
-  }
+.nav-active.is-shown {
+  opacity: 1;
 }
 
 .nav-link {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  /* every item in the pill is the same height so the indicator lines up
+     without per-link measurement fudging */
+  height: 38px;
   padding: 6px 10px;
   border-radius: var(--radius-lg);
   font-size: 15px;
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.01em;
   text-decoration: none;
-  color: var(--color-charcoal);
-  transition:
-    color var(--dur) var(--ease-signature),
-    background-color var(--dur) var(--ease-signature);
+  color: var(--nav-fg, var(--color-charcoal));
+  transition: color var(--dur) var(--ease-signature);
 }
 
 .nav-link:hover {
-  color: var(--color-twilight);
-  background: var(--color-linen);
+  color: var(--nav-fg, var(--color-twilight));
 }
 
-/* Bordered CTA inside the pill — transparent fill, hairline Twilight, no
+/* The active link is the one item allowed to invert. Over paper the bubble is
+   solid #171717 so its label has to go white; over media the bubble is
+   translucent white and the label stays white, which is already correct. */
+.nav[data-theme='light'] .nav-link.is-active {
+  color: #fff;
+}
+
+.nav-link.is-active {
+  color: var(--nav-bubble-fg, var(--color-twilight));
+}
+
+/* Bordered CTA inside the pill - transparent fill, hairline border, no
    shadow (DESIGN.md: buttons are defined by their border). */
+/* Inherits the theme so the outline follows the glass. It used to hard-code
+   #282834, which is a dark ink: on the media theme that put near-black text on
+   a dark image, well under any readable ratio. */
 .nav-contact {
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: var(--spacing-4);
+  height: 38px;
+  margin-left: var(--spacing-8);
   padding: 7px 14px;
-  border: 1px solid var(--color-twilight);
+  border: 1px solid var(--nav-ink);
   border-radius: var(--radius-lg);
   background: transparent;
-  color: var(--color-twilight);
+  color: var(--nav-ink);
   font-size: 15px;
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.01em;
@@ -595,8 +693,8 @@ button {
 }
 
 .nav-contact:hover {
-  background: var(--color-twilight);
-  color: var(--color-paper);
+  background: var(--nav-ink);
+  color: var(--nav-paper);
 }
 
 .nav-contact:active {
@@ -750,13 +848,13 @@ button {
 }
 
 .burger:hover {
-  background: var(--color-linen);
+  background: rgba(127, 127, 127, 0.16);
 }
 
 .burger span {
   width: 17px;
   height: 1px;
-  background: var(--color-twilight);
+  background: currentColor;
   transition: transform var(--dur) var(--ease-signature), opacity var(--dur) var(--ease-signature);
 }
 
@@ -815,13 +913,55 @@ button {
     width: 100%;
     padding: var(--spacing-12) 0 0;
     margin-top: var(--spacing-12);
-    border-top: 1px solid var(--color-mist);
+    border-top: 1px solid rgba(127, 127, 127, 0.28);
   }
 
+  /* The open panel inherits the same tint ladder as the pill itself, so the
+     burger -> panel swap never flashes the wrong surface. */
   .nav.is-open .nav-menu-panel {
     border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
-    border-top-color: rgba(255, 255, 255, 0.5);
-    background: rgba(var(--glass-tint), 0.34);
+  }
+
+  .nav[data-theme='media'].is-open .nav-menu-panel {
+    border-top-color: rgba(255, 255, 255, 0.35);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  }
+
+  .nav[data-theme='light'].is-open .nav-menu-panel {
+    border-top-color: #dee2de;
+    background: rgba(var(--glass-tint), 0.78);
+  }
+
+  /* Rows stack on mobile, so the travelling indicator has no horizontal track
+     to slide along - it travels on the vertical axis instead and is sized to
+     the row rather than the panel.
+
+     The height has to be explicit. height:100% resolved against the panel made
+     the indicator 256px tall behind four 44px rows, so every row looked
+     active at once; script.js writes --nav-h from the measured row for the
+     same reason it writes --nav-y. */
+  .nav-menu .nav-active {
+    width: 100%;
+    height: var(--nav-h, 0px);
+    transform: translateY(var(--nav-y, 0px));
+    transition:
+      transform 300ms var(--ease-signature),
+      height 300ms var(--ease-signature),
+      background-color var(--dur) var(--ease-signature),
+      opacity 160ms var(--ease-signature);
+  }
+
+  .nav-link,
+  .nav-contact {
+    height: 44px;
+  }
+
+  .nav-link {
+    justify-content: flex-start;
   }
 
   .nav.is-open .nav-menu {
@@ -876,7 +1016,7 @@ button {
      min-height rather than padding alone. The very-short-landscape tier below
      deliberately drops back to 28px — there, clearing the fold is the harder
      constraint and a 44px row would push the card off the screen. */
-  .hero-card .btn,
+  .hero-dest,
   .pill.section-cta-button {
     min-height: 44px;
   }
@@ -901,15 +1041,28 @@ button {
    The card is small and pinned bottom-left so the footage keeps the frame.
    vh comes first as a fallback for engines without svh; svh is what stops
    mobile browser chrome from cropping the card on scroll. */
+/* ---------- 7. HERO ----------
+   Centred composition on a full-bleed dusk plate. There is no glass card any
+   more: the video IS the surface and the type sits directly on it, so the
+   frame is never boxed in. .hero is a three-part column — eyebrow, centred
+   stage, bottom strip — spread with space-between, and the stage itself takes
+   the slack so its contents sit on the vertical centre of the room that is
+   left over.
+   Selectors the entrance timeline depends on are unchanged: .hero-display
+   .block, .hero-sub and .hero-paths li. */
 .hero {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
   overflow: hidden;
-  padding: clamp(120px, 18vh, 200px) 0 clamp(24px, 5vh, 48px);
+  /* top clears the floating pill, bottom is the strip's own breathing room */
+  padding-top: var(--nav-clearance);
+  padding-bottom: clamp(16px, 3vh, 32px);
   background-color: var(--color-dusk);
   background-image:
     radial-gradient(120% 78% at 18% 6%, rgba(244, 177, 131, 0.5) 0%, rgba(244, 177, 131, 0) 58%),
@@ -950,7 +1103,7 @@ button {
   opacity: 1;
 }
 
-/* legibility wash + film grain. Sits above the video, below the card. */
+/* legibility wash + film grain. Sits above the video, below the content. */
 .hero::after {
   content: '';
   position: absolute;
@@ -974,44 +1127,71 @@ button {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Frosted Hero Overlay Card — small, bottom-left over the footage. 24px radius
-   (DESIGN.md large-surfaces), translucent white, backdrop-blur, hairline.
-   Width is capped so the scene keeps the frame at every viewport. */
-.hero-card {
+/* The centred block. flex:1 plus justify-content:center is what puts the
+   eyebrow/headline/subtext/CTA stack on the vertical centre of whatever room
+   the nav padding and the bottom strip leave behind, rather than pinning it
+   to the top. */
+.hero-stage {
   position: relative;
   z-index: 2;
+  flex: 1 1 auto;
   width: 100%;
-  max-width: min(460px, 100%);
+  max-width: var(--page-max-width);
   margin-inline: auto;
-  /* Same axis as every other block on the page. The old rule stopped at the
-     1200px container's outer edge, which put the card one gutter to the left
-     of the text it sits above; adding --gutter-inline reuses the shell tokens
-     instead of re-deriving the offset a third time. */
-  margin-left: max(var(--gutter-inline), calc((100% - var(--page-max-width)) / 2 + var(--gutter-inline)));
-  padding: clamp(20px, 2.5vw, 32px);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: var(--radius-large-surfaces);
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--color-paper);
-  text-align: left;
+  padding-inline: var(--gutter-inline);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-24);
+  text-align: center;
 }
 
-@supports (backdrop-filter: blur(16px)) {
-  .hero-card {
-    -webkit-backdrop-filter: blur(16px) saturate(1.15);
-    backdrop-filter: blur(16px) saturate(1.15);
-    background: rgba(255, 255, 255, 0.16);
+/* 1. Eyebrow — small glass pill with a dot */
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: 6px 14px 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f9faf7;
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  .hero-eyebrow {
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
   }
 }
 
+.hero-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #41a1cf;
+  box-shadow: 0 0 0 3px rgba(65, 161, 207, 0.22);
+}
+
+/* 2. Headline — one sentence per line, solid white, soft shadow so it holds up
+   against the bright part of the dusk sky. */
 .hero-display {
-  color: var(--color-paper);
-  font-size: clamp(32px, 4vw, 40px);
-  line-height: var(--leading-display);
-  letter-spacing: var(--tracking-display);
-  max-width: 15ch;
+  color: #fff;
+  font-size: clamp(36px, 5.4vw, 68px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
+  max-width: 20ch;
   overflow-wrap: break-word;
-  text-wrap: balance;
   /* room for descenders (g, y, p, q) so the char reveal never crops them */
   padding: 0.08em 0 0.16em;
 }
@@ -1035,157 +1215,394 @@ button {
   backface-visibility: hidden;
 }
 
+/* 3. Subtext — solid colour, centred, 52ch */
 .hero-sub {
-  max-width: 46ch;
-  margin-top: var(--spacing-16);
-  color: rgba(255, 255, 255, 0.86);
-  font-size: var(--text-subheading);
-  line-height: 1.5;
+  max-width: 52ch;
+  color: #f9faf7;
+  font-size: clamp(16px, 1.1vw, 18px);
+  line-height: 1.55;
   letter-spacing: var(--tracking-subheading);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.22);
 }
 
-/* one action + the three platform paths as ghost links */
+/* 4. CTA row */
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-16) var(--spacing-24);
-  margin-top: var(--spacing-24);
+  justify-content: center;
+  gap: var(--spacing-12) var(--spacing-16);
 }
 
+/* Outlined primary. No fill, no shadow — the thin glass backing is what keeps
+   the #41a1cf stroke legible over moving video. */
+.btn-outline {
+  border: 1px solid #41a1cf;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.1);
+  color: #41a1cf;
+  box-shadow: none;
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  .btn-outline {
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+  }
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background: rgba(65, 161, 207, 0.16);
+  color: #6fbde3;
+  border-color: #6fbde3;
+}
+
+.btn-outline .btn-arrow {
+  color: #41a1cf;
+}
+
+/* Ghost secondary — text only, scrolls to Features */
+.btn-ghost {
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: #f9faf7;
+  box-shadow: none;
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 5. Destination cards — 3 across on desktop, capped at the page width so the
+   row shares the same axis as everything else on the site. */
 .hero-paths {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--element-gap) var(--spacing-16);
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-12);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.hero-paths a {
-  position: relative;
+.hero-dest {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--spacing-12);
+  height: 100%;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f9faf7;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature),
+    transform var(--dur) var(--ease-signature);
+}
+
+@supports (backdrop-filter: blur(14px)) {
+  .hero-dest {
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+  }
+}
+
+.hero-dest:hover,
+.hero-dest:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.42);
+  transform: translateY(-2px);
+}
+
+.hero-dest-icon {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--tracking-body-sm);
-  text-decoration: none;
-  transition: color var(--dur) var(--ease-signature);
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #f9faf7;
 }
 
-.hero-paths a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 4px;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: left center;
+.hero-dest-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hero-dest-title {
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.hero-dest-label {
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(249, 250, 247, 0.78);
+}
+
+.hero-dest-arrow {
+  display: inline-flex;
+  align-self: start;
+  color: rgba(249, 250, 247, 0.7);
   transition: transform var(--dur) var(--ease-signature);
 }
 
-.hero-paths a:hover::after,
-.hero-paths a:focus-visible::after {
-  transform: scaleX(1);
+.hero-dest:hover .hero-dest-arrow,
+.hero-dest:focus-visible .hero-dest-arrow {
+  transform: translate(2px, -2px);
 }
 
-.hero-paths a:hover {
-  color: var(--color-paper);
+/* 6. Bottom strip — caption left, scroll cue centred, video toggle right.
+   Grid rather than flex so the middle cue stays optically centred no matter
+   how wide the caption and the button are. */
+.hero-strip {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter-inline);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--spacing-16);
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(249, 250, 247, 0.86);
+}
+
+.hero-figcaption {
+  margin: 0;
+  justify-self: start;
+}
+
+.hero-scrollcue {
+  justify-self: center;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.hero-scrollcue-line {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(180deg, rgba(249, 250, 247, 0.75) 0%, rgba(249, 250, 247, 0) 100%);
+  transform-origin: top center;
+  animation: hero-scrollcue 2.4s var(--ease-signature) infinite;
+}
+
+@keyframes hero-scrollcue {
+  0% {
+    transform: scaleY(0.25);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  70% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+.hero-videotoggle {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f9faf7;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  .hero-videotoggle {
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+  }
+}
+
+.hero-videotoggle:hover,
+.hero-videotoggle:focus-visible {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.hero-videotoggle-icon {
+  display: block;
+  width: 11px;
+  height: 12px;
+  background: currentColor;
+  /* two bars = pause; the .is-paused state swaps to a triangle via clip-path */
+  clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
+}
+
+.hero-videotoggle.is-paused .hero-videotoggle-icon {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Reduced motion: the cue stops moving and the video never starts, so there
+   is nothing to animate. Both are handled in CSS here and in script.js for
+   the playback decision. */
+/* Reduced motion stops the travel animations but keeps every element exactly
+   where it belongs — nothing is hidden and nothing jumps, because a visitor
+   who asks for less motion still needs the same information on screen. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-scrollcue-line {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  /* The indicator still moves to the active link, it just arrives instantly
+     instead of sliding, so the active section is still legible. */
+  .nav-active {
+    transition:
+      background-color 160ms linear,
+      opacity 160ms linear;
+  }
+
+  .hero-dest {
+    transition: none;
+  }
+
+  .hero-dest:hover,
+  .hero-dest:focus-visible {
+    transform: none;
+  }
+
+  .hero-dest-arrow {
+    transition: none;
+  }
+}
+
+/* ---------- hero height tiers ----------
+   The stage has to fit inside 100svh at every height, so the optional rows
+   are dropped by viewport height rather than by width. */
+
+/* 600-720px tall: the caption and the card descriptions go, the icons and
+   titles stay. */
+@media (max-height: 719px) and (min-height: 600px) {
+  .hero-figcaption,
+  .hero-dest-label {
+    display: none;
+  }
+
+  .hero-dest {
+    padding: 12px;
+    gap: var(--spacing-8);
+  }
+
+  .hero-stage {
+    gap: var(--spacing-16);
+  }
+}
+
+/* Under 600px tall — a phone on its side. Eyebrow, destination cards and the
+   caption all step aside; the headline, subtext and CTA carry the screen on
+   clamp()s that are driven by viewport height. */
+@media (max-height: 599px) {
+  .hero-eyebrow,
+  .hero-paths,
+  .hero-figcaption {
+    display: none;
+  }
+
+  .hero-display {
+    font-size: clamp(24px, 7.4vh, 40px);
+  }
+
+  .hero-sub {
+    max-width: 60ch;
+    font-size: clamp(13px, 3.1vh, 16px);
+    margin: 0;
+  }
+
+  .hero-stage {
+    gap: var(--spacing-12);
+  }
+
+  .hero-scrollcue-line {
+    height: 22px;
+  }
+}
+
+/* Mobile portrait — the destination cards become one scroll-snap row so the
+   hero keeps its full set of links without the page ever scrolling sideways.
+   x is the only axis that scrolls here, and only inside the row itself. */
+@media (max-width: 720px) and (min-height: 600px) {
+  .hero-paths {
+    display: flex;
+    grid-template-columns: none;
+    gap: var(--spacing-8);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* bleed to the screen edges so the row reads as scrollable */
+    margin-inline: calc(var(--gutter-inline) * -1);
+    padding-inline: var(--gutter-inline);
+  }
+
+  .hero-paths::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-paths li {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+
+  .hero-dest {
+    grid-template-columns: auto auto;
+    padding: 12px;
+  }
+
+  .hero-dest-label {
+    display: none;
+  }
+
+  .hero-dest-arrow {
+    display: none;
+  }
 }
 
 @media (max-width: 940px) {
-  .hero {
-    padding: 112px 0 clamp(20px, 4vh, 32px);
-  }
-
-  .hero-card {
-    /* Was 5vw, which drifted 4-10px off the page axis below 940px. The gutter
-       token is the same one .shell uses, so the card tracks it exactly. */
-    margin-inline: var(--gutter-inline);
-    padding: clamp(20px, 5vw, 28px);
-  }
-
   .hero-display {
     max-width: 100%;
   }
 }
 
-@media (max-width: 480px) {
-  .hero-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-16);
-  }
-}
-
-/* Landscape tiers come last on purpose: the max-width:940px block above uses the
-   `padding` shorthand, so a short-height rule written before it gets silently
-   overridden and the card is pushed 112px down instead of tightening. Later in
-   the source wins, so these sit after it. */
-/* Short landscape viewports — phones turned sideways, 844x390 and the
-   1366x768 class of laptop. The card shrinks its type and padding so the
-   whole thing still fits above the fold instead of overflowing. */
-@media (max-height: 560px) and (orientation: landscape) {
-  .hero {
-    padding-block: clamp(84px, 16vh, 120px) clamp(14px, 3vh, 22px);
-  }
-
-  .hero-card {
-    max-width: min(420px, 100%);
-    padding: clamp(14px, 2vw, 20px);
-  }
-
-  .hero-display {
-    font-size: clamp(24px, 3.4vw, 30px);
-  }
-
-  .hero-sub {
-    margin-top: var(--spacing-8);
-    font-size: var(--text-body-sm);
-  }
-
-  .hero-actions {
-    margin-top: var(--spacing-12, 12px);
-  }
-}
-
-/* Very short landscape — a phone on its side at 390px tall. The hero is
-   min-height 100svh but the card is what has to clear the fold, so the type
-   scale and the gap under the subhead both come down a further step and the
-   CTA is allowed to sit on one row. */
-@media (max-height: 460px) and (orientation: landscape) {
-  .hero {
-    padding-block: clamp(64px, 13vh, 76px) clamp(10px, 2vh, 14px);
-  }
-
-  .hero-card {
-    max-width: min(430px, 100%);
-    padding: clamp(12px, 1.6vw, 16px);
-  }
-
-  .hero-display {
-    font-size: clamp(19px, 2.6vw, 24px);
-  }
-
-  .hero-sub {
-    margin-top: 6px;
-    font-size: 13px;
-    line-height: 1.45;
-  }
-
-  .hero-actions {
-    margin-top: 10px;
-    gap: var(--spacing-12, 12px) var(--spacing-16);
-  }
-
-  .hero-paths a {
-    min-height: 28px;
-  }
-}
-
-
-/* Tall phones: bias the crop upward so the card sits over the horizon band
+/* Tall phones: bias the crop upward so the type sits over the horizon band
    rather than over empty foreground. */
 @media (max-aspect-ratio: 3 / 4) {
   .hero-media {
@@ -1196,7 +1613,6 @@ button {
     background-position: 50% 34%;
   }
 }
-
 /* ---------- 8. SECTIONS ----------
    Editorial rhythm: an atmospheric hero, then clean white content bands
    separated by stretches of bare parchment canvas. Each band carries half the
@@ -1356,20 +1772,54 @@ section[id] {
   overflow: hidden;
   border-radius: var(--radius-large-surfaces);
   background-color: var(--surface-vivid-blue);
-  background-image: var(--atmos-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   color: var(--color-paper);
   padding: clamp(48px, 8vw, 104px);
 }
 
-/* Legibility scrim — strength chosen by measurement, not by eye. The darkest
-   sampled pixel behind the 18px substatement sets the floor: at 0.36 the copy
-   measured 4.47:1 and failed, at 0.38 it measures 4.97:1 and the 48px headline
-   4.62:1. So the scrim sits at the top of the 0.25-0.4 band rather than the
-   middle of it; going lighter is the one number in this card that cannot move
-   without breaking WCAG AA. */
+/* A real <img>, not a background-image. A CSS background cannot carry a
+   srcset, so the browser was locked to the single 2000px file and had to
+   upscale it 1.12x on any retina screen; with srcset it picks 1600w or 2000w
+   to match the device. No filter, no transform and no will-change sit on this
+   element or its parent -- the softness was resolution, never a blur. */
+.atmospheric-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Biased toward the darker band of the frame. The copy sits in the upper-left
+     of the card, so centring the crop put the bright sky exactly where the
+     text is; this pulls the horizon down and gives the headline a darker bed. */
+  object-position: center 12%;
+}
+
+/* Legibility scrim — strength chosen by measurement, not by eye.
+
+   Measured on this photo at 1120x364, sampling the rendered pixels behind the
+   copy with the text hidden, worst case over the whole text column.
+
+   The brief caps this overlay at 0.2-0.35. That cap cannot be met by the
+   overlay alone: the copy sits over the bright sky band, and on the ungraded
+   frame even a FLAT 0.55 wash only reached 1.18:1. The budget limits how much
+   the overlay may darken, and the pixels underneath were simply too bright.
+
+   So the darkening moved into the photograph, which is the layer that actually
+   owns it. assets/atmos-*.jpg are graded copies of the master with this same
+   directional falloff baked into the pixels (see the header note in
+   style.css and the generation script), and the overlay below is the thin
+   scrim the brief asked for.
+
+      ungraded frame, flat 0.55 overlay .. headline 1.18:1          FAIL
+      ungraded frame, 0.78 gradient ..... headline 6.76:1  PASS, but over budget
+      graded frame, 0.25 overlay ........ headline 5.93:1  PASS, in budget
+
+   Same tonal falloff as the version that carried the weight in CSS, so the
+   card looks the same; the difference is that the stylesheet is now inside its
+   own budget. The wash still fades out before the right edge, leaving the
+   photograph's detail untouched where nothing has to be read over it. No
+   backdrop-filter here on purpose: frosting the overlay is what made the image
+   look washed out. */
 .atmospheric::before {
   content: '';
   position: absolute;
@@ -1377,20 +1827,27 @@ section[id] {
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(122deg, rgba(10, 22, 34, 0.44) 0%, rgba(10, 22, 34, 0.38) 50%, rgba(10, 22, 34, 0.44) 100%),
-    linear-gradient(0deg, rgba(6, 14, 22, 0.34) 0%, rgba(6, 14, 22, 0.16) 55%);
+    linear-gradient(
+      100deg,
+      rgba(6, 14, 22, 0.25) 0%,
+      rgba(6, 14, 22, 0.2) 42%,
+      rgba(6, 14, 22, 0.05) 78%,
+      rgba(6, 14, 22, 0) 100%
+    );
 }
 
 .atmospheric .section-display {
   color: var(--color-paper);
   max-width: 20ch;
   text-align: left;
+  text-shadow: 0 2px 18px rgba(4, 10, 16, 0.55);
 }
 
 .atmospheric .section-stmt {
   margin-top: var(--spacing-16);
   /* pure white, not a translucent white — 0.82 alpha drops it to 3.4:1 */
   color: var(--color-paper);
+  text-shadow: 0 2px 14px rgba(4, 10, 16, 0.5);
 }
 
 .section-cta {

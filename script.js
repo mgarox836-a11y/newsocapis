@@ -303,11 +303,21 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       header.classList.remove('is-open');
       toggle.setAttribute('aria-expanded', 'false');
       if (returnFocus) toggle.focus();
+      /* Put the indicator back on the desktop row it was drawn for. */
+      header.dispatchEvent(new CustomEvent('nav:state'));
     }
 
     function open() {
       header.classList.add('is-open');
       toggle.setAttribute('aria-expanded', 'true');
+      /* The panel is display:none until this class lands, so its links have
+         no measurable box while the indicator is being asked about them.
+         Measuring one frame later is the first moment the stacked layout
+         exists, which is what the indicator needs to slide down onto the
+         active row instead of inheriting the collapsed desktop geometry. */
+      requestAnimationFrame(function () {
+        header.dispatchEvent(new CustomEvent('nav:state'));
+      });
     }
 
     toggle.addEventListener('click', function () {
@@ -439,55 +449,182 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     if (fine && fine.addEventListener) fine.addEventListener('change', trackHighlight);
     if (still && still.addEventListener) still.addEventListener('change', trackHighlight);
 
-    /* --- on-media / on-light ----------------------------------------- */
-    var themeTargets = [
-      document.getElementById('hero'),
-      document.querySelector('.atmospheric')
-    ].filter(Boolean);
-    if (!themeTargets.length || !window.IntersectionObserver) return;
+/* --- theme: media vs light -----------------------------------------
+       The old version watched two hardcoded elements (the hero and the
+       atmospheric card) with an IntersectionObserver and a -110px rootMargin.
+       That only ever knew about those two surfaces, so any other dark section
+       that scrolled under the pill left it wearing the light tint, and
+       "is the nav over media right now" answered from a magic offset instead
+       of the real pill position.
 
-    var navBox = function () { return pill.getBoundingClientRect().top; };
+       The page declares the answer instead: every section the glass should
+       react to carries data-nav="media" or data-nav="light". Once per frame we
+       ask the browser what is actually under the middle of the pill via
+       elementsFromPoint, walk outward to the nearest ancestor that declares a
+       data-nav, and write that value. One rule covers every surface, present
+       and future, with no offset to tune and no per-surface registration. */
+    var themeValue = nav.getAttribute('data-theme') || 'media';
 
-    function themeFromRects() {
-      var probe = navBox() + 1;
-      var onMedia = false;
+    function applyTheme(next) {
+      if (next === themeValue) return;
+      themeValue = next;
+      nav.setAttribute('data-theme', next);
+    }
 
-      themeTargets.forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.top <= probe && r.bottom >= probe) onMedia = true;
+    function nearestNavTheme(node) {
+      while (node && node !== document.documentElement) {
+        var t = node.getAttribute && node.getAttribute('data-nav');
+        if (t === 'media' || t === 'light') return t;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    /* A decorative band can sit between two declared sections without
+       declaring itself -- the parchment margin below the hero does. The stack
+       walk correctly finds nothing there, and returning without a decision
+       would strand whatever theme was set last, which is how the pill kept
+       wearing "media" while sitting on paper. Falling back to the nearest
+       declared surface by distance, then to the document default, makes the
+       answer total: every pixel resolves to a theme. */
+    function nearestDeclaredTheme(y) {
+      var best = null;
+      var bestDistance = Infinity;
+      var carriers = document.querySelectorAll('[data-nav="media"], [data-nav="light"]');
+      for (var i = 0; i < carriers.length; i++) {
+        var r = carriers[i].getBoundingClientRect();
+        if (!r.height) continue;
+        var t = carriers[i].getAttribute('data-nav');
+        var distance = y < r.top ? r.top - y : (y > r.bottom ? y - r.bottom : 0);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = t;
+        }
+      }
+      return best || 'light';
+    }
+
+    function themeFromPoint() {
+      var r = pill.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      var cx = r.left + r.width / 2;
+      var cy = r.top + r.height / 2;
+      var stack = document.elementsFromPoint(cx, cy);
+      for (var i = 0; i < stack.length; i++) {
+        var t = nearestNavTheme(stack[i]);
+        if (t) { applyTheme(t); return; }
+      }
+      applyTheme(nearestDeclaredTheme(cy));
+    }
+
+    /* Coalesce to one hit test per frame: scroll fires far more often than the
+       layout can actually change, and elementsFromPoint forces layout. */
+    var themePending = false;
+    function scheduleTheme() {
+      if (themePending) return;
+      themePending = true;
+      requestAnimationFrame(function () {
+        themePending = false;
+        themeFromPoint();
       });
+    }
 
-      nav.setAttribute('data-theme', onMedia ? 'on-media' : 'on-light');
-    };
+    window.addEventListener('scroll', scheduleTheme, { passive: true });
+    window.addEventListener('resize', scheduleTheme);
+    themeFromPoint();
 
-    if (!window.IntersectionObserver) return;
+    /* --- sliding active indicator ---------------------------------------
+       One absolutely positioned .nav-active lives inside .nav-menu. script.js
+       only writes two custom properties -- the active link's offset and width
+       measured against the menu -- and CSS transitions them, so the travel is
+       a transform/width change rather than a relayout. The horizontal row
+       (desktop) and the vertical stack (mobile panel) share the element; the
+       stylesheet decides which axis the translate reads. */
+    var indicator = nav.querySelector('[data-nav-active]');
+    var menu = nav.querySelector('.nav-menu');
+    var wide = window.matchMedia && window.matchMedia('(min-width: 1024px)');
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    var lockUntil = 0;
 
-    var io = new IntersectionObserver(themeFromRects, {
-      /* Shrink the top of the root down to just under the pill. A surface
-         counts as "behind the nav" while any part of it is still below that
-         line, and stops counting once it has scrolled fully above — so the
-         flip happens at the boundary crossing the pill rather than at the top
-         edge of the window. The bottom of the root is left alone; a narrow
-         band there only produces a single mid-scroll callback that
-         scroll-behavior:smooth can leave as the final state. */
-      rootMargin: '-110px 0px 0px 0px',
-      threshold: 0
-    });
+    function positionIndicator() {
+      if (!indicator || !menu) return;
 
-    themeTargets.forEach(function (el) { io.observe(el); });
+      /* While a smooth scroll is in flight the target link is still moving, so
+         measuring it would park the indicator where the link is not. */
+      if (Date.now() < lockUntil) return;
 
-    /* The pill is fixed, so its probe line never moves while the page does;
-       re-run on resize and on scroll end to keep the boundary honest when the
-       viewport height changes under a rotating phone. */
-    var resizeTimer = null;
-    window.addEventListener('resize', function () {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(function () {
-        io.disconnect();
-        themeTargets.forEach(function (el) { io.observe(el); });
-        themeFromRects();
-      }, 150);
-    });
+      var active = menu.querySelector('.nav-link.is-active');
+      if (!active) {
+        indicator.classList.remove('is-shown');
+        indicator.style.setProperty('--nav-w', '0px');
+        return;
+      }
+
+      var m = menu.getBoundingClientRect();
+      var a = active.getBoundingClientRect();
+
+      if (wide && wide.matches) {
+        indicator.style.setProperty('--nav-w', a.width + 'px');
+        indicator.style.setProperty('--nav-h', a.height + 'px');
+        indicator.style.setProperty('--nav-x', (a.left - m.left) + 'px');
+        indicator.style.setProperty('--nav-y', '0px');
+      } else {
+        /* Stacked rows have no horizontal track, so the pill spans the panel
+           and travels on the vertical axis instead. The row height is measured
+           too -- inheriting the panel's height would paint the whole stack. */
+        indicator.style.setProperty('--nav-w', m.width + 'px');
+        indicator.style.setProperty('--nav-h', a.height + 'px');
+        indicator.style.setProperty('--nav-x', '0px');
+        indicator.style.setProperty('--nav-y', (a.top - m.top) + 'px');
+      }
+
+      indicator.classList.add('is-shown');
+    }
+
+    /* A click on a nav link scrolls smoothly. Hold the indicator still until
+       the browser reports the scroll settled, otherwise it snaps to the
+       outgoing section and then jumps. scrollend is not universal and a
+       cancelled smooth scroll never fires one, so a timeout always releases
+       the lock. */
+    function lockIndicator() {
+      /* Reduced motion makes the jump instant, so there is nothing to wait
+         out -- hold for a single frame and re-measure right away. */
+      var hold = reduceMotion && reduceMotion.matches ? 32 : 900;
+      lockUntil = Date.now() + hold;
+      window.setTimeout(positionIndicator, hold);
+    }
+
+    /* The section observer below owns which link is active; these two events
+       are how it hands the indicator over. nav:state = a section boundary
+       was crossed, position now. nav:lock = a link was clicked, hold still
+       until the smooth scroll settles. */
+    nav.addEventListener('nav:state', positionIndicator);
+    nav.addEventListener('nav:lock', lockIndicator);
+
+    if ('onscrollend' in window) {
+      window.addEventListener('scrollend', function () {
+        /* scrollend landing inside the lock window means the scroll beat the
+           timeout, so release early rather than idling out the remainder. */
+        lockUntil = 0;
+        positionIndicator();
+      });
+    }
+
+    /* Web fonts land after first paint and change every link's measured width,
+       so a first measurement taken against the fallback face slides the
+       indicator onto the wrong spot a beat later. Re-measure when they are
+       ready, on resize, and whenever the layout crosses the desktop/mobile
+       breakpoint, since that changes which axis the indicator travels on. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(positionIndicator);
+    }
+    window.addEventListener('resize', positionIndicator);
+    if (wide && wide.addEventListener) wide.addEventListener('change', positionIndicator);
+
+    /* First paint: the desktop row is laid out by the time this runs, so the
+       indicator can be placed immediately. The mobile panel is display:none
+       until the burger opens, so its first real measurement happens there. */
+    positionIndicator();
   })();
 
   /* ---------------------------------------------------------------
@@ -572,9 +709,33 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Active nav section — IntersectionObserver center band -> .is-active
+     Active nav section -> .is-active + the sliding indicator
+
+     The observer here is only a cheap trigger. It fires when something
+     crosses the reading band, which is a handful of times per page rather
+     than once per scroll frame.
+
+     The winner is recomputed from live rects instead of being taken from the
+     callback's entry list. The old code picked the highest intersectionRatio
+     among the entries in that one batch, and entries arrive per observed
+     element, so a batch could easily contain only the elements that just left
+     the band: after a smooth scroll to #clarity the final state was no link
+     marked active at all, even though #clarity was sitting squarely in the
+     band. Reading the rects of every tracked section sidesteps that entirely
+     -- whatever the batch contained, the answer is the same.
+
+     The band is the 5%-tall strip at 40-45% down the viewport: the line the
+     reader's eye treats as "here". A section wins if it covers that strip,
+     and the bottom-of-page case resolves to the last section, since the
+     viewport centre can legitimately rest in a gap between bands.
+
+     The decision is broadcast as nav:state and the navbar module listens for
+     it, so the indicator moves in the same turn that sets the class. A click
+     fires nav:lock, which holds the indicator still until the smooth scroll
+     settles instead of letting it travel through every section on the way.
      --------------------------------------------------------------- */
   (function () {
+    var nav = document.getElementById('nav');
     var sectionsByHref = { top: 'hero', features: 'features', flow: 'flow', clarity: 'clarity' };
     var links = {};
     [].forEach.call(document.querySelectorAll('.nav-link'), function (a) {
@@ -582,8 +743,15 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       if (key in sectionsByHref) links[sectionsByHref[key]] = a;
     });
 
+    var sections = [];
+    Object.keys(sectionsByHref).forEach(function (key) {
+      var el = document.getElementById(sectionsByHref[key]);
+      if (el) sections.push(el);
+    });
+
     var current = null;
-    var set = function (sectionId) {
+
+    function set(sectionId) {
       if (sectionId === current) return;
       if (current && links[current]) {
         links[current].removeAttribute('aria-current');
@@ -594,26 +762,53 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         links[current].setAttribute('aria-current', 'true');
         links[current].classList.add('is-active');
       }
-    };
+      if (nav) nav.dispatchEvent(new CustomEvent('nav:state'));
+    }
+
+    /* Whichever tracked section covers the reading band wins. Sections are not
+       nested, so at most one can cover it. */
+    function winner() {
+      var top = window.innerHeight * 0.40;
+      var bottom = window.innerHeight * 0.45;
+      for (var i = 0; i < sections.length; i++) {
+        var r = sections[i].getBoundingClientRect();
+        if (r.top <= bottom && r.bottom >= top) return sections[i].id;
+      }
+
+      /* Past the last band -- either the bottom of the page or a bare stretch
+         between two sections. The document order is the reading order, so the
+         last section above the band is the one the reader is looking at. */
+      var last = '';
+      for (var j = 0; j < sections.length; j++) {
+        if (sections[j].getBoundingClientRect().bottom <= top) last = sections[j].id;
+      }
+      return last;
+    }
+
+    function sync() { set(winner()); }
 
     if (!('IntersectionObserver' in window) || !links.hero) return;
 
-    var band = new IntersectionObserver(function (entries) {
-      var top = entries
-        .filter(function (en) { return en.isIntersecting; })
-        .sort(function (a, b) { return b.intersectionRatio - a.intersectionRatio; })[0];
-      if (top) { set(top.target.id); return; }
-      var doc = document.documentElement;
-      if (doc.scrollHeight - (doc.scrollTop + doc.clientHeight) < 120) set('clarity');
-      else set('');
-    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
-
-    Object.keys(sectionsByHref).forEach(function (key) {
-      var el = document.getElementById(sectionsByHref[key]);
-      if (el) band.observe(el);
+    var band = new IntersectionObserver(sync, {
+      rootMargin: '-40% 0px -55% 0px',
+      threshold: 0
     });
+    sections.forEach(function (el) { band.observe(el); });
 
-    set('hero');
+    sync();
+
+    /* A programmatic scrollIntoView or a restored scroll position can move the
+       page without crossing the band from the observer's point of view, so the
+       final resting state is re-read once the scroll has actually stopped. */
+    if ('onscrollend' in window) window.addEventListener('scrollend', sync);
+
+    if (!nav) return;
+
+    [].forEach.call(document.querySelectorAll('.nav-link'), function (a) {
+      a.addEventListener('click', function () {
+        nav.dispatchEvent(new CustomEvent('nav:lock'));
+      });
+    });
   })();
 
   /* ---------------------------------------------------------------
@@ -669,7 +864,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
-     Hero video — decoration only.
+     Hero video — decoration only, with a manual play/pause control.
 
      There is deliberately no autoplay attribute on the element. Playback is
      started from here, so a browser with JS disabled, a save-data connection,
@@ -678,11 +873,21 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
      CSS media query: the class only lands once play() has actually resolved,
      so a rejected autoplay promise leaves the gradient underneath visible
      instead of a black video plate.
+
+     The button in the bottom strip is the one place a visitor can override
+     that decision, so it has to work in every state the autoplay guard can
+     leave behind -- poster only (save-data), poster only (reduced motion, where
+     the media query above also stops the scroll cue), playing, paused by the
+     visitor, and a file that never decoded at all. It is wired before the two
+     early returns for exactly that reason: on the paths where they return, the
+     video is present and paused, and a control claiming to pause something that
+     is already paused would be a lie.
      --------------------------------------------------------------- */
   (function () {
     var video = document.querySelector('[data-hero-video]');
     if (!video) return;
 
+    var toggle = document.querySelector('[data-video-toggle]');
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
 
     function saveData() {
@@ -690,8 +895,20 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       return !!(c && c.saveData);
     }
 
-    if (reduceMotion && reduceMotion.matches) return;
-    if (saveData()) return;
+    /* --- the control --------------------------------------------------- */
+
+    /* aria-label has to describe the action, not the state, so it flips with
+       the button rather than describing what is currently on screen. */
+    function paint(playing) {
+      if (!toggle) return;
+      toggle.classList.toggle('is-paused', !playing);
+      toggle.setAttribute('aria-label', playing ? 'Pause background video' : 'Play background video');
+      toggle.setAttribute('aria-pressed', playing ? 'false' : 'true');
+    }
+
+    function isPlaying() {
+      return !video.paused && !video.ended && video.readyState > 2;
+    }
 
     function reveal() {
       video.classList.add('is-ready');
@@ -700,14 +917,45 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     function start() {
       var attempt = video.play();
       if (attempt && typeof attempt.then === 'function') {
-        attempt.then(reveal).catch(function () {
+        attempt.then(function () {
+          reveal();
+          paint(true);
+        }).catch(function () {
           /* Autoplay refused, or the codec is unsupported: the poster stays. */
+          paint(false);
         });
       } else {
         /* Older engines return undefined and either play or silently do not. */
         reveal();
+        paint(isPlaying());
       }
     }
+
+    if (toggle) {
+      /* Pause is the resting icon, so anything that has not started yet — the
+         poster-only paths and the failure path — is painted as paused. */
+      paint(false);
+
+      toggle.addEventListener('click', function () {
+        if (isPlaying()) {
+          video.pause();
+          paint(false);
+          return;
+        }
+        start();
+      });
+
+      /* Keep the icon honest when something outside this script pauses the
+         video, e.g. a browser pausing background tabs. */
+      ['play', 'pause', 'ended'].forEach(function (evt) {
+        video.addEventListener(evt, function () { paint(isPlaying()); });
+      });
+    }
+
+    /* --- autoplay gate -------------------------------------------------- */
+
+    if (reduceMotion && reduceMotion.matches) return;
+    if (saveData()) return;
 
     if (video.readyState >= 2) {
       start();
@@ -718,10 +966,12 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     video.addEventListener('canplay', start, { once: true });
     /* A missing or undecodable file must not surface as an error state. The
        poster is a still of the same dusk scene, so it stays put and becomes
-       the fallback — dropping it would leave the bare gradient, which is
-       a worse picture than the frame the visitor would have got. */
+       the fallback — dropping it would leave the bare gradient, which is a
+       worse picture than the frame the visitor would have got. The button
+       hides itself in that case, because there is nothing to play. */
     video.addEventListener('error', function () {
       video.classList.add('is-fallback');
+      if (toggle) toggle.hidden = true;
     }, { once: true });
 
     /* preload="none" in the markup is what makes the two early returns above
