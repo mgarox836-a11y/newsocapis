@@ -904,6 +904,18 @@ button {
   /* The dropdown is its own pane of glass rather than a flat Linen wash, so
      the hero footage keeps showing through it. */
   .nav-menu {
+    /* Collapsed by default. The rule was missing, so the panel stayed
+       display:flex at every width: with the menu closed the nav pill measured
+       327px of an 844px phone screen, the "Flow" row was still the topmost
+       hit-test target at y=200 over the hero, and all five links stayed
+       focusable behind a burger that only redrew itself as an X.
+
+       display:none rather than a height or opacity transition, so a closed
+       panel contributes no box at all: no hit target, nothing in the tab
+       order, and nothing for the indicator to measure against. script.js
+       already assumed this -- it filters the focus trap on offsetParent and
+       waits a frame after adding .is-open before measuring the stacked rows. */
+    display: none;
     order: 2;
     flex: 0 0 100%;
     position: static;
@@ -914,6 +926,24 @@ button {
     padding: var(--spacing-12) 0 0;
     margin-top: var(--spacing-12);
     border-top: 1px solid rgba(127, 127, 127, 0.28);
+  }
+
+  /* Opened. The rows fade up into place rather than the panel simply
+     appearing, which is what the burger icon's rotation implies. */
+  .nav.is-open .nav-menu {
+    display: flex;
+    animation: nav-panel-in 260ms var(--ease-signature) both;
+  }
+
+  @keyframes nav-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* The open panel inherits the same tint ladder as the pill itself, so the
@@ -1481,6 +1511,12 @@ button {
   .hero-scrollcue-line {
     animation: none;
     opacity: 0.7;
+  }
+
+  /* The mobile panel appears rather than fading up. It still opens and still
+     traps focus -- only the travel is dropped. */
+  .nav.is-open .nav-menu {
+    animation: none;
   }
 
   /* The indicator still moves to the active link, it just arrives instantly
