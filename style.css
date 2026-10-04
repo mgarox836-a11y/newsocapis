@@ -1,247 +1,581 @@
-/* ============ Design tokens ============
-   Fonts: Space Grotesk (display/body) + JetBrains Mono (metadata)
-   Accent: neon lime #b3f021, single & locked
-   Radius rule: cards 22px · tiles 18px · buttons/pills 999px
-   Theme: cinematic dark, page-level, locked.
-   Styling: Tailwind utilities in HTML; this file only carries
-   tokens, keyframes, and stateful mechanics (reveal / tilt / nav).
-   ============ */
+/* =============================================================================
+   Newsocapis — General Intelligence Company surface
+   Tokens per DESIGN.md (Quick Start block, verbatim). Plain CSS. No
+   frameworks, no build step. Instrument Serif (display) + Inter (UI) load
+   from Google Fonts — see index.html font links.
+   ============================================================================= */
 
+/* ---------- 1. TOKENS ---------- */
 :root {
-  --ink: #07090c;
-  --surface: #101419;
-  --band: #0b0e12;
+  /* Colors */
+  --color-parchment: #fefffc;
+  --color-paper: #ffffff;
+  --color-linen: #f9faf7;
+  --color-ink-black: #171717;
+  --color-graphite: #2c2c2c;
+  --color-charcoal: #444141;
+  --color-ash: #646464;
+  --color-fog: #b4b8b4;
+  --color-mist: #dee2de;
+  --color-twilight: #282834;
+  --color-dusk: #1f1f29;
+  --color-signal-blue: #41a1cf;
+  --color-cerulean: #0081c0;
 
-  --hairline: rgba(255, 255, 255, 0.07);
-  --hairline-strong: rgba(255, 255, 255, 0.16);
+  /* Typography — Font Families */
+  --font-ppmondwest: 'Instrument Serif', 'Newsreader', ui-serif, Georgia,
+    'Times New Roman', serif;
+  --font-af: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --text: #eef0f2;
-  --muted: #9aa1ab;
+  /* Typography — Scale */
+  --text-caption: 13px;
+  --leading-caption: 1.3;
+  --tracking-caption: -0.13px;
+  --text-body-sm: 15px;
+  --leading-body-sm: 1;
+  --tracking-body-sm: -0.15px;
+  --text-subheading: 18px;
+  --leading-subheading: 1.3;
+  --tracking-subheading: -0.18px;
+  /* 16px body step: DESIGN.md's Quick Start block stops at 15/18px, but the
+     component examples specify "body text in af 16px weight 400, #444141" and
+     the Do's pair body copy with line-height 1.5. Named here so long-form
+     paragraphs render at the documented size instead of borrowing a step. */
+  --text-body: 16px;
+  --leading-body: 1.5;
+  --tracking-body: -0.15px;
+  --text-heading-sm: 27px;
+  --leading-heading-sm: 1.5;
+  --tracking-heading-sm: -1.08px;
+  --text-heading: 40px;
+  --leading-heading: 1.1;
+  --tracking-heading: -0.8px;
+  --text-heading-lg: 48px;
+  --leading-heading-lg: 1.1;
+  --tracking-heading-lg: -0.96px;
+  --text-display: 54px;
+  --leading-display: 1.1;
+  --tracking-display: -1.08px;
 
-  --accent: #b3f021;
-  --accent-soft: rgba(179, 240, 33, 0.06);
-  --accent-line: rgba(179, 240, 33, 0.32);
-  --accent-ink: #0a0c0f;
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 
-  --radius-card: 22px;
-  --radius-tile: 18px;
-  --radius-pill: 999px;
+  /* Spacing */
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
 
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Layout */
+  --page-max-width: 1200px;
+  /* inter-section rhythm — one source of truth, scaled across breakpoints;
+     each .section pads by half of this so content-to-content gap = 1 full gap */
+  --section-gap: clamp(72px, 9vw, 108px);
+  /* headline-to-substatement gap inside one block (e.g. Clarity/CTA) */
+  --stack-gap: clamp(12px, 1.5vw, 20px);
+  --card-padding: 16px;
+  --element-gap: 8px;
 
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Border Radius */
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-full: 50.496px;
+
+  /* Named Radii */
+  --radius-nav: 50px;
+  --radius-cards: 12px;
+  --radius-buttons: 8px;
+  --radius-large-surfaces: 24px;
+
+  /* Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0.15) 0px 2px 6px 0px;
+  --shadow-subtle: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 4px 5px 0px;
+  --shadow-subtle-2: rgb(222, 226, 222) 0px 0px 0px 1px;
+  --shadow-subtle-3: rgba(0, 0, 0, 0.06) 0px 2px 2px 0px, rgba(0, 0, 0, 0.04) 0px 0px 0px 5px;
+  --shadow-sm-2: rgba(0, 0, 0, 0.05) 0px 1px 8px 0px;
+
+  /* Surfaces */
+  --surface-parchment-canvas: #fefffc;
+  --surface-paper-card: #ffffff;
+  --surface-linen-wash: #f9faf7;
+  --surface-vivid-blue: #0081c0;
+
+  /* Hero illustration placeholder — swap by dropping assets/hero-dusk.jpg in
+     place (index.html <img class="hero-art">), no code change needed. Until
+     then the warm dusk gradient below is what shows. */
+  --hero-art-image: none;
+  --hero-art-dusk-a: #f4b183;
+  --hero-art-dusk-b: #c96f9b;
+  --hero-art-dusk-c: #6b4a8f;
+  --hero-art-dusk-d: #2b2b52;
+
+  /* Motion */
+  --ease-signature: cubic-bezier(0.52, 0.01, 0, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 0.5s;
+  /* entrance choreography — expo-out for entrances (instant intent, calm land) */
+  --ent-line: cubic-bezier(0.16, 1, 0.3, 1);
+  --ent-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  /* preloader curtain — high-end slide-up, fast start / long landing */
+  --ease-curtain: cubic-bezier(0.85, 0, 0.15, 1);
 }
 
-/* ============ Base ============ */
+/* ---------- 2. BASE ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 88px;
+  scrollbar-gutter: stable;
+  overflow-x: clip;
+}
+
+[id] {
+  scroll-margin-top: 84px;
 }
 
 body {
-  font-family: var(--font-display);
-  background: var(--ink);
-  color: var(--text);
-  overflow-x: hidden;
+  margin: 0;
+  font-family: var(--font-af);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  background: var(--surface-parchment-canvas);
+  color: var(--color-charcoal);
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display serif — DESIGN.md: weight 400 at every size, liga off, tight
+   tracking. The serif does the work; never bold it. */
+h1, h2, h3, .hero-display, .section-display {
+  font-family: var(--font-ppmondwest);
+  font-weight: var(--font-weight-regular);
+  font-feature-settings: 'liga' 0;
+  font-variant-ligatures: none;
+}
+
+/* Scroll lock during the preloader phase (html.is-locked, set by script.js).
+   Restored automatically once the overlay is torn down. */
+html.is-locked,
+html.is-locked body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+a {
+  color: inherit;
+}
+
+h1, h2, h3, h4, p {
+  margin: 0;
+  font-weight: var(--font-weight-regular);
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+}
+
+/* <button>/<input> must inherit the font — no UA defaults */
+button, input, select, textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  cursor: pointer;
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--color-mist);
+  color: var(--color-ink-black);
 }
 
+/* Keyboard focus — DESIGN.md keeps borders/blur instead of elevation, so the
+   focus ring is the only affordance that must cut through the parchment. */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-signal-blue);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
 }
 
 ::-webkit-scrollbar {
   width: 10px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--ink);
+  background: var(--surface-parchment-canvas);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #242b33;
-  border-radius: 999px;
-  border: 3px solid var(--ink);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #303a44;
+  background: var(--color-fog);
+  border-radius: var(--radius-full);
+  border: 3px solid var(--surface-parchment-canvas);
 }
 
-/* ============ Textures ============ */
+/* no box-shadow on buttons anywhere in this system — borders and
+   backdrop-blur carry the structure instead */
 
-.bg-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 64px 64px;
-}
-
-.grain {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.62'/></svg>");
-}
-
-/* ============ Motion primitives ============ */
-
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: statusPulse 2.4s ease-out infinite;
-}
-
-@keyframes statusPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(179, 240, 33, 0.45); }
-  50% { box-shadow: 0 0 0 7px rgba(179, 240, 33, 0); }
-}
-
-.hero-line {
-  opacity: 0;
-  animation: riseIn 0.9s var(--ease-out) forwards;
-}
-
-@keyframes riseIn {
-  from { opacity: 0; transform: translateY(28px); }
-  to { opacity: 1; transform: none; }
-}
-
-.hero-title {
-  position: relative;
-  text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.5),
-    0 2px 8px rgba(0, 0, 0, 0.6),
-    0 6px 22px rgba(0, 0, 0, 0.74),
-    0 16px 56px rgba(0, 0, 0, 0.9);
-}
-
-.hero-title::after {
-  content: '';
-  position: absolute;
-  inset: -0.7em -0.5em;
-  z-index: -1;
-  border-radius: 30px;
-  background: radial-gradient(
-    74% 66% at 34% 48%,
-    rgba(4, 6, 9, 0.6),
-    rgba(4, 6, 9, 0.24) 52%,
-    rgba(4, 6, 9, 0) 78%
-  );
-  filter: blur(10px);
-  pointer-events: none;
-}
-
-.scroll-hint-bar {
-  animation: scrollHint 2.2s var(--ease-out) infinite;
-}
-
-@keyframes scrollHint {
-  0% { transform: translateY(-100%); }
-  55% { transform: translateY(0); }
-  100% { transform: translateY(100%); }
-}
-
-.animate-float {
-  animation: floatY 7s ease-in-out infinite;
-}
-
-@keyframes floatY {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-
-.animate-breathe {
-  animation: breathe 6s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.12); }
-}
-
-/* ============ Navigation ============ */
-
+/* ---------- 3. SHARED LAYOUT ---------- */
+/* Frosted Navigation Pill — floating at top center. The header itself is a
+   pointer-transparent rail; only the pill accepts clicks, so the painted hero
+   reads through around it. */
 .nav {
-  transition: background 0.4s var(--ease-out), border-color 0.4s var(--ease-out);
+  position: fixed;
+  inset-inline: 0;
+  top: clamp(12px, 2vw, 20px);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding-inline: clamp(16px, 4vw, 40px);
+  pointer-events: none;
 }
 
-.nav.is-scrolled {
-  background: rgba(7, 9, 12, 0.86);
-  border-color: rgba(255, 255, 255, 0.12);
+.nav-inner {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  max-width: 100%;
+  padding: 5px 5px 5px 14px;
+  border: 1px solid var(--color-twilight);
+  border-radius: var(--radius-nav);
+  /* DESIGN.md: frosted, translucent — the illustration shows through softly.
+     Slightly more white than the 0.06 spec so the pill stays legible over the
+     dusk hero while keeping the same glass intent. */
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow-sm);
+}
+
+@supports (backdrop-filter: blur(14px)) {
+  .nav-inner {
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: blur(14px) saturate(1.1);
+  }
+}
+
+.footer-inner {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding: clamp(48px, 7vw, 96px) clamp(20px, 6vw, 64px) clamp(40px, 5vw, 64px);
+}
+
+/* ---------- 4. BRAND ---------- */
+/* Sun-over-landscape glyph + wordmark — DESIGN.md's minimal nav mark */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  text-decoration: none;
+  color: var(--color-twilight);
+  white-space: nowrap;
+}
+
+.brand-glyph {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+/* footer wordmark variant — no glyph there, just the dot */
+.brand-dot {
+  color: var(--color-signal-blue);
+}
+
+/* ---------- 5. SKIP LINK ---------- */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 9px 15px;
+  border: 1px solid var(--color-twilight);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper);
+  color: var(--color-twilight);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--dur) var(--ease-signature);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ---------- 6. NAV ---------- */
+.nav-menu {
+  display: none;
 }
 
 .nav-link {
   position: relative;
-  font-weight: 500;
-  color: var(--muted);
-  transition: color 0.3s var(--ease-out);
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -5px;
-  width: 100%;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.35s var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--color-charcoal);
+  transition:
+    color var(--dur) var(--ease-signature),
+    background-color var(--dur) var(--ease-signature);
 }
 
 .nav-link:hover {
-  color: var(--text);
+  color: var(--color-twilight);
+  background: var(--color-linen);
 }
 
-@media (min-width: 1024px) {
-  .nav-link:hover::after {
-    transform: scaleX(1);
-  }
+.nav-link.is-active {
+  color: var(--color-twilight);
+  background: var(--color-linen);
+}
+
+/* Bordered CTA inside the pill — transparent fill, hairline Twilight, no
+   shadow (DESIGN.md: buttons are defined by their border). */
+.nav-contact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-4);
+  padding: 7px 14px;
+  border: 1px solid var(--color-twilight);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-twilight);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: translate;
+  transition:
+    color var(--dur) var(--ease-signature),
+    background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
+}
+
+.nav-contact:hover {
+  background: var(--color-twilight);
+  color: var(--color-paper);
+}
+
+.nav-contact:active {
+  scale: 0.96;
+}
+
+/* ---------- PRIMARY OUTLINED CTA — "Open the tools" ----------
+   DESIGN.md: the chromatic border IS the identity. Transparent fill, 1px
+   Signal Blue, no shadow. Arrow in a hairline circle at the right edge.
+   Button radius is 8px (--radius-lg) per the Components spec. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  padding: 8px 12px 8px 14px;
+  border: 1px solid var(--color-signal-blue);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-signal-blue);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: translate;
+  transition:
+    color var(--dur) var(--ease-signature),
+    background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
+}
+
+.pill:hover {
+  background: var(--color-signal-blue);
+  color: var(--color-paper);
+}
+
+.pill:active {
+  scale: 0.96;
+}
+
+.pill-label {
+  position: relative;
+  z-index: 1;
+}
+
+.pill-arrow {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+}
+
+.pill-arrow svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur) var(--ease-signature);
+}
+
+.pill:hover .pill-arrow svg {
+  transform: translate(1.5px, -1.5px);
+}
+
+/* ---------- 6b. BUTTON PRIMITIVES ----------
+   Four variants from DESIGN.md. Buttons never carry a box-shadow. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  padding: 8px 12px 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--dur) var(--ease-signature),
+    background-color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
+}
+
+.btn-arrow {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+
+.btn-arrow svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur) var(--ease-signature);
+}
+
+.btn:hover .btn-arrow svg {
+  transform: translate(1.5px, -1.5px);
+}
+
+/* primary — Signal Blue border only. The only .btn treatment in use; the
+   filled/secondary/ghost variants from the design system were dropped with
+   the dark theme because nothing referenced them. */
+.btn-primary {
+  border-color: var(--color-signal-blue);
+  color: var(--color-signal-blue);
+}
+
+.btn-primary:hover {
+  background: var(--color-signal-blue);
+  color: var(--color-paper);
 }
 
 .burger {
   display: none;
-  width: 42px;
-  height: 42px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--hairline-strong);
-  background: rgba(255, 255, 255, 0.05);
+  gap: 5px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--radius-lg);
+  background: transparent;
   cursor: pointer;
+  transition: background-color var(--dur) var(--ease-signature);
+}
+
+.burger:hover {
+  background: var(--color-linen);
 }
 
 .burger span {
-  width: 16px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--text);
-  transition: transform 0.3s var(--ease-out), opacity 0.3s var(--ease-out);
+  width: 17px;
+  height: 1px;
+  background: var(--color-twilight);
+  transition: transform var(--dur) var(--ease-signature), opacity var(--dur) var(--ease-signature);
 }
 
 .nav.is-open .burger span:nth-child(1) {
-  transform: translateY(4px) rotate(45deg);
+  transform: translateY(3px) rotate(45deg);
 }
 
 .nav.is-open .burger span:nth-child(2) {
-  transform: translateY(-4px) rotate(-45deg);
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+.burger:active {
+  scale: 0.92;
+}
+
+@media (min-width: 1024px) {
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+  }
 }
 
 @media (max-width: 1023px) {
@@ -249,185 +583,914 @@ body {
     display: flex;
   }
 
-  #navMenu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    display: none;
-    padding: 12px 24px 26px;
-    background: rgba(7, 9, 12, 0.96);
-    border-bottom: 1px solid var(--hairline);
+  /* dropdown hangs off the pill — Linen wash, Mist hairline, 16px radius
+     (DESIGN.md: cards 12/16px), never above the 24px ceiling */
+  .nav {
+    align-items: flex-start;
   }
 
-  .nav.is-open #navMenu {
+  .nav-inner {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    border-radius: var(--radius-2xl);
+  }
+
+  /* DOM order is brand / menu / burger; on mobile the burger must stay on the
+     first row with the brand and the menu take a full row of its own. */
+  .nav-inner > .brand { order: 0; }
+  .nav-inner > .burger { order: 1; margin-left: auto; }
+
+  .nav-menu {
+    order: 2;
+    flex: 0 0 100%;
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-4);
+    width: 100%;
+    padding: var(--spacing-12) 0 0;
+    margin-top: var(--spacing-12);
+    border-top: 1px solid var(--color-mist);
+  }
+
+  .nav.is-open .nav-menu {
     display: flex;
   }
 
   .nav-link {
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 44px;
+    padding-inline: var(--spacing-12);
+  }
+
+  .nav-contact {
+    margin: var(--spacing-8) 0 0;
+    min-height: 44px;
   }
 }
 
-/* ============ Scroll reveal ============ */
+/* narrow phones — collapse the wordmark so the pill stays one line */
+@media (max-width: 400px) {
+  .brand-name {
+    display: none;
+  }
+}
 
-.js [data-reveal] {
+/* ---------- 7. HERO ----------
+   Full-bleed 100vh painted illustration (DESIGN.md Layout). No radius, no
+   mask — a hard edge against the parchment below is the intended rhythm.
+   Two layers: the warm dusk gradient placeholder (or assets/hero-dusk.jpg when
+   dropped in), then the frosted overlay card holding the headline. */
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  padding: clamp(120px, 18vh, 200px) 0 clamp(24px, 5vh, 48px);
+  background-color: var(--color-dusk);
+  background-image:
+    var(--hero-art-image),
+    linear-gradient(
+      180deg,
+      var(--hero-art-dusk-a) 0%,
+      var(--hero-art-dusk-b) 34%,
+      var(--hero-art-dusk-c) 68%,
+      var(--hero-art-dusk-d) 100%
+    );
+  background-size: cover;
+  background-position: center;
+}
+
+/* Real illustration, when present, covers the gradient entirely. The <img>
+   removes itself on 404 (see index.html onerror) so the gradient stands in. */
+.hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+/* legibility wash — keeps the frosted card readable over any artwork without
+   tinting the whole scene. Sits above the art, below the card. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(23, 23, 23, 0.28) 0%, rgba(23, 23, 23, 0) 32%),
+    linear-gradient(0deg, rgba(23, 23, 23, 0.42) 0%, rgba(23, 23, 23, 0) 46%);
+}
+
+/* Frosted Hero Overlay Card — bottom-left over the illustration. 24px radius
+   (DESIGN.md large-surfaces), translucent white, backdrop-blur, hairline.
+   Deliberately narrow so the artwork stays visible on both sides. */
+.hero-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: min(640px, 100%);
+  margin-inline: auto;
+  margin-left: max(clamp(20px, 6vw, 64px), calc((100% - var(--page-max-width)) / 2));
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-large-surfaces);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--color-paper);
+  text-align: left;
+}
+
+@supports (backdrop-filter: blur(16px)) {
+  .hero-card {
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+    backdrop-filter: blur(16px) saturate(1.15);
+    background: rgba(255, 255, 255, 0.16);
+  }
+}
+
+.hero-display {
+  color: var(--color-paper);
+  font-size: clamp(38px, 5.6vw, var(--text-display));
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  max-width: 15ch;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  /* room for descenders (g, y, p, q) so the char reveal never crops them */
+  padding: 0.08em 0 0.16em;
+}
+
+.hero-display .block {
+  display: block;
+}
+
+/* SplitText layers — per-char bottom-up mask + subtle 3D, per-word subhead */
+.hero-display .spl-char {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+}
+
+.hero-sub .spl-word {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+}
+
+.hero-sub {
+  max-width: 46ch;
+  margin-top: var(--spacing-16);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: var(--text-subheading);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-subheading);
+}
+
+/* one action + the three platform paths as ghost links */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-16) var(--spacing-24);
+  margin-top: var(--spacing-24);
+}
+
+.hero-paths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--element-gap) var(--spacing-16);
+}
+
+.hero-paths a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-body-sm);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease-signature);
+}
+
+.hero-paths a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur) var(--ease-signature);
+}
+
+.hero-paths a:hover::after,
+.hero-paths a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.hero-paths a:hover {
+  color: var(--color-paper);
+}
+
+@media (max-width: 940px) {
+  .hero {
+    padding: 112px 0 clamp(20px, 4vh, 32px);
+  }
+
+  .hero-card {
+    margin-inline: clamp(16px, 5vw, 24px);
+    padding: clamp(20px, 5vw, 28px);
+  }
+
+  .hero-display {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-16);
+  }
+}
+
+/* ---------- 8. SECTIONS ----------
+   Editorial rhythm: an atmospheric hero, then clean white content bands
+   separated by stretches of bare parchment canvas. Each band carries half the
+   section gap, so content-to-content reads one full gap. */
+section[id] {
+  scroll-margin-top: 84px;
+}
+
+.band {
+  padding-block: calc(var(--section-gap) / 2);
+  color: var(--color-charcoal);
+}
+
+/* clean white content section — the band between illustrations */
+.band--paper {
+  background: var(--surface-paper-card);
+  border-block: 1px solid var(--color-mist);
+}
+
+.band-inner {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 6vw, 64px);
+}
+
+/* headline then subtext — the shared register of every section head */
+.section-head {
+  max-width: var(--page-max-width);
+}
+
+.section-stmt {
+  max-width: 46ch;
+  color: var(--color-ash);
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  letter-spacing: var(--tracking-subheading);
+}
+
+.section-display {
+  color: var(--color-graphite);
+  font-size: clamp(32px, 4.4vw, var(--text-heading-lg));
+  line-height: var(--leading-heading-lg);
+  letter-spacing: var(--tracking-heading-lg);
+  max-width: 18ch;
+  text-wrap: balance;
+  /* descender headroom — clip-path reveal clips to the border-box, so give
+     the glyphs padding inside it or 'g/y/p/q' get cut at rest */
+  padding: 0.06em 0 0.16em;
+}
+
+.section-head .section-stmt {
+  margin-top: var(--spacing-16);
+}
+
+/* ---------- FIGURE CAPTION ----------
+   The journal voice: a small ash note sitting in the parchment margin. */
+.fig-caption {
+  max-width: 52ch;
+  margin-top: var(--spacing-40);
+  color: var(--color-ash);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+}
+
+.figure-band {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding: var(--spacing-48) clamp(20px, 6vw, 64px) 0;
+}
+
+.figure-band .fig-caption {
+  margin-top: 0;
+}
+
+@media (max-width: 940px) {
+  .section-display {
+    font-size: clamp(32px, 8vw, 48px);
+  }
+}
+
+/* headline-then-substatement register (Clarity / CTA): one shared gap,
+   no more hugging the display line */
+.section-display + .section-stmt {
+  margin-top: var(--stack-gap);
+}
+
+@media (max-width: 940px) {
+  .section-display {
+    font-size: clamp(44px, 8.5vw, 72px);
+  }
+}
+
+.section-head + .tile-list {
+  margin-top: clamp(48px, 6vw, 80px);
+}
+
+.flow-list {
+  display: grid;
+  gap: var(--spacing-40) var(--spacing-40);
+  margin-top: clamp(48px, 6vw, 80px);
+}
+
+@media (min-width: 900px) {
+  .flow-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.flow-item {
+  border-top: 1px solid var(--color-mist);
+  padding-top: var(--spacing-20);
+  transition: border-color var(--dur) var(--ease-signature);
+}
+
+.flow-item:hover {
+  border-color: var(--color-fog);
+}
+
+.flow-num {
+  color: var(--color-signal-blue);
+  font-size: var(--text-body);
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-title {
+  margin-top: var(--spacing-16);
+  color: var(--color-graphite);
+  font-size: var(--text-subheading);
+  line-height: var(--leading-subheading);
+  letter-spacing: var(--tracking-subheading);
+  font-family: var(--font-ppmondwest);
+  font-weight: var(--font-weight-regular);
+  font-feature-settings: 'liga' 0;
+}
+
+.flow-label {
+  margin-top: var(--spacing-8);
+  max-width: 34ch;
+  color: var(--color-ash);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+}
+
+/* Atmospheric Illustration Card — DESIGN.md's one saturated moment. Cerulean
+   surface, 24px radius, generous internal padding, white serif headline. This
+   is the only place in the system where pure colour is allowed to exist. */
+.atmospheric {
+  border-radius: var(--radius-large-surfaces);
+  background: var(--surface-vivid-blue);
+  color: var(--color-paper);
+  padding: clamp(48px, 8vw, 104px);
+}
+
+.atmospheric .section-display {
+  color: var(--color-paper);
+  max-width: 20ch;
+  text-align: left;
+}
+
+.atmospheric .section-stmt {
+  margin-top: var(--spacing-16);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.section-cta {
+  text-align: center;
+}
+
+.section-cta .section-display {
+  margin-inline: auto;
+}
+
+.section-cta .section-stmt {
+  margin-inline: auto;
+}
+
+.section-cta-button {
+  margin-top: var(--spacing-40);
+}
+
+/* ---------- 9. FOOTER ----------
+   White band, reads like a book colophon: a large editorial serif statement,
+   then the wordmark, meta and small af links. */
+.footer {
+  border-top: 1px solid var(--color-mist);
+  background: var(--surface-paper-card);
+}
+
+/* the colophon line — biggest serif on the page after the hero */
+.footer-statement {
+  color: var(--color-graphite);
+  font-family: var(--font-ppmondwest);
+  font-weight: var(--font-weight-regular);
+  font-feature-settings: 'liga' 0;
+  font-variant-ligatures: none;
+  font-size: clamp(36px, 5.2vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.footer-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-40);
+  padding-top: clamp(48px, 6vw, 80px);
+}
+
+@media (min-width: 1024px) {
+  .footer-row {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.footer-meta {
+  margin-top: var(--spacing-20);
+  color: var(--color-ash);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--element-gap) var(--spacing-32);
+}
+
+.footer-links a {
+  display: inline-block;
+  color: var(--color-charcoal);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease-signature);
+}
+
+.footer-links a:hover {
+  color: var(--color-signal-blue);
+}
+
+/* ---------- 10. REVEAL-ON-SCROLL ----------
+   Hidden state only applies once js-runtime (set by script.js alone, NOT by
+   the inline <head> failsafe) is present — so if script.js is blocked, every
+   reveal stays visible and the page remains fully usable. Blur joins the
+   lift so reveals read as focus resolving, not just sliding. */
+.js-runtime [data-reveal] {
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(22px);
+  filter: blur(6px);
   transition:
-    opacity 0.8s var(--ease-out),
-    transform 0.8s var(--ease-out);
+    opacity 0.7s var(--ent-soft),
+    transform 0.7s var(--ent-soft),
+    filter 0.7s var(--ent-soft);
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal].is-in {
+.js-runtime [data-reveal].is-in {
   opacity: 1;
   transform: none;
+  filter: blur(0);
 }
 
-/* ============ 3D tilt cards ============ */
-
-.tilt-card {
+/* display headings draw in with the entrance's wipe language while the
+   rest of a section lifts in — one scroll grammar, two registers */
+.js-runtime [data-reveal].section-display {
+  transform: none;
+  filter: none;
+  clip-path: inset(0 0 100% 0);
   transition:
-    transform 0.18s ease-out,
-    border-color 0.35s var(--ease-out),
-    box-shadow 0.35s var(--ease-out);
+    opacity 0.7s var(--ent-soft),
+    clip-path 0.9s var(--ent-line);
+  transition-delay: var(--reveal-delay, 0s);
 }
 
-.tilt-glare {
-  opacity: 0;
-  transition: opacity 0.4s var(--ease-out);
-}
-
-.tilt-card:hover .tilt-glare {
+.js-runtime [data-reveal].section-display.is-in {
   opacity: 1;
+  clip-path: inset(0 0 0 0);
 }
 
-/* ============ Hero 3D ============ */
-
-.hero-grid {
-  grid-template-columns: 1fr;
-  gap: 3.5rem;
+/* ---------- 11. ENTRANCE ----------
+   Pure-CSS fallback entrance, used only when GSAP is absent
+   (html.css-entrance, set by script.js). Same choreography as the GSAP
+   timeline, on the expo curve, played once before html.is-entered pins it.
+   The GSAP path sets its own from-states and never relies on this block.
+   ------------------------------------------------------------------------ */
+@keyframes en-lift {
+  from {
+    opacity: 0;
+    translate: 0 var(--rise, 0.55em);
+    filter: blur(6px);
+  }
 }
 
-#hero3d,
-.hero3d {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  min-width: 0;
-  z-index: 1;
+/* hero display entrance — the seamless fade + 20px rise the curtain reveals */
+@keyframes en-rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+    filter: blur(6px);
+  }
+}
+
+@keyframes en-settle {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--rise, 0.55em) * 0.6);
+    scale: 0.99;
+    filter: blur(4px);
+  }
+}
+
+html.css-entrance:not(.is-entered) .nav-inner .brand {
+  animation: en-lift 0.6s var(--ent-soft) 0.10s backwards;
+}
+
+html.css-entrance:not(.is-entered) .nav-menu a:nth-child(1) {
+  animation: en-lift 0.55s var(--ent-soft) 0.18s backwards;
+}
+
+html.css-entrance:not(.is-entered) .nav-menu a:nth-child(2) {
+  animation: en-lift 0.55s var(--ent-soft) 0.24s backwards;
+}
+
+html.css-entrance:not(.is-entered) .nav-menu a:nth-child(3) {
+  animation: en-lift 0.55s var(--ent-soft) 0.30s backwards;
+}
+
+html.css-entrance:not(.is-entered) .nav-menu a:nth-child(4) {
+  animation: en-lift 0.55s var(--ent-soft) 0.36s backwards;
+}
+
+html.css-entrance:not(.is-entered) .nav-menu .nav-contact,
+html.css-entrance:not(.is-entered) .burger {
+  animation: en-settle 0.6s var(--ent-soft) 0.42s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-display .block:nth-child(1) {
+  animation: en-rise 0.9s var(--ent-line) 0.30s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-display .block:nth-child(2) {
+  animation: en-rise 0.9s var(--ent-line) 0.42s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-display .block:nth-child(3) {
+  animation: en-rise 0.9s var(--ent-line) 0.54s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-sub {
+  animation: en-lift 0.7s var(--ent-soft) 0.72s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-paths li:nth-child(1) {
+  animation: en-lift 0.6s var(--ent-soft) 0.90s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-paths li:nth-child(2) {
+  animation: en-lift 0.6s var(--ent-soft) 0.97s backwards;
+}
+
+html.css-entrance:not(.is-entered) .hero-paths li:nth-child(3) {
+  animation: en-lift 0.6s var(--ent-soft) 1.04s backwards;
+}
+
+html.css-entrance:not(.is-entered) .footer .brand {
+  animation: en-lift 0.6s var(--ent-soft) 1.12s backwards;
+}
+
+html.css-entrance:not(.is-entered) .footer-links li {
+  animation: en-lift 0.6s var(--ent-soft) 1.18s backwards;
+}
+
+/* the GSAP entrance also settles the hero artwork from a gentle scale — the
+   CSS fallback honors the same treatment */
+html.css-entrance:not(.is-entered) .hero-art {
+  animation: art-settle 1.6s var(--ent-line) 0.4s backwards;
+}
+
+@keyframes art-settle {
+  from { scale: 1.06; }
+}
+
+/* ---------- 11b. PRELOADER — "Calm Surface" ----------
+   One opaque Parchment pane, dead center: wide-tracked NEWSOCAPIS wordmark
+   (fade-in, staggered by --i) and a 1px line that fills in over the first
+   1.5s (rAF, script.js). At 1.5s the whole pane slides up (translateY(-100%),
+   fast-out/long-landing curve) during the final 0.7s and teardown removes it
+   + unlocks scroll.
+
+   Timing, easing and the pl-char keyframes below are UNCHANGED from the
+   pre-redesign version — only the colors moved to the light theme. */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  overflow: hidden;
+  background: var(--color-parchment);
+  pointer-events: auto;
+  will-change: transform;
+  transition:
+    transform 0.7s var(--ease-curtain),
+    visibility 0s 0.7s;
+}
+
+html.js .preloader {
+  display: block;
+}
+
+/* curtain up — the pane itself is the curtain */
+.preloader.is-done {
+  transform: translateY(-100%);
   pointer-events: none;
+  visibility: hidden;
+}
+
+.preloader-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+
+/* wordmark — elegant wide tracking, staggered fade-in */
+.preloader-brand {
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.55em;
+  margin-inline-start: 0.55em; /* optically recenter the wide tracking */
+  color: var(--color-graphite);
+}
+
+.preloader-brand > span {
+  display: inline-block;
+  opacity: 0;
+  animation: pl-char 0.6s var(--ent-line) forwards;
+  animation-delay: calc(0.08s + var(--i, 0) * 0.025s);
+}
+
+@keyframes pl-char {
+  from {
+    opacity: 0;
+    translate: 0 0.55em;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+
+/* 1px loading line — fills 0→1 in 1.5s (rAF, script.js) */
+.preloader-bar {
+  position: relative;
+  width: min(200px, 46vw);
+  height: 1px;
+  background: var(--color-mist);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
-#hero3d canvas,
-.hero3d canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  cursor: grab;
-  touch-action: pan-y;
-  pointer-events: none;
+.preloader-bar-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  border-radius: inherit;
+  background: var(--color-signal-blue);
 }
 
-@media (pointer: fine) {
-  #hero3d canvas,
-  .hero3d canvas {
-    pointer-events: auto;
-  }
+/* ---------- 12. CONTENT CARD — "One place for everything you share" --------
+   DESIGN.md White Content Card: 12px radius, Paper fill, 1px Mist border,
+   --shadow-subtle. Hover lifts the border to Fog and nudges the line arrow —
+   no glow, no spotlight, no shadow change. */
+.tile-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-16);
+  margin-top: clamp(48px, 6vw, 80px);
 }
 
-.hero3d canvas.dragging {
-  cursor: grabbing;
-}
-
-.hero-copy {
+.tile {
   position: relative;
-  z-index: 2;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+  min-height: 220px;
+  padding: var(--card-padding);
+  border: 1px solid var(--color-mist);
+  border-radius: var(--radius-cards);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-subtle);
+  color: var(--color-graphite);
+  text-decoration: none;
+  overflow: hidden;
+  transition:
+    border-color var(--dur) var(--ease-signature),
+    color var(--dur) var(--ease-signature);
 }
 
-.hero-copy p {
-  margin: 0 auto;
-  text-align: center;
+.tile-wide { grid-column: span 2; }
+.tile-full { grid-column: 1 / -1; min-height: 180px; }
+
+.tile > * { position: relative; z-index: 1; }
+
+.tile-icon {
+  flex: none;
+  fill: none;
+  stroke: var(--color-twilight);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-bottom: var(--spacing-4);
+  transition: stroke var(--dur) var(--ease-signature);
 }
 
-.hero-copy .flex-wrap {
-  justify-content: center;
+.tile:hover .tile-icon {
+  stroke: var(--color-signal-blue);
 }
 
-@media (min-width: 769px) {
-  .hero-copy {
-    text-align: left;
-  }
-
-  .hero-copy p {
-    margin: 0;
-    text-align: left;
-  }
-
-  .hero-copy .flex-wrap {
-    justify-content: flex-start;
-  }
+.tile-title {
+  font-family: var(--font-ppmondwest);
+  font-weight: var(--font-weight-regular);
+  font-feature-settings: 'liga' 0;
+  font-size: var(--text-heading-sm);
+  line-height: var(--leading-heading-sm);
+  letter-spacing: var(--tracking-heading-sm);
+  color: var(--color-graphite);
 }
 
-@media (min-width: 769px) {
-  .hero-grid {
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: 1.5rem;
-  }
+.tile-label {
+  max-width: 34ch;
+  color: var(--color-ash);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  transition: color var(--dur) var(--ease-signature);
 }
 
-@media (max-width: 768px) {
-  #hero3d,
-  .hero3d {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    opacity: 0.35;
-  }
+.tile-arrow {
+  position: absolute;
+  top: var(--card-padding);
+  right: var(--card-padding);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--color-mist);
+  border-radius: var(--radius-full);
+  color: var(--color-ash);
+  transition:
+    color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
 }
 
-/* ============ Accessibility ============ */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  html {
-    scroll-behavior: auto;
-  }
-
-  .hero-line {
-    opacity: 1;
-    animation: none;
-  }
-
-  .js [data-reveal] {
-    opacity: 1;
-    transform: none;
-  }
+.tile-arrow svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur) var(--ease-signature);
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .nav {
-    background: var(--ink);
-  }
+.tile:hover {
+  border-color: var(--color-fog);
 }
-main, footer { position: relative; z-index: 10; }
+
+.tile:hover .tile-arrow {
+  color: var(--color-twilight);
+  border-color: var(--color-fog);
+}
+
+.tile:hover .tile-arrow svg { transform: translate(1.5px, -1.5px); }
+
+@media (max-width: 900px) {
+  .tile-list { grid-template-columns: 1fr; }
+  .tile-wide,
+  .tile-full { grid-column: auto; }
+  .tile-full { min-height: 180px; }
+}
+
+/* ---------- 13. SCROLL PROGRESS + BACK-TO-TOP ---------- */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 55;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: var(--color-signal-blue);
+}
+
+#back-to-top {
+  position: fixed;
+  right: clamp(16px, 4vw, 40px);
+  bottom: clamp(16px, 4vw, 40px);
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-mist);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper);
+  color: var(--color-twilight);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  will-change: translate;
+  transition:
+    opacity var(--dur) var(--ease-signature),
+    visibility var(--dur) var(--ease-signature),
+    transform var(--dur) var(--ease-signature),
+    color var(--dur) var(--ease-signature),
+    border-color var(--dur) var(--ease-signature);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+#back-to-top:hover {
+  border-color: var(--color-fog);
+  color: var(--color-signal-blue);
+  transform: translateY(-2px);
+}
+
+#back-to-top:active {
+  scale: 0.92;
+}
+
+#back-to-top:disabled {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#back-to-top svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

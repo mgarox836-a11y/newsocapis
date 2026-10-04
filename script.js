@@ -1,0 +1,501 @@
+/* Newsocapis — plain JS. No frameworks, no build step.
+   Preloader (~2.2s total: brand glow + 1px line fills the first 1.5s, curtain
+   slide-up over the final 0.7s) then hero reveal: GSAP 3 (CDN) if present,
+   pure-CSS keyframes otherwise. If GSAP is present but its entrance throws, the
+   reveal falls back to the CSS choreography. prefers-reduced-motion: reduce is
+   honoured on both paths — the hero lands on its end state with no motion. */
+
+var START_AT_TOP_ON_LOAD = true;
+var startAtTopFresh = true; /* true unless this is a back_forward restore */
+if (START_AT_TOP_ON_LOAD) {
+  try {
+    var startAtTopNav = performance.getEntriesByType('navigation')[0];
+    startAtTopFresh = !startAtTopNav || startAtTopNav.type !== 'back_forward';
+  } catch (e) { startAtTopFresh = true; }
+}
+if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
+  if (window.location.hash && history.replaceState) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+}
+
+(function () {
+  'use strict';
+
+  var docEl = document.documentElement;
+  docEl.classList.add('js-runtime');
+
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  /* ---------------------------------------------------------------
+     Preloader + Hero Reveal — minimal "Calm Surface" loading screen.
+     ~2.2s: NEWSOCAPIS fades in with a soft glow, the 1px line fills 0→1
+     over the first 1.5s (rAF, easeOutQuart), then the pane slides up
+     (translateY(-100%), curtain curve) during the final 0.7s while the hero
+     reveal — GSAP timeline or pure-CSS fallback — plays behind. Teardown
+     removes the overlay from the DOM and unlocks scroll once the curtain
+     clears. bfcache / back-forward never replay it.
+     --------------------------------------------------------------- */
+  (function () {
+    var preloaderEl = document.querySelector('[data-preloader]');
+    var fillEl = document.querySelector('[data-preloader-fill]');
+
+    var entered = false;
+
+    /* GSAP 3 publishes window.gsap as a plain OBJECT, not a function, so the
+       old `typeof window.gsap === 'function'` test failed forever and the whole
+       GSAP/SplitText entrance silently never ran — the CSS fallback covered
+       for it and nobody noticed. Probe the API we actually call instead. */
+    function gsapAvailable() {
+      return !window.__gsapFailed &&
+        !!window.gsap &&
+        typeof window.gsap.timeline === 'function';
+    }
+
+    /* The entrance hides hero text by writing inline opacity/transform. If any
+       part of that choreography dies mid-flight the headline would stay at
+       opacity 0 forever, so every exit path funnels through here and strips
+       the inline props back to their stylesheet rest state. Idempotent: on the
+       happy path the tweens have already landed on those same values. */
+    /* The entrance hides every element the timeline touches by writing inline
+       opacity/transform. If the timeline is killed mid-flight those tweens
+       freeze at partial values, so the rescue sweep has to cover all of its
+       targets — hero text AND nav/footer chrome — or a failed entrance leaves
+       an invisible navigation bar behind. */
+    var ENTRANCE_TARGETS = [
+      '.hero-display .block',
+      '.hero-display .spl-char',
+      '.hero-sub',
+      '.hero-sub .spl-word',
+      '.hero-paths li',
+      '.hero-art',
+      '.nav-inner .brand',
+      '.nav-menu .nav-link',
+      '.nav-menu .nav-contact',
+      '.burger',
+      '.footer .brand',
+      '.footer-links li'
+    ];
+
+    function settleEntranceTargets() {
+      ENTRANCE_TARGETS.forEach(function (sel) {
+        var els = document.querySelectorAll(sel);
+        for (var i = 0; i < els.length; i++) {
+          els[i].style.opacity = '';
+          els[i].style.transform = '';
+          els[i].style.filter = '';
+          els[i].style.visibility = '';
+        }
+      });
+    }
+
+    function finish() {
+      if (entered) return;
+      entered = true;
+      settleEntranceTargets();
+      docEl.classList.remove('is-loading');
+      docEl.classList.add('is-entered');
+    }
+
+    function removePreloader() {
+      if (preloaderEl && preloaderEl.parentNode) {
+        preloaderEl.parentNode.removeChild(preloaderEl);
+      }
+      preloaderEl = null;
+    }
+
+    /* teardown — never keeps the overlay in the layout or scroll locked */
+    function cleanup() {
+      removePreloader();
+      finish();
+      docEl.classList.remove('is-locked');
+    }
+
+    /* hero/reveal choreography — plays when the curtain starts to part */
+    function reveal() {
+      if (!gsapAvailable()) {
+        /* pure-CSS keyframe entrance — same choreography, no library */
+        docEl.classList.add('css-entrance');
+        /* let the CSS keyframes play (latest delay ≈1.2s + 0.7s), then pin */
+        window.setTimeout(finish, 1900);
+        return;
+      }
+
+      docEl.classList.add('gsap-entrance');
+
+      /* Reduced motion. The stylesheet's prefers-reduced-motion block strips
+         the CSS keyframes, but it cannot touch this timeline — GSAP animates
+         inline styles, which no media query in the CSS can veto. Honour the
+         preference here or fixing the GSAP guard would have silently removed
+         the site's only reduced-motion support. Land on the end state at once:
+         no split, no tweens, same visible result. */
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finish();
+        return;
+      }
+
+      var splits = [];
+
+      try {
+        /* onComplete fires after GSAP's final render, but the preloader
+           teardown below already called finish() ~900ms earlier — which
+           un-gates is-entered while the timeline is still running. Settle the
+           hero text one tick after the timeline truly ends so the last write is
+           ours, not GSAP's leftover perspective/blur. */
+        var tl = gsap.timeline({
+          onComplete: function () {
+            window.setTimeout(function () {
+              settleEntranceTargets();
+              finish();
+            }, 0);
+          }
+        });
+
+        /* hero artwork settles from a gentle scale — only if the illustration
+           actually resolved (the <img> removes itself on a 404) */
+        var art = document.querySelector('.hero-art');
+        if (art) tl.from(art, { scale: 1.06, duration: 1.7, ease: 'power2.out' }, 0.25);
+
+        /* chrome */
+        tl.from('.nav-inner .brand', { y: -10, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.05);
+        tl.from('.nav-menu .nav-link', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.06 }, 0.09);
+        tl.from('.burger, .nav-menu .nav-contact', { y: -8, opacity: 0, duration: 0.55, ease: 'power3.out' }, 0.2);
+
+        /* hero display — masked char reveal (SplitText 3D rise) when the plugin
+           is present; seamless blur-rise otherwise */
+        if (window.SplitText) {
+          var blockSpans = gsap.utils.toArray('.hero-display .block').map(function (el) {
+            return new window.SplitText(el, { type: 'chars', charsClass: 'spl-char' });
+          });
+          splits = splits.concat(blockSpans);
+          var chars = blockSpans.reduce(function (acc, sp) { return acc.concat(sp.chars); }, []);
+          gsap.set(chars, {
+            yPercent: 115, rotateY: 14, opacity: 0, filter: 'blur(6px)',
+            transformPerspective: 800, transformOrigin: '50% 100% 0'
+          });
+          tl.to(chars, {
+            yPercent: 0, rotateY: 0, opacity: 1, filter: 'blur(0px)',
+            duration: 0.9, ease: 'expo.out', stagger: 0.018
+          }, 0.30);
+
+          var subSp = new window.SplitText('.hero-sub', { type: 'words', wordsClass: 'spl-word' });
+          splits.push(subSp);
+          gsap.set(subSp.words, {
+            yPercent: 60, rotateY: 8, opacity: 0, filter: 'blur(5px)',
+            transformPerspective: 700, transformOrigin: '50% 100% 0'
+          });
+          tl.to(subSp.words, {
+            yPercent: 0, rotateY: 0, opacity: 1, filter: 'blur(0px)',
+            duration: 0.7, ease: 'power3.out', stagger: 0.045
+          }, 0.80);
+        } else {
+          tl.fromTo(
+            '.hero-display .block',
+            { y: 20, opacity: 0, filter: 'blur(8px)' },
+            { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, stagger: 0.12, ease: 'power3.out' },
+            0.30
+          );
+          tl.from('.hero-sub', { y: 22, opacity: 0, filter: 'blur(6px)', duration: 0.7, ease: 'power3.out' }, 0.80);
+        }
+
+        tl.from('.hero-paths li', { y: 14, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07 }, 0.90);
+        tl.from('.footer .brand, .footer-links li', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out', stagger: 0.04 }, 1.12);
+      } catch (err) {
+        /* SplitText or the timeline threw. Undo any split, drop the dead
+           timeline, and hand the page to the CSS choreography that has always
+           been the safety net. Never swallow this silently — a quiet catch
+           here is what hid this bug in the first place. */
+        if (window.console && console.warn) {
+          console.warn('[newsocapis] GSAP entrance failed, falling back to CSS:', err);
+        }
+        splits.forEach(function (sp) {
+          try { sp.revert(); } catch (e2) { /* already gone */ }
+        });
+        tl && tl.kill && tl.kill();
+        docEl.classList.remove('gsap-entrance');
+        settleEntranceTargets();
+        docEl.classList.add('css-entrance');
+        window.setTimeout(finish, 1900);
+      }
+    }
+
+    /* ---- the 1px line fills 0→1 over 1.5s (easeOutQuart), then 0.7s curtain ---- */
+    function runPreloader() {
+      var total = 1500;   /* line fill window */
+      var curtain = 700;  /* curtain slide-up duration */
+      var t0 = null;
+      var handedOff = false;
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function tick(now) {
+        if (t0 === null) t0 = now;
+        var p = Math.min(1, (now - t0) / total);
+        var v = easeOutQuart(p);
+        if (fillEl) fillEl.style.transform = 'scaleX(' + v + ')';
+        if (p < 1) { requestAnimationFrame(tick); return; }
+        window.setTimeout(handoff, 0);
+      }
+
+      function handoff() {
+        if (handedOff) return;
+        handedOff = true;
+        if (preloaderEl) preloaderEl.classList.add('is-done');
+        window.requestAnimationFrame(reveal);
+        /* curtain clears (~2.2s → ever-sooner teardown) → unlock */
+        window.setTimeout(cleanup, curtain + 20);
+      }
+
+      /* hard failsafe — never leaves the overlay locked in place */
+      window.setTimeout(cleanup, 2600);
+
+      requestAnimationFrame(tick);
+    }
+
+    docEl.classList.add('is-locked');
+    try {
+      runPreloader();
+    } catch (e) {
+      cleanup();
+      reveal();
+    }
+  })();
+
+  /* bfcache: never re-cue anything after a back/forward restore */
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      var stale = document.querySelector('.preloader');
+      if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+      docEl.classList.add('is-entered');
+      docEl.classList.remove('is-loading');
+      docEl.classList.remove('is-locked');
+    }
+  });
+
+  /* ---------------------------------------------------------------
+     ScrollTrigger is no longer used anywhere. It shipped with the retired
+     hero pin (hero-scroll.js) and nothing else ever registered a trigger, so
+     refresh() had nothing to re-measure — and the section reveals below are
+     driven by IntersectionObserver + CSS, which never needed it. The <script>
+     is still loaded in index.html so window.ScrollTrigger exists for any
+     future pin, but there is deliberately no setup code here.
+     --------------------------------------------------------------- */
+
+  /* ---------------------------------------------------------------
+     Burger (button-driven): close the panel on link click and ESC.
+     --------------------------------------------------------------- */
+  (function () {
+    var header = document.getElementById('nav');
+    var toggle = document.getElementById('navToggle');
+    if (!header || !toggle) return;
+
+    var close = function () {
+      header.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', function () {
+      var open = header.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    header.querySelectorAll('.nav-link').forEach(function (link) {
+      link.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && header.classList.contains('is-open')) {
+        close();
+        toggle.focus();
+      }
+    });
+  })();
+
+  /* ---------------------------------------------------------------
+     Scroll progress bar + back-to-top
+     --------------------------------------------------------------- */
+  (function () {
+    var bar = document.getElementById('scroll-progress');
+    var backToTop = document.getElementById('back-to-top');
+    var ticking = false;
+
+    function update() {
+      var doc = document.documentElement;
+      var total = doc.scrollHeight - doc.clientHeight;
+      var p = total > 0 ? doc.scrollTop / total : 0;
+      if (bar) bar.style.transform = 'scaleX(' + p + ')';
+      if (backToTop) {
+        var show = doc.scrollTop > 600;
+        backToTop.classList.toggle('visible', show);
+      }
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }
+
+    if (backToTop) {
+      backToTop.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    if (bar || backToTop) {
+      update();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+    }
+  })();
+
+  /* ---------------------------------------------------------------
+     Reveal-on-scroll — [data-reveal] / .is-in.
+     Tween is CSS (opacity/transform/filter) — off the main thread.
+     --------------------------------------------------------------- */
+  (function () {
+    var els = document.querySelectorAll('[data-reveal]');
+    if (!els.length) return;
+    var shown = new WeakSet();
+    var show = function (el) {
+      if (shown.has(el)) return;
+      shown.add(el);
+      el.classList.add('is-in');
+    };
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(show);
+      return;
+    }
+    var io = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { show(en.target); obs.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+
+    var passVisible = function () {
+      els.forEach(function (el) {
+        if (shown.has(el)) return;
+        var r = el.getBoundingClientRect();
+        if (r.top <= window.innerHeight && r.bottom > 0) show(el);
+      });
+    };
+    window.addEventListener('load', function () { requestAnimationFrame(passVisible); }, { once: true });
+    var ticking = false;
+    var onLayout = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { passVisible(); ticking = false; });
+    };
+    window.addEventListener('scroll', onLayout, { passive: true });
+    window.addEventListener('resize', onLayout, { passive: true });
+  })();
+
+  /* ---------------------------------------------------------------
+     Active nav section — IntersectionObserver center band -> .is-active
+     --------------------------------------------------------------- */
+  (function () {
+    var sectionsByHref = { top: 'hero', features: 'features', flow: 'flow', clarity: 'clarity' };
+    var links = {};
+    [].forEach.call(document.querySelectorAll('.nav-link'), function (a) {
+      var key = (a.getAttribute('href') || '').replace(/^#/, '');
+      if (key in sectionsByHref) links[sectionsByHref[key]] = a;
+    });
+
+    var current = null;
+    var set = function (sectionId) {
+      if (sectionId === current) return;
+      if (current && links[current]) {
+        links[current].removeAttribute('aria-current');
+        links[current].classList.remove('is-active');
+      }
+      current = sectionId;
+      if (current && links[current]) {
+        links[current].setAttribute('aria-current', 'true');
+        links[current].classList.add('is-active');
+      }
+    };
+
+    if (!('IntersectionObserver' in window) || !links.hero) return;
+
+    var band = new IntersectionObserver(function (entries) {
+      var top = entries
+        .filter(function (en) { return en.isIntersecting; })
+        .sort(function (a, b) { return b.intersectionRatio - a.intersectionRatio; })[0];
+      if (top) { set(top.target.id); return; }
+      var doc = document.documentElement;
+      if (doc.scrollHeight - (doc.scrollTop + doc.clientHeight) < 120) set('clarity');
+      else set('');
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    Object.keys(sectionsByHref).forEach(function (key) {
+      var el = document.getElementById(sectionsByHref[key]);
+      if (el) band.observe(el);
+    });
+
+    set('hero');
+  })();
+
+  /* ---------------------------------------------------------------
+     Magnetic buttons — [data-magnet]. Fish to the pointer, max ~14px.
+     GSAP quickTo when available, rAF lerp otherwise. pointer:fine only.
+     Active press uses the CSS `scale` property.
+     --------------------------------------------------------------- */
+  (function () {
+    var btns = document.querySelectorAll('[data-magnet]');
+    if (!btns.length || !finePointer.matches) return;
+
+    function clampMag(dx, half) {
+      var t = Math.max(-1, Math.min(1, dx / half));
+      return t * 14;
+    }
+
+    if (window.gsap) {
+      btns.forEach(function (b) {
+        var qx = gsap.quickTo(b, 'x', { duration: 0.35, ease: 'power3.out' });
+        var qy = gsap.quickTo(b, 'y', { duration: 0.35, ease: 'power3.out' });
+        b.addEventListener('pointermove', function (e) {
+          var r = b.getBoundingClientRect();
+          var halfW = Math.max(1, r.width / 2);
+          var halfH = Math.max(1, r.height / 2);
+          qx(clampMag(e.clientX - (r.left + halfW), halfW));
+          qy(clampMag(e.clientY - (r.top + halfH), halfH));
+        });
+        b.addEventListener('pointerleave', function () { qx(0); qy(0); });
+      });
+      return;
+    }
+
+    /* rAF lerp fallback */
+    btns.forEach(function (b) {
+      var tx = 0, ty = 0, cx = 0, cy = 0, raf = null;
+      function loop() {
+        cx += (tx - cx) * 0.16;
+        cy += (ty - cy) * 0.16;
+        b.style.translate = cx.toFixed(2) + 'px ' + cy.toFixed(2) + 'px';
+        if (Math.abs(tx - cx) > 0.1 || Math.abs(ty - cy) > 0.1) raf = requestAnimationFrame(loop);
+        else raf = null;
+      }
+      b.addEventListener('pointermove', function (e) {
+        var r = b.getBoundingClientRect();
+        var halfW = Math.max(1, r.width / 2);
+        var halfH = Math.max(1, r.height / 2);
+        tx = clampMag(e.clientX - (r.left + halfW), halfW);
+        ty = clampMag(e.clientY - (r.top + halfH), halfH);
+        if (!raf) raf = requestAnimationFrame(loop);
+      });
+      b.addEventListener('pointerleave', function () { tx = 0; ty = 0; if (!raf) raf = requestAnimationFrame(loop); });
+    });
+  })();
+
+  /* ---------------------------------------------------------------
+     Footer year
+     --------------------------------------------------------------- */
+  document.querySelectorAll('[data-year]').forEach(function (el) {
+    el.textContent = String(new Date().getFullYear());
+  });
+})();

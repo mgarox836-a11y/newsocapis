@@ -1,0 +1,9 @@
+# browser-automation artifacts (screenshots, console logs)
+.playwright-mcp/
+
+# deps / build
+node_modules/
+
+# os
+.DS_Store
+Thumbs.db
