@@ -42,7 +42,20 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header id="nav" class="nav">
+  <!-- Liquid-glass displacement map. Referenced only from inside an @supports
+       block in style.css, so engines that cannot resolve a filter reference in
+       backdrop-filter never see it and fall back to a plain blur. -->
+  <svg class="glass-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter id="lg-displace" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.72 0.028" numOctaves="2" seed="7" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="5" result="soft" />
+        <feDisplacementMap in="SourceGraphic" in2="soft" scale="12" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <header id="nav" class="nav" data-theme="on-media" data-pointer="fine">
     <div class="nav-inner">
       <a href="#top" class="brand" data-unveil>
         <svg class="brand-glyph" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
@@ -53,7 +66,7 @@
         <span class="brand-name">Newsocapis</span>
       </a>
 
-      <nav id="navMenu" class="nav-menu" aria-label="Main navigation">
+      <nav id="navMenu" class="nav-menu nav-menu-panel" aria-label="Main navigation">
         <a class="nav-link" href="#top">Overview</a>
         <a class="nav-link" href="#features">Features</a>
         <a class="nav-link" href="#flow">Flow</a>
@@ -69,9 +82,20 @@
 
   <main id="main">
 
-    <!-- ============ HERO — dusk gradient + frosted overlay card ============
-         The surface is the gradient itself: no <img>, so nothing to 404. -->
+    <!-- ============ HERO — video over a layered dusk fallback ============
+         The video is decoration, not content: it is muted, looping, inline
+         and carries no audio track, and every word on the page lives in the
+         DOM as real text below. The layered gradient behind it is a complete
+         artwork in its own right, so a blocked video, a failed fetch, or a
+         data-saver browser all land on the same dusk the design specifies. -->
     <section id="hero" class="hero">
+      <video class="hero-media" muted loop playsinline preload="none" poster="assets/hero-dusk.jpg" aria-hidden="true" tabindex="-1" data-hero-video>
+        <source src="assets/hero.webm" type="video/webm" />
+        <source src="assets/hero.mp4" type="video/mp4" />
+      </video>
+
+      <div class="hero-grain" aria-hidden="true"></div>
+
       <div class="hero-card">
         <h1 class="hero-display">
           <span class="block" data-unveil>Calm surface.</span>
@@ -99,13 +123,13 @@
     </section>
 
     <!-- ============ FIG. 1 — the parchment margin between hero and content ============ -->
-    <div class="figure-band">
+    <div class="figure-band shell">
       <p class="fig-caption" data-reveal>Fig. 1 &mdash; Dusk fading to paper. No picture and nothing pinned; the page stays still and the light does the work.</p>
     </div>
 
     <!-- ============ FEATURES ============ -->
     <section id="features" class="band band--paper">
-      <div class="band-inner">
+      <div class="band-inner shell">
         <div class="section-head">
           <h2 class="section-display" data-reveal>One place for everything you share.</h2>
           <p class="section-stmt" data-reveal style="--reveal-delay: 0.07s">Three ways in, zero clutter. Pick a platform, tap through, done.</p>
@@ -147,37 +171,74 @@
 
     <!-- ============ FLOW ============ -->
     <section id="flow" class="band">
-      <div class="band-inner">
+      <div class="band-inner shell">
         <div class="section-head">
           <h2 class="section-display" data-reveal>How it flows.</h2>
           <p class="section-stmt" data-reveal style="--reveal-delay: 0.07s">From one link to wherever you need to go.</p>
         </div>
 
-        <ol class="flow-list">
-          <li class="flow-item" data-reveal>
-            <span class="flow-num">01</span>
-            <h3 class="flow-title">Connect</h3>
-            <p class="flow-label">Pick a platform and tap through.</p>
-          </li>
-          <li class="flow-item" data-reveal style="--reveal-delay: 0.07s">
-            <span class="flow-num">02</span>
-            <h3 class="flow-title">Explore</h3>
-            <p class="flow-label">Stories, clips, and free tools, ready in one place.</p>
-          </li>
-          <li class="flow-item" data-reveal style="--reveal-delay: 0.14s">
-            <span class="flow-num">03</span>
-            <h3 class="flow-title">Use</h3>
-            <p class="flow-label">Sorted in seconds, no noise.</p>
-          </li>
-        </ol>
+        <div class="figure-grid">
+          <div class="figure-copy">
+            <ol class="flow-list">
+              <li class="flow-item" data-reveal>
+                <span class="flow-num">01</span>
+                <h3 class="flow-title">Connect</h3>
+                <p class="flow-label">Pick a platform and tap through.</p>
+              </li>
+              <li class="flow-item" data-reveal style="--reveal-delay: 0.07s">
+                <span class="flow-num">02</span>
+                <h3 class="flow-title">Explore</h3>
+                <p class="flow-label">Stories, clips, and free tools, ready in one place.</p>
+              </li>
+              <li class="flow-item" data-reveal style="--reveal-delay: 0.14s">
+                <span class="flow-num">03</span>
+                <h3 class="flow-title">Use</h3>
+                <p class="flow-label">Sorted in seconds, no noise.</p>
+              </li>
+            </ol>
 
-        <p class="fig-caption" data-reveal>Fig. 2 &mdash; Three steps, no detours. The list reads left to right like a line of type.</p>
+            <p class="fig-caption" data-reveal>Fig. 2 &mdash; Three steps, no detours. The list reads left to right like a line of type.</p>
+          </div>
+
+          <figure class="diagram-card" data-reveal>
+            <svg class="diagram-art" viewBox="0 0 480 300" role="img" aria-label="Line diagram: one link passes through Connect, Explore, and Use, arriving at a single destination.">
+              <g class="diagram-stroke">
+                <path d="M56 150h44" />
+                <path d="M168 150h44" />
+                <path d="M280 150h44" />
+                <path d="M400 150c26 0 44-14 44-38v-24" />
+              </g>
+              <g class="diagram-node">
+                <circle cx="120" cy="150" r="30" />
+                <circle cx="232" cy="150" r="30" />
+                <circle cx="344" cy="150" r="30" />
+              </g>
+              <g class="diagram-mark">
+                <path d="M110 150l7 7 13-14" />
+                <path d="M222 150l7 7 13-14" />
+                <path d="M334 150l7 7 13-14" />
+              </g>
+              <g class="diagram-label">
+                <text x="120" y="214">Connect</text>
+                <text x="232" y="214">Explore</text>
+                <text x="344" y="214">Use</text>
+              </g>
+              <g class="diagram-ghost">
+                <circle cx="444" cy="66" r="16" />
+                <path d="M444 74v22" />
+              </g>
+              <g class="diagram-baseline">
+                <path d="M56 258h388" />
+              </g>
+            </svg>
+          </figure>
+        </div>
       </div>
     </section>
 
     <!-- ============ CLARITY — the one saturated moment in the system ============ -->
     <section id="clarity" class="band">
-      <div class="band-inner">
+      <div class="band-inner shell">
         <div class="atmospheric">
           <h2 class="section-display" data-reveal>No noise, no clutter. Just your links, working quietly.</h2>
           <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">That is the whole point of Newsocapis.</p>
@@ -187,22 +248,57 @@
 
     <!-- ============ CTA ============ -->
     <section id="visit" class="band band--paper section-cta">
-      <div class="band-inner">
-        <h2 class="section-display" data-reveal>Everything, in one quiet link.</h2>
-        <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
-        <a class="pill section-cta-button" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnet data-reveal style="--reveal-delay: 0.18s">
-          <span class="pill-label">Open the tools</span>
-          <span class="pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
-        </a>
+      <div class="band-inner shell">
+        <div class="figure-grid">
+          <div class="figure-copy">
+            <h2 class="section-display" data-reveal>Everything, in one quiet link.</h2>
+            <p class="section-stmt" data-reveal style="--reveal-delay: 0.1s">Instagram, TikTok, and free web tools, all reachable from a single place.</p>
+            <a class="pill section-cta-button" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer" data-magnet data-reveal style="--reveal-delay: 0.18s">
+              <span class="pill-label">Open the tools</span>
+              <span class="pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13"><path d="M3 13 13 3 M5 3h8v8"/></svg></span>
+            </a>
 
-        <p class="fig-caption" data-reveal>Fig. 3 &mdash; Colophon. One address, three destinations, nothing else to maintain.</p>
+            <p class="fig-caption" data-reveal>Fig. 3 &mdash; Colophon. One address, three destinations, nothing else to maintain.</p>
+          </div>
+
+          <figure class="diagram-card" data-reveal>
+            <svg class="diagram-art" viewBox="0 0 480 300" role="img" aria-label="Line diagram: one quiet link fans out to three destinations — Instagram, TikTok, and free web tools.">
+              <g class="diagram-ghost">
+                <circle cx="96" cy="150" r="22" />
+              </g>
+              <g class="diagram-stroke">
+                <path d="M118 150c46 0 58-72 104-72h44" />
+                <path d="M118 150h148" />
+                <path d="M118 150c46 0 58 72 104 72h44" />
+              </g>
+              <g class="diagram-node">
+                <circle cx="300" cy="78" r="30" />
+                <circle cx="300" cy="150" r="30" />
+                <circle cx="300" cy="222" r="30" />
+              </g>
+              <g class="diagram-mark">
+                <rect x="288" y="70" width="24" height="16" rx="4" />
+                <circle cx="300" cy="78" r="4" />
+                <path d="M292 152v-6a8 8 0 0 1 16 0v6" />
+                <circle cx="300" cy="158" r="2.4" />
+                <rect x="288" y="216" width="24" height="15" rx="2.4" />
+                <path d="M288 221h24" />
+              </g>
+              <g class="diagram-label">
+                <text x="366" y="83">Instagram</text>
+                <text x="366" y="155">TikTok</text>
+                <text x="366" y="227">Free web tools</text>
+              </g>
+            </svg>
+          </figure>
+        </div>
       </div>
     </section>
 
   </main>
 
   <footer class="footer">
-    <div class="footer-inner">
+    <div class="footer-inner shell">
       <p class="footer-statement" data-unveil>All your links,<br />kept quiet.</p>
 
       <div class="footer-row">

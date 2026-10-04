@@ -106,6 +106,11 @@
   --radius-buttons: 8px;
   --radius-large-surfaces: 24px;
 
+  /* Layout gutter + anchor clearance. Both are single-source: the shell owns
+     the gutter, :root owns the nav clearance that scroll-margin reads. */
+  --gutter-inline: clamp(16px, 4vw, 40px);
+  --nav-clearance: 104px;
+
   /* Shadows */
   --shadow-sm: rgba(0, 0, 0, 0.15) 0px 2px 6px 0px;
   --shadow-subtle: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 4px 5px 0px;
@@ -132,6 +137,26 @@
   --hero-dusk-b: #c96f9b;
   --hero-dusk-c: #6b4a8f;
   --hero-dusk-d: #2b2b52;
+
+  /* Atmospheric card artwork. Kept as a variable so the <img>-less
+     background-image pair can be swapped without touching the component, and
+     so a failed load falls through to --color-atmos-fallback underneath. */
+  --atmos-image: url("assets/atmos-card.jpg");
+
+  /* Diagram figure cards — white, hairline Mist border, soft sm-2 lift.
+     Same recipe as DESIGN.md's content card, scaled to a figure. */
+  --surface-diagram-card: #ffffff;
+  --diagram-border: #dee2de;
+  --diagram-line: #b4b8b4;
+  --radius-diagram: 16px;
+
+  /* Liquid-glass navbar. Tuned off the Dusk/Signal family already in the
+     palette so no new accent hue is introduced. */
+  --glass-tint: 255, 255, 255;
+  --glass-blur: 22px;
+  --glass-saturate: 1.9;
+  --glass-edge: rgba(255, 255, 255, 0.55);
+  --glass-specular: rgba(255, 255, 255, 0.9);
 
   /* Motion */
   --ease-signature: cubic-bezier(0.52, 0.01, 0, 1);
@@ -258,6 +283,58 @@ button {
    backdrop-blur carry the structure instead */
 
 /* ---------- 3. SHARED LAYOUT ---------- */
+/* THE layout primitive. One class owns the horizontal axis for the entire
+   page: max-width, centring, and the inline gutter. Every band, figure, and
+   footer delegates here instead of re-declaring its own padding — that is
+   what guarantees a caption, its heading, and the neighbouring card all share
+   one left edge. Before this existed, each section carried its own padding
+   (.band-inner 64px, .atmospheric +104px, centred CTA) and the stacks drifted
+   apart by 100px+. Change the gutter here, nowhere else. */
+.shell {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter-inline);
+}
+
+/* Anchors land below the floating pill rather than under it. --nav-clearance
+   is the pill's height plus its top offset, so this tracks the nav without
+   hard-coding a second number that can drift. */
+:where(section, .figure-band) {
+  scroll-margin-top: var(--nav-clearance);
+}
+
+/* Figure row — 6+6. Text column and caption share the left half; the diagram
+   card owns the right half. Collapses to one column below 900px. */
+.figure-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+
+/* One column on narrow viewports: the diagram card drops below the text and
+   its caption, and both stay on the same left edge as everything else. */
+@media (max-width: 900px) {
+  .figure-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(28px, 5vw, 40px);
+  }
+}
+
+.figure-copy {
+  min-width: 0;
+}
+
+/* Caption sits directly under its figure's text column, sharing that
+   column's left edge exactly — not centred, not full-bleed. */
+.figure-grid .fig-caption {
+  margin-top: var(--spacing-24);
+  margin-inline: 0;
+  max-width: 46ch;
+  text-align: left;
+}
+
 /* Frosted Navigation Pill — floating at top center. The header itself is a
    pointer-transparent rail; only the pill accepts clicks, so the painted hero
    reads through around it. */
@@ -272,33 +349,117 @@ button {
   pointer-events: none;
 }
 
+/* ---------- LIQUID GLASS PILL ----------
+   Layers, back to front:
+     .nav-inner          glass tint + blur + specular top edge + drop shadow
+     .nav-inner::before  static specular hairline along the top rim
+     .nav-inner::after   pointer-tracked highlight (desktop, fine pointer only)
+   The tint is deliberately opaque enough that #1f1f29 link copy clears
+   WCAG AA against whatever the footage is doing behind it. */
 .nav-inner {
+  position: relative;
+  isolation: isolate;
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-4);
-  max-width: 100%;
+  max-width: calc(100vw - 24px);
   padding: 5px 5px 5px 14px;
-  border: 1px solid var(--color-twilight);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-nav);
-  /* DESIGN.md: frosted, translucent — the illustration shows through softly.
-     Slightly more white than the 0.06 spec so the pill stays legible over the
-     dusk hero while keeping the same glass intent. */
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: var(--shadow-sm);
+  background: rgba(var(--glass-tint), 0.5);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.42) inset,
+    0 10px 28px -8px rgba(31, 31, 41, 0.24),
+    0 2px 6px -2px rgba(31, 31, 41, 0.14);
+  transition:
+    background-color var(--dur) var(--ease-signature),
+    box-shadow var(--dur) var(--ease-signature);
 }
 
-@supports (backdrop-filter: blur(14px)) {
-  .nav-inner {
-    -webkit-backdrop-filter: blur(14px) saturate(1.1);
-    backdrop-filter: blur(14px) saturate(1.1);
+/* Over the hero footage the pill sits on moving media, so it gets a denser
+   tint and a brighter rim to stay separated from the dusk behind it. */
+.nav[data-theme='on-media'] .nav-inner {
+  background: rgba(var(--glass-tint), 0.38);
+  border-color: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.58) inset,
+    0 12px 32px -8px rgba(23, 23, 23, 0.42),
+    0 2px 8px -2px rgba(23, 23, 23, 0.24);
+}
+
+/* Static specular rim — the hard bright line a real glass edge catches. */
+.nav-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.08) 42%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Pointer-tracked highlight. --lg-x / --lg-y are written by script.js on
+   pointermove; the element stays inert unless the pointer is a real one, so
+   touch and reduced-motion users never get a highlight that follows nothing. */
+.nav-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    180px circle at var(--lg-x, 50%) var(--lg-y, 0%),
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.22) 34%,
+    rgba(255, 255, 255, 0) 68%
+  );
+  transition: opacity 260ms var(--ease-signature);
+}
+
+.nav[data-pointer='fine'] .nav-inner:hover::after {
+  opacity: 1;
+}
+
+/* Blur + saturate + brightness: the base glass every browser gets. Written
+   before the displacement rule below so that rule, when supported, replaces
+   it rather than stacking a second filter list. */
+@supports (backdrop-filter: blur(2px)) {
+  .nav-inner,
+  .nav-menu-panel {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
+  }
+}
+
+/* Chromium only: refract what sits behind the pill through the inline
+   feTurbulence + feDisplacementMap filter in #lg-displace, which is what
+   gives the rim its liquid wobble. Gated on @supports so Safari and Firefox
+   keep the plain blur above rather than losing the backdrop entirely. */
+/* No -webkit-backdrop-filter in here on purpose. Chrome's parser rejects a
+   prefixed backdrop-filter carrying a url() filter function and silently drops
+   every rule after this block — the hero, footer and all section styles with
+   it. The unprefixed property is enough: this block only ever matches engines
+   that resolve a filter reference in backdrop-filter anyway. The failure mode is
+   silent â no console error, the page just quietly loses every rule after
+   this point â so if the stylesheet ever parses to a suspiciously small rule
+   count, look here first. */
+@supports (backdrop-filter: blur(2px) url("#lg-displace")) {
+  .nav-inner,
+  .nav-menu-panel {
+    backdrop-filter: blur(3px) url("#lg-displace") saturate(var(--glass-saturate)) brightness(1.06);
   }
 }
 
 .footer-inner {
-  max-width: var(--page-max-width);
-  margin-inline: auto;
-  padding: clamp(48px, 7vw, 96px) clamp(20px, 6vw, 64px) clamp(40px, 5vw, 64px);
+  padding-block: clamp(48px, 7vw, 96px) clamp(40px, 5vw, 64px);
 }
 
 /* ---------- 4. BRAND ---------- */
@@ -359,8 +520,33 @@ button {
 }
 
 /* ---------- 6. NAV ---------- */
+.glass-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .nav-menu {
   display: none;
+}
+
+/* Active item gets its own glass bubble rather than a flat fill, so the
+   current section reads as a separate piece of glass sitting on the pill. */
+.nav-link.is-active {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 2px 8px -2px rgba(31, 31, 41, 0.18);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+@supports (backdrop-filter: blur(2px)) {
+  .nav-link.is-active {
+    -webkit-backdrop-filter: blur(10px) saturate(1.5);
+    backdrop-filter: blur(10px) saturate(1.5);
+  }
 }
 
 .nav-link {
@@ -380,11 +566,6 @@ button {
 }
 
 .nav-link:hover {
-  color: var(--color-twilight);
-  background: var(--color-linen);
-}
-
-.nav-link.is-active {
   color: var(--color-twilight);
   background: var(--color-linen);
 }
@@ -622,6 +803,8 @@ button {
   .nav-inner > .brand { order: 0; }
   .nav-inner > .burger { order: 1; margin-left: auto; }
 
+  /* The dropdown is its own pane of glass rather than a flat Linen wash, so
+     the hero footage keeps showing through it. */
   .nav-menu {
     order: 2;
     flex: 0 0 100%;
@@ -633,6 +816,12 @@ button {
     padding: var(--spacing-12) 0 0;
     margin-top: var(--spacing-12);
     border-top: 1px solid var(--color-mist);
+  }
+
+  .nav.is-open .nav-menu-panel {
+    border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+    border-top-color: rgba(255, 255, 255, 0.5);
+    background: rgba(var(--glass-tint), 0.34);
   }
 
   .nav.is-open .nav-menu {
@@ -657,32 +846,111 @@ button {
   }
 }
 
+/* Below 720px the pill tightens: less inline padding, a smaller touch target
+   floor than 44px is not used anywhere, and the safe-area inset is honoured
+   so the pill clears a notch on a landscape phone. */
+@media (max-width: 720px) {
+  .nav {
+    top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 2vw, 16px));
+    padding-inline: clamp(12px, 3vw, 24px);
+  }
+
+  .nav-inner {
+    max-width: calc(100vw - 24px);
+    padding: 4px 4px 4px 12px;
+    border-radius: var(--radius-2xl);
+  }
+
+  .nav-link {
+    min-height: 44px;
+    padding-inline: var(--spacing-12);
+  }
+
+  .burger {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* 44px touch floor for every control on a phone. The hero's own link row
+     and the footer links are inline text by default, so they need an explicit
+     min-height rather than padding alone. The very-short-landscape tier below
+     deliberately drops back to 28px — there, clearing the fold is the harder
+     constraint and a 44px row would push the card off the screen. */
+  .hero-card .btn,
+  .pill.section-cta-button {
+    min-height: 44px;
+  }
+
+  .hero-paths a {
+    min-height: 44px;
+  }
+
+  .footer-links a,
+  .footer .brand {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 /* ---------- 7. HERO ----------
-   Full-bleed 100dvh dusk gradient (DESIGN.md Layout). No radius, no mask —
-   a hard edge against the parchment below is the intended rhythm. The
-   gradient runs light-to-dark downward, so the frosted overlay card that
-   holds the headline always lands on the dark end where white text clears
-   WCAG AA with room to spare. */
+   Full-bleed 100svh dusk. Three stacked layers, back to front:
+     1. .hero            — layered dusk gradient, the fallback artwork
+     2. .hero-media      — the video, cover-fitted above it
+     3. .hero::after     — grain + legibility scrim
+   The card is small and pinned bottom-left so the footage keeps the frame.
+   vh comes first as a fallback for engines without svh; svh is what stops
+   mobile browser chrome from cropping the card on scroll. */
 .hero {
   position: relative;
   isolation: isolate;
-  min-height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
   padding: clamp(120px, 18vh, 200px) 0 clamp(24px, 5vh, 48px);
   background-color: var(--color-dusk);
-  background-image: linear-gradient(
-    180deg,
-    var(--hero-dusk-a) 0%,
-    var(--hero-dusk-b) 34%,
-    var(--hero-dusk-c) 68%,
-    var(--hero-dusk-d) 100%
-  );
+  background-image:
+    radial-gradient(120% 78% at 18% 6%, rgba(244, 177, 131, 0.5) 0%, rgba(244, 177, 131, 0) 58%),
+    radial-gradient(96% 62% at 82% 96%, rgba(43, 43, 82, 0.92) 0%, rgba(43, 43, 82, 0) 62%),
+    linear-gradient(
+      180deg,
+      var(--hero-dusk-a) 0%,
+      var(--hero-dusk-b) 34%,
+      var(--hero-dusk-c) 68%,
+      var(--hero-dusk-d) 100%
+    );
 }
 
-/* legibility wash — keeps the frosted card readable without tinting the
-   whole scene. Sits above the gradient, below the card. */
+/* Video plate. object-fit cover keeps the 16:9 source full-bleed at any ratio
+   without letterboxing, and the object-position shifts per breakpoint so the
+   interesting part of the frame (the lit horizon) stays in view instead of
+   being cropped to sky on tall phones. */
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  pointer-events: none;
+  /* browsers keep decoding a hidden video otherwise */
+  opacity: 0;
+  transition: opacity 900ms var(--ease-signature);
+}
+
+/* Only fade in once JS confirms the file actually decoded. If play() rejects
+   or the fetch fails, [data-hero-video] never lands and the gradient stands
+   alone — no black plate, no half-faded frame. With no autoplay attribute the
+   poster attribute is what shows until then, so a JS-blocked or reduced-motion
+   browser still shows the poster and never fetches a frame. */
+.hero-media.is-ready {
+  opacity: 1;
+}
+
+/* legibility wash + film grain. Sits above the video, below the card. */
 .hero::after {
   content: '';
   position: absolute;
@@ -690,21 +958,37 @@ button {
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(23, 23, 23, 0.28) 0%, rgba(23, 23, 23, 0) 32%),
-    linear-gradient(0deg, rgba(23, 23, 23, 0.42) 0%, rgba(23, 23, 23, 0) 46%);
+    linear-gradient(180deg, rgba(23, 23, 23, 0.3) 0%, rgba(23, 23, 23, 0) 30%),
+    linear-gradient(0deg, rgba(23, 23, 23, 0.46) 0%, rgba(23, 23, 23, 0) 48%);
 }
 
-/* Frosted Hero Overlay Card — bottom-left over the illustration. 24px radius
+/* Grain is drawn as its own element so the scrim above stays a plain two-stop
+   gradient — mixing an SVG turbulence data-URI into the same background list
+   would tie the noise to the scrim's own alpha ramp. */
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Frosted Hero Overlay Card — small, bottom-left over the footage. 24px radius
    (DESIGN.md large-surfaces), translucent white, backdrop-blur, hairline.
-   Deliberately narrow so the artwork stays visible on both sides. */
+   Width is capped so the scene keeps the frame at every viewport. */
 .hero-card {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: min(640px, 100%);
+  max-width: min(460px, 100%);
   margin-inline: auto;
-  margin-left: max(clamp(20px, 6vw, 64px), calc((100% - var(--page-max-width)) / 2));
-  padding: clamp(24px, 4vw, 40px);
+  /* Same axis as every other block on the page. The old rule stopped at the
+     1200px container's outer edge, which put the card one gutter to the left
+     of the text it sits above; adding --gutter-inline reuses the shell tokens
+     instead of re-deriving the offset a third time. */
+  margin-left: max(var(--gutter-inline), calc((100% - var(--page-max-width)) / 2 + var(--gutter-inline)));
+  padding: clamp(20px, 2.5vw, 32px);
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: var(--radius-large-surfaces);
   background: rgba(255, 255, 255, 0.14);
@@ -722,7 +1006,7 @@ button {
 
 .hero-display {
   color: var(--color-paper);
-  font-size: clamp(38px, 5.6vw, var(--text-display));
+  font-size: clamp(32px, 4vw, 40px);
   line-height: var(--leading-display);
   letter-spacing: var(--tracking-display);
   max-width: 15ch;
@@ -816,7 +1100,9 @@ button {
   }
 
   .hero-card {
-    margin-inline: clamp(16px, 5vw, 24px);
+    /* Was 5vw, which drifted 4-10px off the page axis below 940px. The gutter
+       token is the same one .shell uses, so the card tracks it exactly. */
+    margin-inline: var(--gutter-inline);
     padding: clamp(20px, 5vw, 28px);
   }
 
@@ -830,6 +1116,84 @@ button {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-16);
+  }
+}
+
+/* Landscape tiers come last on purpose: the max-width:940px block above uses the
+   `padding` shorthand, so a short-height rule written before it gets silently
+   overridden and the card is pushed 112px down instead of tightening. Later in
+   the source wins, so these sit after it. */
+/* Short landscape viewports — phones turned sideways, 844x390 and the
+   1366x768 class of laptop. The card shrinks its type and padding so the
+   whole thing still fits above the fold instead of overflowing. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .hero {
+    padding-block: clamp(84px, 16vh, 120px) clamp(14px, 3vh, 22px);
+  }
+
+  .hero-card {
+    max-width: min(420px, 100%);
+    padding: clamp(14px, 2vw, 20px);
+  }
+
+  .hero-display {
+    font-size: clamp(24px, 3.4vw, 30px);
+  }
+
+  .hero-sub {
+    margin-top: var(--spacing-8);
+    font-size: var(--text-body-sm);
+  }
+
+  .hero-actions {
+    margin-top: var(--spacing-12, 12px);
+  }
+}
+
+/* Very short landscape — a phone on its side at 390px tall. The hero is
+   min-height 100svh but the card is what has to clear the fold, so the type
+   scale and the gap under the subhead both come down a further step and the
+   CTA is allowed to sit on one row. */
+@media (max-height: 460px) and (orientation: landscape) {
+  .hero {
+    padding-block: clamp(64px, 13vh, 76px) clamp(10px, 2vh, 14px);
+  }
+
+  .hero-card {
+    max-width: min(430px, 100%);
+    padding: clamp(12px, 1.6vw, 16px);
+  }
+
+  .hero-display {
+    font-size: clamp(19px, 2.6vw, 24px);
+  }
+
+  .hero-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .hero-actions {
+    margin-top: 10px;
+    gap: var(--spacing-12, 12px) var(--spacing-16);
+  }
+
+  .hero-paths a {
+    min-height: 28px;
+  }
+}
+
+
+/* Tall phones: bias the crop upward so the card sits over the horizon band
+   rather than over empty foreground. */
+@media (max-aspect-ratio: 3 / 4) {
+  .hero-media {
+    object-position: 50% 34%;
+  }
+
+  .hero-media:not(.is-ready) {
+    background-position: 50% 34%;
   }
 }
 
@@ -855,7 +1219,7 @@ section[id] {
 .band-inner {
   max-width: var(--page-max-width);
   margin-inline: auto;
-  padding-inline: clamp(20px, 6vw, 64px);
+  padding-inline: var(--gutter-inline);
 }
 
 /* headline then subtext — the shared register of every section head */
@@ -899,9 +1263,7 @@ section[id] {
 }
 
 .figure-band {
-  max-width: var(--page-max-width);
-  margin-inline: auto;
-  padding: var(--spacing-48) clamp(20px, 6vw, 64px) 0;
+  padding-top: var(--spacing-48);
 }
 
 .figure-band .fig-caption {
@@ -984,11 +1346,39 @@ section[id] {
 /* Atmospheric Illustration Card — DESIGN.md's one saturated moment. Cerulean
    surface, 24px radius, generous internal padding, white serif headline. This
    is the only place in the system where pure colour is allowed to exist. */
+/* Atmospheric card — the photo is the surface. The vivid blue underneath is a
+   real fallback rather than a placeholder: if the image 404s or is still
+   decoding, the card is a flat colour block that still clears AA with white
+   copy, so the section never loses its text. */
 .atmospheric {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border-radius: var(--radius-large-surfaces);
-  background: var(--color-cerulean-ink);
+  background-color: var(--surface-vivid-blue);
+  background-image: var(--atmos-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--color-paper);
   padding: clamp(48px, 8vw, 104px);
+}
+
+/* Legibility scrim — strength chosen by measurement, not by eye. The darkest
+   sampled pixel behind the 18px substatement sets the floor: at 0.36 the copy
+   measured 4.47:1 and failed, at 0.38 it measures 4.97:1 and the 48px headline
+   4.62:1. So the scrim sits at the top of the 0.25-0.4 band rather than the
+   middle of it; going lighter is the one number in this card that cannot move
+   without breaking WCAG AA. */
+.atmospheric::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(122deg, rgba(10, 22, 34, 0.44) 0%, rgba(10, 22, 34, 0.38) 50%, rgba(10, 22, 34, 0.44) 100%),
+    linear-gradient(0deg, rgba(6, 14, 22, 0.34) 0%, rgba(6, 14, 22, 0.16) 55%);
 }
 
 .atmospheric .section-display {
@@ -1015,8 +1405,93 @@ section[id] {
   margin-inline: auto;
 }
 
+/* The CTA used to centre itself, which is what pushed Fig. 3's caption onto a
+   different axis from its own heading. Inside a 6+6 figure row both sit in the
+   same left column, so the centring is dropped here — the copy aligns with
+   every other band on the page. */
+.section-cta .figure-copy {
+  text-align: left;
+}
+
+.section-cta .figure-copy .section-display,
+.section-cta .figure-copy .section-stmt {
+  margin-inline: 0;
+}
+
 .section-cta-button {
   margin-top: var(--spacing-40);
+}
+
+/* ---------- DIAGRAM FIGURE CARDS ----------
+   The right-hand half of each 6+6 figure row. White surface, hairline Mist
+   border, 16px radius and a soft sm-2 lift — the same recipe as DESIGN.md's
+   content card. The line art inside is drawn with currentColor-derived
+   greys so the card stays in the neutral palette and inherits nothing
+   colourful from the SVG markup. */
+.diagram-card {
+  min-width: 0;
+  margin: 0;
+  padding: clamp(20px, 2.5vw, 32px);
+  border: 1px solid var(--diagram-border);
+  border-radius: var(--radius-diagram);
+  background: var(--surface-diagram-card);
+  box-shadow: var(--shadow-sm-2);
+  color: var(--color-graphite);
+}
+
+.diagram-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* stroke groups — connectors and rings */
+.diagram-stroke,
+.diagram-baseline {
+  fill: none;
+  stroke: var(--diagram-line);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the faint baseline under Fig. 2 reads as a printed rule, not a border */
+.diagram-baseline {
+  stroke: var(--diagram-border);
+  stroke-width: 1;
+}
+
+.diagram-node {
+  fill: var(--surface-paper-card);
+  stroke: var(--color-fog);
+  stroke-width: 1.5;
+}
+
+/* interior glyphs — ticks and platform marks, drawn heavier to sit above the
+   ring they live in */
+.diagram-mark {
+  fill: none;
+  stroke: var(--color-graphite);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the single origin node reads as a quiet solid dot */
+.diagram-ghost {
+  fill: var(--surface-linen-wash);
+  stroke: var(--color-fog);
+  stroke-width: 1.5;
+}
+
+.diagram-label {
+  fill: var(--color-ash);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  text-anchor: start;
 }
 
 /* ---------- 9. FOOTER ----------
@@ -1423,7 +1898,12 @@ html.js .preloader {
   .tile-full { min-height: 180px; }
 }
 
-/* ---------- 13. SCROLL PROGRESS + BACK-TO-TOP ---------- */
+/* ---------- 13. SCROLL PROGRESS + BACK-TO-TOP ----------
+   This is the one thin line at the very top of the page, and it is
+   intentional: it is the scroll-progress indicator, not a stray border. It is
+   kept as a 1px functional mark per DESIGN.md but softened into a gradient
+   that fades out at the right edge, so it reads as a quiet measure rather
+   than a hard rule spanning the viewport. */
 #scroll-progress {
   position: fixed;
   top: 0;
@@ -1434,9 +1914,15 @@ html.js .preloader {
   pointer-events: none;
   transform: scaleX(0);
   transform-origin: 0 50%;
+  will-change: transform;
   /* 1px functional indicator — Cerulean clears the 3:1 non-text floor that
      Signal Blue (2.9:1 on parchment) misses */
-  background: var(--color-cerulean);
+  background: linear-gradient(
+    90deg,
+    var(--color-cerulean) 0%,
+    var(--color-cerulean) 72%,
+    rgba(0, 128, 192, 0) 100%
+  );
 }
 
 #back-to-top {

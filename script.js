@@ -286,25 +286,207 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     var toggle = document.getElementById('navToggle');
     if (!header || !toggle) return;
 
-    var close = function () {
+    var menu = document.getElementById('navMenu');
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    var coarsePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
+
+    function focusables() {
+      if (!menu) return [];
+      return Array.prototype.filter.call(
+        menu.querySelectorAll('a[href], button:not([disabled])'),
+        function (el) { return el.offsetParent !== null; }
+      );
+    }
+
+    function close(returnFocus) {
+      if (!header.classList.contains('is-open')) return;
       header.classList.remove('is-open');
       toggle.setAttribute('aria-expanded', 'false');
-    };
+      if (returnFocus) toggle.focus();
+    }
+
+    function open() {
+      header.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
 
     toggle.addEventListener('click', function () {
-      var open = header.classList.toggle('is-open');
-      toggle.setAttribute('aria-expanded', String(open));
+      if (header.classList.contains('is-open')) {
+        close(false);
+      } else {
+        open();
+      }
     });
 
     header.querySelectorAll('.nav-link').forEach(function (link) {
-      link.addEventListener('click', close);
+      link.addEventListener('click', function () { close(false); });
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && header.classList.contains('is-open')) {
-        close();
-        toggle.focus();
+      if (!header.classList.contains('is-open')) return;
+
+      /* Escape closes and hands focus back to the button that opened it. */
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(true);
+        return;
       }
+
+      /* Focus trap: Tab cycles inside the open panel rather than escaping to
+         the page behind it. Without this, tabbing off the last item drops the
+         user into content they cannot see is still scrolled past. */
+      if (e.key === 'Tab') {
+        var items = focusables();
+        if (!items.length) return;
+        var first = items[0];
+        var last = items[items.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (!menu.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
+    /* Tap outside closes. capture:true so a tap that starts on the page counts
+       even if it ends on the pill, and so this wins over the toggle's own
+       handler on the way down. */
+    /* A tap that dismisses the menu would otherwise fall straight through to
+       whatever sits underneath it. On a phone that is usually the hero CTA,
+       which opens an external site in a new tab — so the user asks to
+       close a menu and gets navigated away instead. Swallow exactly one click.
+       The flag expires on its own in case no click follows the pointerdown. */
+    var swallowNextClick = false;
+    var swallowTimer = 0;
+
+    document.addEventListener('pointerdown', function (e) {
+      if (!header.classList.contains('is-open')) return;
+      if (header.contains(e.target)) return;
+      close(false);
+      swallowNextClick = true;
+      window.clearTimeout(swallowTimer);
+      swallowTimer = window.setTimeout(function () { swallowNextClick = false; }, 400);
+    }, { capture: true });
+
+    document.addEventListener('click', function (e) {
+      if (!swallowNextClick) return;
+      swallowNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, { capture: true });
+
+    /* Returning to a desktop width must not leave the panel stranded open. */
+    if (window.matchMedia) {
+      var wide = window.matchMedia('(min-width: 1024px)');
+      var onWide = function (e) { if (e.matches) close(false); };
+      if (wide.addEventListener) wide.addEventListener('change', onWide);
+      else if (wide.addListener) wide.addListener(onWide);
+    }
+  })();
+
+  /* ---------------------------------------------------------------
+     Navbar liquid glass — pointer highlight and on-media / on-light theme
+
+     The pill is glass, so its contrast depends entirely on what is behind it.
+     A single observer watches the two surfaces that matter: the hero (media)
+     and the paper band below it. Whichever one is winning at the nav's own
+     y-position decides data-theme, which the stylesheet uses to thicken or
+     thin the tint. Nothing here restyles the links themselves, so the WCAG
+     colour work stays exactly as it was.
+     --------------------------------------------------------------- */
+  (function () {
+    var nav = document.getElementById('nav');
+    var pill = nav && nav.querySelector('.nav-inner');
+    if (!nav || !pill) return;
+
+    /* --- pointer-tracked highlight ------------------------------------ */
+    var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function trackHighlight() {
+      var enabled = !!(fine && fine.matches) && !(still && still.matches);
+      nav.setAttribute('data-pointer', enabled ? 'fine' : 'coarse');
+      if (!enabled) return;
+
+      var pending = false;
+      var x = 0;
+      var y = 0;
+
+      function apply() {
+        pending = false;
+        pill.style.setProperty('--lg-x', x + 'px');
+        pill.style.setProperty('--lg-y', y + 'px');
+      }
+
+      pill.addEventListener('pointermove', function (e) {
+        var r = pill.getBoundingClientRect();
+        x = e.clientX - r.left;
+        y = e.clientY - r.top;
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(apply);
+      }, { passive: true });
+    }
+
+    trackHighlight();
+
+    if (fine && fine.addEventListener) fine.addEventListener('change', trackHighlight);
+    if (still && still.addEventListener) still.addEventListener('change', trackHighlight);
+
+    /* --- on-media / on-light ----------------------------------------- */
+    var themeTargets = [
+      document.getElementById('hero'),
+      document.querySelector('.atmospheric')
+    ].filter(Boolean);
+    if (!themeTargets.length || !window.IntersectionObserver) return;
+
+    var navBox = function () { return pill.getBoundingClientRect().top; };
+
+    function themeFromRects() {
+      var probe = navBox() + 1;
+      var onMedia = false;
+
+      themeTargets.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top <= probe && r.bottom >= probe) onMedia = true;
+      });
+
+      nav.setAttribute('data-theme', onMedia ? 'on-media' : 'on-light');
+    };
+
+    if (!window.IntersectionObserver) return;
+
+    var io = new IntersectionObserver(themeFromRects, {
+      /* Shrink the top of the root down to just under the pill. A surface
+         counts as "behind the nav" while any part of it is still below that
+         line, and stops counting once it has scrolled fully above — so the
+         flip happens at the boundary crossing the pill rather than at the top
+         edge of the window. The bottom of the root is left alone; a narrow
+         band there only produces a single mid-scroll callback that
+         scroll-behavior:smooth can leave as the final state. */
+      rootMargin: '-110px 0px 0px 0px',
+      threshold: 0
+    });
+
+    themeTargets.forEach(function (el) { io.observe(el); });
+
+    /* The pill is fixed, so its probe line never moves while the page does;
+       re-run on resize and on scroll end to keep the boundary honest when the
+       viewport height changes under a rotating phone. */
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        io.disconnect();
+        themeTargets.forEach(function (el) { io.observe(el); });
+        themeFromRects();
+      }, 150);
     });
   })();
 
@@ -484,6 +666,70 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       });
       b.addEventListener('pointerleave', function () { tx = 0; ty = 0; if (!raf) raf = requestAnimationFrame(loop); });
     });
+  })();
+
+  /* ---------------------------------------------------------------
+     Hero video — decoration only.
+
+     There is deliberately no autoplay attribute on the element. Playback is
+     started from here, so a browser with JS disabled, a save-data connection,
+     or prefers-reduced-motion never decodes a single frame and simply keeps
+     the poster. That is also why the fade-in is class-driven rather than a
+     CSS media query: the class only lands once play() has actually resolved,
+     so a rejected autoplay promise leaves the gradient underneath visible
+     instead of a black video plate.
+     --------------------------------------------------------------- */
+  (function () {
+    var video = document.querySelector('[data-hero-video]');
+    if (!video) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function saveData() {
+      var c = navigator.connection;
+      return !!(c && c.saveData);
+    }
+
+    if (reduceMotion && reduceMotion.matches) return;
+    if (saveData()) return;
+
+    function reveal() {
+      video.classList.add('is-ready');
+    }
+
+    function start() {
+      var attempt = video.play();
+      if (attempt && typeof attempt.then === 'function') {
+        attempt.then(reveal).catch(function () {
+          /* Autoplay refused, or the codec is unsupported: the poster stays. */
+        });
+      } else {
+        /* Older engines return undefined and either play or silently do not. */
+        reveal();
+      }
+    }
+
+    if (video.readyState >= 2) {
+      start();
+      return;
+    }
+
+    /* Wait until enough of the file has decoded before spending a play() call. */
+    video.addEventListener('canplay', start, { once: true });
+    /* A missing or undecodable file must not surface as an error state. The
+       poster is a still of the same dusk scene, so it stays put and becomes
+       the fallback — dropping it would leave the bare gradient, which is
+       a worse picture than the frame the visitor would have got. */
+    video.addEventListener('error', function () {
+      video.classList.add('is-fallback');
+    }, { once: true });
+
+    /* preload="none" in the markup is what makes the two early returns above
+       worth having: nothing is fetched until we already know we are allowed
+       to play, so a save-data visitor pays zero bytes for a video they will
+       never see. Listeners are attached before load() so canplay cannot be
+       missed. */
+    video.load();
   })();
 
   /* ---------------------------------------------------------------

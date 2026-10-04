@@ -11,3 +11,7 @@ Thumbs.db
 # python bytecode cache
 __pycache__/
 *.pyc
+
+# original full-length source footage (~42MB). hero.mp4 / hero.webm are the
+# trimmed 20s cut actually served to the page; sky.mp4 is kept out of git.
+assets/sky.mp4
