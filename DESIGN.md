@@ -22,8 +22,10 @@ General Intelligence Company uses an editorial, almost literary visual language:
 | Mist | `#dee2de` | `--color-mist` | Hairline borders on cards, buttons, and section dividers — green-tinted to harmonize with illustrations |
 | Twilight | `#282834` | `--color-twilight` | Near-black with a cool blue undertone — used for nav borders, icon strokes, and outlined actions; reads darker than its lightness suggests |
 | Dusk | `#1f1f29` | `--color-dusk` | Filled button background — a near-black with cool violet undertone, the only non-white filled surface in the system |
-| Signal Blue | `#41a1cf` | `--color-signal-blue` | Blue accent for outlined action borders, linked labels, and lightweight interactive emphasis. Do not promote it to the primary CTA color |
-| Cerulean | `#0081c0` | `--color-cerulean` | Vivid blue used for a singular saturated card surface — the lone moment of pure color intensity, used sparingly as atmospheric punctuation |
+| Signal Blue | `#41a1cf` | `--color-signal-blue` | Blue accent for outlined action borders and lightweight interactive emphasis. **Never as label text**: it reaches only 2.90:1 on the #fefffc canvas and 2.70:1 on the dusk hero card, both under the WCAG AA floor for small text. Do not promote it to the primary CTA color |
+| Cerulean | `#0081c0` | `--color-cerulean` | Vivid blue used for a singular saturated card surface — the lone moment of pure color intensity, used sparingly as atmospheric punctuation. Doubles as the accessible blue for borders, focus rings, and hover fills on light surfaces (4.27:1 on canvas) |
+| Cerulean Ink | `#0076ad` | `--color-cerulean-ink` | The minimum depth at which white body copy clears AA (5.01:1). Use instead of Cerulean whenever a saturated surface carries text below 48px — the atmospheric card's 18px subcopy, and filled hover states |
+| Signal Blue Light | `#7ec8ec` | `--color-signal-blue-light` | Signal Blue lifted for dark surfaces. The base hue is only 2.70:1 against the dusk hero card, so an outline there needs this tint (4.25:1) to stay visible without abandoning the blue identity |
 
 ## Tokens — Typography
 
@@ -114,7 +116,7 @@ Floating pill at top center of the page, background rgba(255,255,255,0.06) with 
 ### Primary Outlined CTA Button
 **Role:** Main call-to-action
 
-8px border-radius, transparent background, 1px border in #41a1cf (Signal Blue), text in #41a1cf, af 15px weight 500, padding 5px 12px. The chromatic border is the entire visual identity of the button — no fill, no shadow. Arrow icon (→) inside a circle at the right edge.
+8px border-radius, transparent background, 1px border in the accessible blue for the surface it sits on, af 15px weight 500, padding 5px 12px. The chromatic border is the entire visual identity of the button — no fill, no shadow. Arrow icon (→) inside a circle at the right edge. The **border** carries the blue; the **label does not**: Signal Blue text fails AA on both the light canvas (2.90:1) and the dusk hero (3.38:1), so use #444141 Charcoal on light surfaces and #ffffff on dark ones.
 
 ### Secondary Outlined Button
 **Role:** Secondary action
@@ -174,6 +176,7 @@ White background, large editorial statement in ppmondwest serif, small navigatio
 - Use 1px solid #dee2de for all card and section borders; this green-tinted hairline is the visual signature
 - Apply 8px border-radius to buttons and 12-16px to cards — avoid mixing 4px and 24px in the same surface
 - Use #41a1cf as a border-only accent on CTAs; the system has no filled chromatic buttons
+- Keep the blue in the border and out of the label — every text or functional use of the hue on a light surface goes to #0081c0 Cerulean (4.27:1) or #2c2c2c Graphite; every use on the dusk hero goes to #7ec8ec Signal Blue Light
 - Let the canvas be #fefffc (warm off-white), not pure #ffffff, to maintain the book-page atmosphere
 - Pair display headings with line-height 1.1; pair body text with line-height 1.5 — the contrast is intentional
 
@@ -185,6 +188,7 @@ White background, large editorial statement in ppmondwest serif, small navigatio
 - Do not use rgba or transparency on body text — all text colors should be solid hex values
 - Do not use radius values above 24px except for the navigation pill; this is not a soft-rounded design
 - Do not fill buttons with #41a1cf or #0081c0; Signal Blue and Cerulean are border/surface colors only
+- Do not set body text in #41a1cf — it is a 2.90:1 hue on this canvas and fails WCAG AA. This is the one place the written spec above yields to accessibility
 
 ## Surfaces
 
@@ -222,11 +226,11 @@ Full-bleed illustrated hero sections alternate with clean white content sections
 
 ## 3-5 Example Component Prompts
 
-1. **Outlined primary CTA button**: 8px border-radius, transparent background, 1px solid border in #41a1cf (Signal Blue), text #41a1cf, af family weight 500 at 15px, padding 5px 12px, with a small arrow icon in a circle on the right.
+1. **Outlined primary CTA button**: 8px border-radius, transparent background, 1px solid border in #0081c0 (Cerulean — Signal Blue is 2.90:1 here), text #444141 (Charcoal, never the border hue), af family weight 500 at 15px, padding 5px 12px, with a small arrow icon in a circle on the right.
 
 2. **Editorial headline section**: White (#ffffff) background, 64px vertical padding. Headline in ppmondwest weight 400 at 48px, line-height 1.1, letter-spacing -0.02em, color #2c2c2c. Subtext below in af weight 400 at 16px, line-height 1.5, color #646464.
 
-3. Create an Outlined Primary Action: Transparent background, #41a1cf border and text, 9999px radius, compact pill padding. Use it for the main CTA instead of a filled button.
+3. Create an Outlined Primary Action: Transparent background, #0081c0 border, #444141 text, 9999px radius, compact pill padding. Use it for the main CTA instead of a filled button.
 
 4. **Content card with hairline border**: 12px border-radius, background #ffffff, 1px solid border in #dee2de (Mist), shadow rgba(0,0,0,0.08) 0px 1px 1px / 0px 4px 5px. Padding 16px. Body text in af 16px weight 400, #444141.
 
@@ -260,6 +264,8 @@ Full-bleed illustrated hero sections alternate with clean white content sections
   --color-dusk: #1f1f29;
   --color-signal-blue: #41a1cf;
   --color-cerulean: #0081c0;
+  --color-cerulean-ink: #0076ad;
+  --color-signal-blue-light: #7ec8ec;
 
   /* Typography — Font Families */
   --font-ppmondwest: 'ppmondwest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -361,6 +367,8 @@ Full-bleed illustrated hero sections alternate with clean white content sections
   --color-dusk: #1f1f29;
   --color-signal-blue: #41a1cf;
   --color-cerulean: #0081c0;
+  --color-cerulean-ink: #0076ad;
+  --color-signal-blue-light: #7ec8ec;
 
   /* Typography */
   --font-ppmondwest: 'ppmondwest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

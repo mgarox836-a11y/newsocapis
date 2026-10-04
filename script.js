@@ -69,7 +69,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       '.hero-sub',
       '.hero-sub .spl-word',
       '.hero-paths li',
-      '.hero-art',
       '.nav-inner .brand',
       '.nav-menu .nav-link',
       '.nav-menu .nav-contact',
@@ -151,11 +150,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
             }, 0);
           }
         });
-
-        /* hero artwork settles from a gentle scale — only if the illustration
-           actually resolved (the <img> removes itself on a 404) */
-        var art = document.querySelector('.hero-art');
-        if (art) tl.from(art, { scale: 1.06, duration: 1.7, ease: 'power2.out' }, 0.25);
 
         /* chrome */
         tl.from('.nav-inner .brand', { y: -10, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.05);
