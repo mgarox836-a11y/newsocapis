@@ -113,11 +113,14 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
     /* hero/reveal choreography — plays when the curtain starts to part */
     function reveal() {
+      if (window.__heroIntroInit) return;
+      window.__heroIntroInit = true;
+
       if (!gsapAvailable()) {
         /* pure-CSS keyframe entrance — same choreography, no library */
         docEl.classList.add('css-entrance');
         /* let the CSS keyframes play (latest delay ≈1.2s + 0.7s), then pin */
-        window.setTimeout(finish, 1900);
+        window.setTimeout(cleanup, 1900);
         return;
       }
 
@@ -146,7 +149,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
           onComplete: function () {
             window.setTimeout(function () {
               settleEntranceTargets();
-              finish();
+              cleanup();
             }, 0);
           }
         });
@@ -239,12 +242,11 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         handedOff = true;
         if (preloaderEl) preloaderEl.classList.add('is-done');
         window.requestAnimationFrame(reveal);
-        /* curtain clears (~2.2s → ever-sooner teardown) → unlock */
-        window.setTimeout(cleanup, curtain + 20);
+        /* curtain clears; GSAP onComplete / CSS timeout will call cleanup */
       }
 
-      /* hard failsafe — never leaves the overlay locked in place */
-      window.setTimeout(cleanup, 2600);
+      /* hard failsafe — never leaves the overlay locked in place (extended for GSAP timeline) */
+      window.setTimeout(cleanup, 4000);
 
       requestAnimationFrame(tick);
     }
@@ -553,32 +555,58 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
          measuring it would park the indicator where the link is not. */
       if (Date.now() < lockUntil) return;
 
-      var active = menu.querySelector('.nav-link.is-active');
-      if (!active) {
+      /* Skip indicator positioning on mobile (below 1024px) — the panel uses
+         .is-active class on the link itself for the active pill, no JS sliding
+         needed. This prevents the indicator from jumping to the CTA button on
+         hover/focus and covering it. */
+      if (wide && !wide.matches) {
+        indicator.classList.remove('is-shown');
+        indicator.style.setProperty('--nav-w', '0px');
+        return;
+      }
+
+      var target = null;
+      if (ctaTargetActive && cta) {
+        target = cta;
+      } else {
+        target = menu.querySelector('.nav-link.is-active');
+      }
+
+      if (!target) {
         indicator.classList.remove('is-shown');
         indicator.style.setProperty('--nav-w', '0px');
         return;
       }
 
       var m = menu.getBoundingClientRect();
-      var a = active.getBoundingClientRect();
+      var a = target.getBoundingClientRect();
 
       if (wide && wide.matches) {
         indicator.style.setProperty('--nav-w', a.width + 'px');
         indicator.style.setProperty('--nav-h', a.height + 'px');
         indicator.style.setProperty('--nav-x', (a.left - m.left) + 'px');
         indicator.style.setProperty('--nav-y', '0px');
-      } else {
-        /* Stacked rows have no horizontal track, so the pill spans the panel
-           and travels on the vertical axis instead. The row height is measured
-           too -- inheriting the panel's height would paint the whole stack. */
-        indicator.style.setProperty('--nav-w', m.width + 'px');
-        indicator.style.setProperty('--nav-h', a.height + 'px');
-        indicator.style.setProperty('--nav-x', '0px');
-        indicator.style.setProperty('--nav-y', (a.top - m.top) + 'px');
       }
 
       indicator.classList.add('is-shown');
+    }
+
+    /* --- CTA hover/focus: slide indicator to "Open the tools" ------------- */
+    var cta = menu.querySelector('.nav-contact');
+    var ctaTargetActive = false;
+
+    function setCtaTarget(isTarget) {
+      if (!cta) return;
+      ctaTargetActive = isTarget;
+      cta.classList.toggle('is-slider-target', isTarget);
+      positionIndicator();
+    }
+
+    if (cta) {
+      cta.addEventListener('mouseenter', function () { setCtaTarget(true); });
+      cta.addEventListener('focus', function () { setCtaTarget(true); });
+      cta.addEventListener('mouseleave', function () { setCtaTarget(false); });
+      cta.addEventListener('blur', function () { setCtaTarget(false); });
     }
 
     /* A click on a nav link scrolls smoothly. Hold the indicator still until
@@ -610,16 +638,27 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       });
     }
 
-    /* Web fonts land after first paint and change every link's measured width,
-       so a first measurement taken against the fallback face slides the
-       indicator onto the wrong spot a beat later. Re-measure when they are
-       ready, on resize, and whenever the layout crosses the desktop/mobile
-       breakpoint, since that changes which axis the indicator travels on. */
+/* Web fonts land after first paint and change every link's measured width,
+        so a first measurement taken against the fallback face slides the
+        indicator onto the wrong spot a beat later. Re-measure when they are
+        ready, on resize, and whenever the layout crosses the desktop/mobile
+        breakpoint, since that changes which axis the indicator travels on. */
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(positionIndicator);
     }
     window.addEventListener('resize', positionIndicator);
-    if (wide && wide.addEventListener) wide.addEventListener('change', positionIndicator);
+    if (wide && wide.addEventListener) {
+      wide.addEventListener('change', function (e) {
+        if (e.matches) {
+          /* Re-measure when crossing back to desktop */
+          positionIndicator();
+        } else {
+          /* Hide indicator on mobile */
+          indicator.classList.remove('is-shown');
+          indicator.style.setProperty('--nav-w', '0px');
+        }
+      });
+    }
 
     /* First paint: the desktop row is laid out by the time this runs, so the
        indicator can be placed immediately. The mobile panel is display:none
@@ -669,9 +708,15 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   /* ---------------------------------------------------------------
      Reveal-on-scroll — [data-reveal] / .is-in.
      Tween is CSS (opacity/transform/filter) — off the main thread.
+     Hero elements (inside [data-no-reveal]) are excluded — they have their
+     own choreographed entrance via GSAP/CSS fallback, not the generic scroll reveal.
      --------------------------------------------------------------- */
   (function () {
-    var els = document.querySelectorAll('[data-reveal]');
+    var allEls = document.querySelectorAll('[data-reveal]');
+    var els = [];
+    for (var i = 0; i < allEls.length; i++) {
+      if (!allEls[i].closest('[data-no-reveal]')) els.push(allEls[i]);
+    }
     if (!els.length) return;
     var shown = new WeakSet();
     var show = function (el) {

@@ -942,47 +942,257 @@ button {
     }
     to {
       opacity: 1;
-      transform: none;
+      transform: none
     }
   }
 
-  /* The open panel inherits the same tint ladder as the pill itself, so the
-     burger -> panel swap never flashes the wrong surface. */
-  .nav.is-open .nav-menu-panel {
-    border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  /* ============================================================
+     MOBILE PANEL — single glass surface, no inner boxes
+     .nav-menu AND .nav-menu-panel are the SAME element (see index.html).
+     Reset .nav-menu base styles so they don't create an "inner box".
+     ============================================================ */
+  .nav.is-open .nav-menu.nav-menu-panel {
+    gap: 0;
+    padding: 0;
+    margin-top: 0;
   }
 
+  .nav.is-open .nav-menu-panel {
+    --menu-pad: 12px;
+    position: relative;
+    isolation: isolate;
+    border-radius: 0 0 var(--radius-3xl) var(--radius-3xl);
+    padding: var(--menu-pad) !important;
+    margin-top: var(--spacing-12);
+    gap: 8px;
+    /* Glass surface — ONLY element with background/blur/shadow */
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    backdrop-filter: blur(22px) saturate(150%);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+      0 12px 40px -12px rgba(0, 0, 0, 0.35);
+    max-height: calc(100dvh - 92px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .nav.is-open .nav-menu-panel::-webkit-scrollbar { width: 4px; }
+  .nav.is-open .nav-menu-panel::-webkit-scrollbar-track { background: transparent; }
+  .nav.is-open .nav-menu-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  @supports (backdrop-filter: url("#lg-displace") blur(2px)) {
+    .nav.is-open .nav-menu-panel {
+      backdrop-filter: url("#lg-displace") blur(22px) saturate(150%);
+    }
+  }
+
+  /* Theme: media (over hero/video) */
   .nav[data-theme='media'].is-open .nav-menu-panel {
-    border-top-color: rgba(255, 255, 255, 0.35);
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.08) 100%
+      rgba(24, 22, 36, 0.38) 0%,
+      rgba(24, 22, 36, 0.22) 100%
     );
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+      0 12px 40px -12px rgba(0, 0, 0, 0.35);
+    /* Theme tokens — media */
+    --m-link-fg: #ffffff;
+    --m-link-fg-hover: #ffffff;
+    --m-link-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    --m-link-fg-active: #171717;
+    --m-pill-bg: #ffffff;
+    --m-cta-fg: #ffffff;
+    --m-cta-border: rgba(255, 255, 255, 0.6);
+    --m-cta-fg-hover: #ffffff;
+    --m-cta-border-hover: #ffffff;
+    --m-cta-hover-bg: rgba(255, 255, 255, 0.14);
+    --m-focus-color: rgba(255, 255, 255, 0.9);
   }
 
+  /* Theme: light (over paper sections) */
   .nav[data-theme='light'].is-open .nav-menu-panel {
-    border-top-color: #dee2de;
-    background: rgba(var(--glass-tint), 0.78);
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid #dee2de;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
+      0 8px 28px -8px rgba(0, 0, 0, 0.10);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    /* Theme tokens — light */
+    --m-link-fg: #444141;
+    --m-link-fg-hover: #171717;
+    --m-link-shadow: none;
+    --m-link-fg-active: #ffffff;
+    --m-pill-bg: #171717;
+    --m-cta-fg: #282834;
+    --m-cta-border: #282834;
+    --m-cta-fg-hover: #171717;
+    --m-cta-border-hover: #171717;
+    --m-cta-hover-bg: rgba(23, 23, 23, 0.06);
+    --m-focus-color: #171717;
   }
 
-  /* Rows stack on mobile, so the travelling indicator has no horizontal track
-     to slide along - it travels on the vertical axis instead and is sized to
-     the row rather than the panel.
+  @supports (backdrop-filter: url("#lg-displace") blur(2px)) {
+    .nav[data-theme='light'].is-open .nav-menu-panel {
+      backdrop-filter: url("#lg-displace") blur(20px) saturate(160%);
+    }
+  }
 
-     The height has to be explicit. height:100% resolved against the panel made
-     the indicator 256px tall behind four 44px rows, so every row looked
-     active at once; script.js writes --nav-h from the measured row for the
-     same reason it writes --nav-y. */
-  .nav-menu .nav-active {
-    width: 100%;
-    height: var(--nav-h, 0px);
-    transform: translateY(var(--nav-y, 0px));
+  /* Strip ALL backgrounds/filters/borders/shadows from inner elements */
+  .nav.is-open .nav-menu-panel .nav-link:not(.is-active),
+  .nav.is-open .nav-menu-panel .nav-active {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    filter: none !important;
+    mask: none !important;
+  }
+
+  .nav.is-open .nav-menu-panel .nav-link:not(.is-active)::before,
+  .nav.is-open .nav-menu-panel .nav-link::after,
+  .nav.is-open .nav-menu-panel .nav-active::before,
+  .nav.is-open .nav-menu-panel .nav-active::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* Links */
+  .nav.is-open .nav-menu-panel .nav-link {
+    min-height: 44px;
+    padding: 0 12px;
+    color: var(--m-link-fg, #fff);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-shadow: var(--m-link-shadow, none);
+    transition: color 200ms var(--ease-signature);
+  }
+
+  .nav.is-open .nav-menu-panel .nav-link:hover:not(.is-active) {
+    color: var(--m-link-fg-hover, var(--m-link-fg));
+    text-shadow: var(--m-link-shadow, none);
+  }
+
+  .nav.is-open .nav-menu-panel .nav-link:focus-visible {
+    outline: 2px solid var(--m-focus-color, var(--color-cerulean));
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
+  /* Active link pill — full width, 48px, centered on link */
+  .nav.is-open .nav-menu-panel .nav-link.is-active {
+    color: var(--m-link-fg-active, #171717);
+    font-weight: 600;
+    text-shadow: none;
+  }
+
+  .nav.is-open .nav-menu-panel .nav-link.is-active::before {
+    content: '' !important;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: -1;
+    height: 48px !important;
+    border-radius: 50px !important;
+    background: var(--m-pill-bg, #fff) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+    pointer-events: none;
+    transition: background-color 200ms var(--ease-signature);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav.is-open .nav-menu-panel .nav-link.is-active::before {
+      transition: none;
+    }
+  }
+
+  /* CTA button — outlined, no solid fill */
+  .nav.is-open .nav-menu-panel .nav-contact {
+    min-height: 48px;
+    margin-top: 8px;
+    padding: 0 12px;
+    border: 1px solid var(--m-cta-border, currentColor);
+    border-radius: 50px;
+    background: transparent !important;
+    color: var(--m-cta-fg, currentColor);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
     transition:
-      transform 300ms var(--ease-signature),
-      height 300ms var(--ease-signature),
-      background-color var(--dur) var(--ease-signature),
-      opacity 160ms var(--ease-signature);
+      color 200ms var(--ease-signature),
+      border-color 200ms var(--ease-signature),
+      background-color 200ms var(--ease-signature);
+  }
+
+  @media (hover: hover) {
+    .nav.is-open .nav-menu-panel .nav-contact:hover {
+      color: var(--m-cta-fg-hover, var(--m-cta-fg));
+      border-color: var(--m-cta-border-hover, var(--m-cta-border));
+      background: var(--m-cta-hover-bg, transparent) !important;
+    }
+  }
+
+  .nav.is-open .nav-menu-panel .nav-contact:focus-visible {
+    color: var(--m-cta-fg-hover, var(--m-cta-fg));
+    border-color: var(--m-cta-border-hover, var(--m-cta-border));
+    background: var(--m-cta-hover-bg, transparent) !important;
+    outline: 2px solid var(--m-focus-color, var(--color-cerulean));
+    outline-offset: 2px;
+  }
+
+  /* Theme tokens — media */
+  .nav[data-theme='media'].is-open .nav-menu-panel {
+    --m-link-fg: #ffffff;
+    --m-link-fg-hover: #ffffff;
+    --m-link-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    --m-link-fg-active: #171717;
+    --m-pill-bg: #ffffff;
+    --m-cta-fg: #ffffff;
+    --m-cta-border: rgba(255, 255, 255, 0.6);
+    --m-cta-fg-hover: #ffffff;
+    --m-cta-border-hover: #ffffff;
+    --m-cta-hover-bg: rgba(255, 255, 255, 0.14);
+    --m-focus-color: rgba(255, 255, 255, 0.9);
+  }
+
+  /* Theme tokens — light */
+  .nav[data-theme='light'].is-open .nav-menu-panel {
+    --m-link-fg: #444141;
+    --m-link-fg-hover: #171717;
+    --m-link-shadow: none;
+    --m-link-fg-active: #ffffff;
+    --m-pill-bg: #171717;
+    --m-cta-fg: #282834;
+    --m-cta-border: #282834;
+    --m-cta-fg-hover: #171717;
+    --m-cta-border-hover: #171717;
+    --m-cta-hover-bg: rgba(23, 23, 23, 0.06);
+    --m-focus-color: #171717;
+  }
+
+  /* Mobile: sliding indicator is DISABLED — active state uses .is-active on the
+     link itself (full-width 48px pill). The .nav-active element is hidden. */
+  .nav-menu .nav-active {
+    display: none !important;
+  }
+
+  .nav.is-open .nav-menu {
+    display: flex;
   }
 
   .nav-link,
@@ -992,20 +1202,6 @@ button {
 
   .nav-link {
     justify-content: flex-start;
-  }
-
-  .nav.is-open .nav-menu {
-    display: flex;
-  }
-
-  .nav-link {
-    min-height: 44px;
-    padding-inline: var(--spacing-12);
-  }
-
-  .nav-contact {
-    margin: var(--spacing-8) 0 0;
-    min-height: 44px;
   }
 }
 
