@@ -565,12 +565,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         return;
       }
 
-      var target = null;
-      if (ctaTargetActive && cta) {
-        target = cta;
-      } else {
-        target = menu.querySelector('.nav-link.is-active');
-      }
+      var target = menu.querySelector('.nav-link.is-active');
 
       if (!target) {
         indicator.classList.remove('is-shown');
@@ -589,24 +584,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       }
 
       indicator.classList.add('is-shown');
-    }
-
-    /* --- CTA hover/focus: slide indicator to "Open the tools" ------------- */
-    var cta = menu.querySelector('.nav-contact');
-    var ctaTargetActive = false;
-
-    function setCtaTarget(isTarget) {
-      if (!cta) return;
-      ctaTargetActive = isTarget;
-      cta.classList.toggle('is-slider-target', isTarget);
-      positionIndicator();
-    }
-
-    if (cta) {
-      cta.addEventListener('mouseenter', function () { setCtaTarget(true); });
-      cta.addEventListener('focus', function () { setCtaTarget(true); });
-      cta.addEventListener('mouseleave', function () { setCtaTarget(false); });
-      cta.addEventListener('blur', function () { setCtaTarget(false); });
     }
 
     /* A click on a nav link scrolls smoothly. Hold the indicator still until
@@ -863,6 +840,12 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
      --------------------------------------------------------------- */
   (function () {
     var btns = document.querySelectorAll('[data-magnet]');
+    btns = Array.prototype.filter.call(btns, function (b) {
+      var navEl = document.getElementById('nav');
+      if (navEl && navEl.contains(b)) return false;
+      if (b.classList.contains('nav-contact')) return false;
+      return true;
+    });
     if (!btns.length || !finePointer.matches) return;
 
     function clampMag(dx, half) {

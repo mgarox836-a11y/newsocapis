@@ -2844,3 +2844,219 @@ html.js .preloader {
     }
   }
 }
+/* M1: NAVBAR LIGHT - stronger background so text under doesn't read through pill */
+@media (min-width: 1024px) {
+  .nav[data-theme='light'] .nav-inner {
+    background: rgba(255, 255, 255, 0.82);
+  }
+}
+
+/* M2: NAVBAR MEDIA DESKTOP - active indicator solid white, active text dark */
+@media (min-width: 1024px) {
+  .nav[data-theme='media'] {
+    --nav-bubble: #ffffff;
+    --nav-bubble-fg: #171717;
+  }
+  .nav[data-theme='media'] .nav-link.is-active {
+    color: #171717;
+  }
+  .nav-menu {
+    margin-left: 12px;
+  }
+}
+
+/* M4: DESTINATION CARDS - compact tier 500-719px height */
+@media (max-height: 719px) and (min-height: 500px) {
+  .hero-dest {
+    padding: 10px 12px;
+    min-height: 48px;
+    height: auto;
+  }
+  .hero-dest-label {
+    display: none;
+  }
+  .hero-dest-arrow {
+    display: inline-flex;
+  }
+  .hero-paths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-8);
+  }
+}
+
+/* M4b: HERO under 500px height - hide cards as requested (mobile landscape) */
+@media (max-height: 499px) {
+  .hero-paths {
+    display: none;
+  }
+}
+
+/* M4c: ensure 500-719px cards are glassy as before */
+@media (max-height: 719px) and (min-height: 500px) {
+  .hero-dest {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* M5: NAVBAR MENU - add small gap between brand and menu on desktop (min 12px) */
+@media (min-width: 1024px) {
+  .nav-menu {
+    margin-left: 12px;
+  }
+}
+
+/* M6: HERO - tighten vertical spacing for short viewports (1366x575) */
+@media (max-height: 620px) {
+  .hero {
+    padding-block: clamp(70px, 14vh, 120px) clamp(20px, 6vh, 40px);
+  }
+  .hero-stage {
+    gap: clamp(10px, 3vh, var(--spacing-16));
+  }
+}
+
+/* M7: HERO display/subheadline responsive on very short heights */
+@media (max-height: 580px) {
+  .hero-display {
+    font-size: clamp(26px, 8vh, 40px);
+  }
+  .hero-sub {
+    font-size: clamp(13px, 3vh, 16px);
+    margin-bottom: clamp(8px, 2vh, 16px);
+  }
+}
+
+/* M8: 500-719px tier - hero stage gap smaller */
+@media (max-height: 719px) and (min-height: 500px) {
+  .hero-stage {
+    gap: clamp(10px, 3vh, var(--spacing-16));
+  }
+}
+
+/* M9: HERO BOTTOM STRIP - ensure explicit placement (safety) */
+.hero-figcaption {
+  grid-column: 1;
+  justify-self: start;
+}
+.hero-scrollcue {
+  grid-column: 2;
+  justify-self: center;
+}
+.hero-videotoggle {
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* M10: NAVBAR DESKTOP - ensure items in pill align and have consistent height */
+@media (min-width: 1024px) {
+  .nav-menu,
+  .nav-inner {
+    align-items: center;
+  }
+  .nav-link,
+  .nav-contact {
+    height: 38px;
+    line-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* M3a: HERO BOTTOM STRIP - keep columns when hiding caption (tier 1) */
+@media (max-height: 719px) and (min-height: 600px) {
+  .hero-figcaption {
+    visibility: hidden;
+    display: block;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+/* M3b: HERO BOTTOM STRIP - keep columns when hiding caption (tier 2) */
+@media (max-height: 599px) {
+  .hero-figcaption {
+    visibility: hidden;
+    display: block;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+/* M3c: HERO BOTTOM STRIP - keep columns when hiding caption (tier 3) */
+@media (max-width: 720px) and (min-height: 600px) {
+  .hero-figcaption {
+    visibility: hidden;
+    display: block;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+/* N1: INDICATOR - use pill radius, never square */
+@media (min-width: 1024px) {
+  .nav-active {
+    border-radius: var(--radius-nav, 50px);
+  }
+}
+
+/* N2: CTA - remove browser focus ring, proper focus-visible, desktop only */
+@media (min-width: 1024px) {
+  .nav-contact {
+    outline: none;
+  }
+  .nav-contact:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.9);
+    outline-offset: 2px;
+    border-radius: var(--radius-nav, 50px);
+  }
+  .nav[data-theme='light'] .nav-contact:focus-visible {
+    outline: 2px solid #171717;
+  }
+}
+
+/* N3: CTA hover - prevent solid black fill in light theme; subtle fills */
+@media (min-width: 1024px) {
+  .nav-contact:hover {
+    background: var(--nav-ink);
+    color: var(--nav-paper);
+  }
+  .nav[data-theme='light'] .nav-contact:hover {
+    background: rgba(23, 23, 23, 0.06);
+    color: #171717;
+    border-color: #282834;
+  }
+  .nav[data-theme='media'] .nav-contact:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* N4: Prevent CTA transform from data-magnet in nav (safety) */
+@media (min-width: 1024px) {
+  #nav .nav-contact {
+    transform: none !important;
+    translate: none !important;
+  }
+}
+
+/* N5: Ensure indicator radius and states desktop only, no square */
+@media (min-width: 1024px) {
+  .nav-active {
+    border-radius: var(--radius-nav, 50px);
+  }
+}
+
+/* N6: Active link text contrast on desktop */
+@media (min-width: 1024px) {
+  .nav[data-theme='light'] .nav-link.is-active {
+    color: #ffffff;
+  }
+  .nav[data-theme='media'] .nav-link.is-active {
+    color: #171717;
+  }
+}
