@@ -962,7 +962,6 @@ button {
     position: relative;
     isolation: isolate;
     border-radius: 0 0 var(--radius-3xl) var(--radius-3xl);
-    padding: var(--menu-pad) !important;
     margin-top: var(--spacing-12);
     gap: 8px;
     /* Glass surface — ONLY element with background/blur/shadow */
@@ -1023,8 +1022,6 @@ button {
     box-shadow:
       0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
       0 8px 28px -8px rgba(0, 0, 0, 0.10);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    backdrop-filter: blur(20px) saturate(160%);
     /* Theme tokens — light */
     --m-link-fg: #444141;
     --m-link-fg-hover: #171717;
@@ -2688,5 +2685,162 @@ html.js .preloader {
     padding: 0 4px 0 16px;
     border-radius: 50px;
     justify-content: space-between;
+  }
+}
+
+/* ============ NAV MOBILE — PERBAIKAN PANEL ============
+   SATU permukaan kaca saja: .nav-inner adalah panelnya (ia memuat baris
+   header brand+X, daftar link, dan tombol), jadi kontainer daftar link
+   .nav-menu-panel dibersihkan menjadi kolom biasa. */
+@media (max-width: 1023px) {
+  /* Radius ikut pindah ke .nav-inner; nilai di bawah menetralkan radius
+     parsial yang masih dihitung pada kontainer daftar link. */
+  .nav.is-open .nav-menu.nav-menu-panel {
+    gap: 6px;
+    padding: 0;
+    margin: 10px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    filter: none;
+    /* Scroll dan max-height pindah ke .nav-inner. Tanpa ini panel tetap
+       overflow-y:auto, dan margin-left 8px sisa pada .nav-contact membuat
+       scrollWidth 268 > clientWidth 260, sehingga panel tersorot
+       scrollLeft 8px dan pil aktif bergeser 8px ke kiri. */
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Margin simetris 12px + padding 12px di semua sisi. Lebar 100% dari
+     content-box .nav (yang sudah padding-inline 12px) menghasilkan 12px
+     tepat di kiri dan kanan; bukan calc(100% - 24px) yang akan jadi 24px. */
+  .nav.is-open .nav-inner {
+    --menu-pad: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    margin-inline: auto;
+    padding: var(--menu-pad);
+    border-radius: var(--radius-3xl);
+    max-height: calc(100dvh - 92px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  /* Specular ::before dan pointer-glow ::after ikut hilang di panel. */
+  .nav.is-open .nav-inner::before,
+  .nav.is-open .nav-inner::after { content: none; }
+}
+
+/* Kaca panel pindah ke .nav-inner (satu-satunya permukaan kaca saat terbuka).
+   Nilai disalin apa adanya dari blok .nav-menu-panel agar tidak bergeser. */
+@media (max-width: 1023px) {
+  .nav[data-theme='media'].is-open .nav-inner {
+    background: linear-gradient(180deg, rgba(24, 22, 36, 0.38) 0%, rgba(24, 22, 36, 0.22) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.18) inset, 0 12px 40px -12px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    backdrop-filter: blur(22px) saturate(150%);
+  }
+
+  .nav[data-theme='light'].is-open .nav-inner {
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid #dee2de;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.6) inset, 0 8px 28px -8px rgba(0, 0, 0, 0.10);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+  }
+
+  /* Kaca tema ikut pindah ke .nav-inner supaya token --m-* (warna link, pil
+     aktif, CTA, focus) tetap hidup di panel yang baru. */
+  .nav[data-theme='media'].is-open .nav-inner {
+    --m-link-fg: #ffffff;
+    --m-link-fg-hover: #ffffff;
+    --m-link-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    --m-link-fg-active: #171717;
+    --m-pill-bg: #ffffff;
+    --m-cta-fg: #ffffff;
+    --m-cta-border: rgba(255, 255, 255, 0.6);
+    --m-cta-fg-hover: #ffffff;
+    --m-cta-border-hover: #ffffff;
+    --m-cta-hover-bg: rgba(255, 255, 255, 0.14);
+    --m-focus-color: rgba(255, 255, 255, 0.9);
+  }
+
+  .nav[data-theme='light'].is-open .nav-inner {
+    --m-link-fg: #444141;
+    --m-link-fg-hover: #171717;
+    --m-link-shadow: none;
+    --m-link-fg-active: #ffffff;
+    --m-pill-bg: #171717;
+    --m-cta-fg: #282834;
+    --m-cta-border: #282834;
+    --m-cta-fg-hover: #171717;
+    --m-cta-border-hover: #171717;
+    --m-cta-hover-bg: rgba(23, 23, 23, 0.06);
+    --m-focus-color: #171717;
+  }
+
+  /* Tombol X: bulat dan netral. ::before/::after ::after di .nav-inner sudah
+     dimatikan di atas; ini menetralkan sisa ::before warisan pill. */
+  .nav.is-open .nav-inner .burger {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .nav.is-open .nav-inner .burger::before,
+  .nav.is-open .nav-inner .burger::after { content: none; }
+
+  .nav.is-open .nav-inner .burger:hover { background: transparent; }
+
+  .nav.is-open .nav-inner .burger:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .nav.is-open .nav-inner .burger:focus-visible {
+    outline: 2px solid var(--m-focus-color, #171717);
+    outline-offset: 2px;
+    border-radius: 50%;
+  }
+
+  /* ---- Pil link aktif + tombol "Open the tools", ditulis eksplisit.
+         Dipisah dari link biasa supaya tidak ikut hilang oleh reset
+         .nav-link:not(.is-active) di atas. ---- */
+  .nav.is-open .nav-inner .nav-link.is-active {
+    min-height: 48px;
+    width: 100%;
+    border-radius: 50px;
+    box-sizing: border-box;
+  }
+
+  .nav.is-open .nav-inner .nav-contact {
+    min-height: 48px;
+    width: 100%;
+    margin-top: 6px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid var(--m-cta-border, currentColor);
+    border-radius: 50px;
+    background: transparent;
+    /* margin-left: 8px dari aturan desktop .nav-contact (style.css:677)
+       membuat CTA meleset 8px ke kanan dari link di atasnya. */
+    margin-left: 0;
+  }
+
+  @media (hover: hover) {
+    .nav.is-open .nav-inner .nav-contact:hover {
+      border-color: var(--m-cta-border-hover, var(--m-cta-border));
+      background: var(--m-cta-hover-bg, transparent);
+      color: var(--m-cta-fg-hover, var(--m-cta-fg));
+    }
   }
 }
