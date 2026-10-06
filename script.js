@@ -892,6 +892,322 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
   })();
 
   /* ---------------------------------------------------------------
+     Feature card proximity — [data-card-interactive].
+
+     A soft Cerulean wash that tracks the cursor, a small 3D tilt, a lift,
+     and a magnetised arrow. Four constraints shape the code:
+
+     1. ONE pointermove listener and ONE rAF loop for the whole section,
+        not one per card. Proximity has to be measured before the cursor
+        arrives, so the listener sits on the section — but the work it
+        does is one target pass, and one loop commits it.
+     2. NO READS INSIDE THE FRAME. getBoundingClientRect() forces layout,
+        so every rect — card and arrow — is cached in page space and only
+        invalidated on scroll, resize, and font load. The frame itself is
+        arithmetic plus style writes, so it cannot thrash.
+     3. ONE INVALIDATION PATH. Scrolling moves the cards but not the
+        cursor, so the cached cursor position is re-solved against the new
+        geometry. Without that the spotlight would smear as the page moves
+        under a still cursor.
+     4. GSAP quickTo when available, rAF lerp otherwise, matching the
+        magnetic-button treatment above. Both paths write the same custom
+        properties, so the stylesheet never has to know which one ran.
+
+     prefers-reduced-motion drops the tilt, lift and magnet and keeps only
+     the wash — a colour change rather than travel.
+     --------------------------------------------------------------- */
+  (function () {
+    var cards = document.querySelectorAll('[data-card-interactive]');
+    if (!cards.length || !finePointer.matches) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    var WASH_MAX = 0.10;   /* peak alpha of the Cerulean wash             */
+    var TILT_MAX = 3.2;    /* deg — enough to catch light, not to wobble  */
+    var LIFT_MAX = 4;      /* px                                          */
+    var REACH = 140;       /* px outside the card where the wash begins   */
+    var MAGNET = 6;        /* px the arrow travels toward the pointer     */
+    var MAGNET_ZONE = 90;  /* px radius around the arrow for the pull    */
+    var ARROW_SCALE = 1.14;
+
+    var OFFSCREEN = -1e5;  /* cursor sentinel: far enough to be outside every REACH */
+
+    /* Smoothstep rather than linear, so the wash leaves and arrives with no
+       visible seam at the edge of the reach radius. */
+    function smoothstep(x) { return x * x * (3 - 2 * x); }
+    function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+    var tiles = [];
+    Array.prototype.forEach.call(cards, function (card) {
+      var arrow = card.querySelector('.tile-arrow');
+      tiles.push({
+        el: card,
+        arrow: arrow,
+        /* page-space rects, refreshed only by measure() */
+        x: 0, y: 0, w: 0, h: 0,
+        ax: 0, ay: 0,                    /* arrow centre, page space */
+        /* targets, written by solve() */
+        wash: 0, tiltX: 0, tiltY: 0, lift: 0,
+        arrowX: 0, arrowY: 0, arrowScale: 1,
+        mouseX: 0, mouseY: 0,
+        /* current values, for the lerp backend */
+        cWash: 0, cTiltX: 0, cTiltY: 0, cLift: 0,
+        cArrowX: 0, cArrowY: 0, cArrowScale: 1,
+        cMouseX: 0, cMouseY: 0,
+        active: false
+      });
+    });
+
+    var scrollX = 0;
+    var scrollY = 0;
+    var px = OFFSCREEN;   /* last known cursor, viewport space */
+    var py = OFFSCREEN;
+
+    /* Cache geometry in page space. Reading is expensive; this is the only
+       place it happens. */
+    function measure() {
+      scrollX = window.pageXOffset || 0;
+      scrollY = window.pageYOffset || 0;
+      for (var i = 0; i < tiles.length; i++) {
+        var t = tiles[i];
+        var r = t.el.getBoundingClientRect();
+        t.x = r.left + scrollX;
+        t.y = r.top + scrollY;
+        t.w = r.width;
+        t.h = r.height;
+
+        if (t.arrow) {
+          var a = t.arrow.getBoundingClientRect();
+          t.ax = a.left + a.width / 2 + scrollX;
+          t.ay = a.top + a.height / 2 + scrollY;
+        } else {
+          /* No arrow is still a well-defined rest state. */
+          t.ax = t.x + t.w / 2;
+          t.ay = t.y + t.h / 2;
+        }
+
+        /* Seed the current values on first measure so a card revealed from
+           blur does not animate in from the top-left corner. */
+        if (!t.seeded) {
+          t.seeded = true;
+          t.mouseX = t.cMouseX = t.w / 2;
+          t.mouseY = t.cMouseY = t.h / 2;
+        }
+      }
+    }
+
+    /* Compute every card's target state from one cursor position. Pure
+       arithmetic over the cached rects — no DOM access at all. */
+    function solve(cx, cy) {
+      var still = reduceMotion && reduceMotion.matches;
+
+      for (var i = 0; i < tiles.length; i++) {
+        var t = tiles[i];
+
+        var inside = cx >= t.x && cx <= t.x + t.w && cy >= t.y && cy <= t.y + t.h;
+
+        var prox;
+        if (inside) {
+          prox = 1;
+        } else {
+          var dx = Math.max(t.x - cx, 0, cx - (t.x + t.w));
+          var dy = Math.max(t.y - cy, 0, cy - (t.y + t.h));
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          prox = dist >= REACH ? 0 : 1 - smoothstep(dist / REACH);
+        }
+
+        t.active = prox > 0.001;
+        t.wash = prox;
+
+        /* Clamped so the gradient centre never sits outside the surface. */
+        t.mouseX = clamp(cx - t.x, 0, t.w);
+        t.mouseY = clamp(cy - t.y, 0, t.h);
+
+        if (still) {
+          t.tiltX = t.tiltY = t.lift = 0;
+          t.arrowX = t.arrowY = 0;
+          t.arrowScale = 1;
+          continue;
+        }
+
+        /* Normalised offset from the card centre, saturated at ±1. Because it
+           saturates, the tilt is fullest at a corner rather than at the middle
+           — which is where the cursor actually is. */
+        var nx = t.w ? clamp((cx - (t.x + t.w / 2)) / (t.w / 2), -1, 1) : 0;
+        var ny = t.h ? clamp((cy - (t.y + t.h / 2)) / (t.h / 2), -1, 1) : 0;
+
+        /* tiltX is negated so a cursor near the top tips the top edge away,
+           the way a real card resting on a table would react. */
+        t.tiltX = ny * TILT_MAX * prox;
+        t.tiltY = -nx * TILT_MAX * prox;
+        t.lift = LIFT_MAX * prox;
+
+        if (t.arrow) {
+          var adx = cx - t.ax;
+          var ady = cy - t.ay;
+          var adist = Math.sqrt(adx * adx + ady * ady);
+          if (inside && adist < MAGNET_ZONE) {
+            var k = 1 - smoothstep(adist / MAGNET_ZONE);
+            t.arrowX = (adx / MAGNET_ZONE) * MAGNET * k;
+            t.arrowY = (ady / MAGNET_ZONE) * MAGNET * k;
+            t.arrowScale = 1 + (ARROW_SCALE - 1) * k;
+          } else {
+            t.arrowX = t.arrowY = 0;
+            t.arrowScale = 1;
+          }
+        }
+      }
+    }
+
+    function rest() {
+      px = py = OFFSCREEN;
+      for (var i = 0; i < tiles.length; i++) {
+        var t = tiles[i];
+        t.active = false;
+        t.wash = t.tiltX = t.tiltY = t.lift = 0;
+        t.arrowX = t.arrowY = 0;
+        t.arrowScale = 1;
+      }
+    }
+
+    /* --- backend: GSAP quickTo, or rAF lerp --------------------------
+       Both expose the same step(): commit the current targets, and keep a
+       rAF alive only while GSAP does not own the easing. */
+
+    var raf = null;
+    var step;
+
+    if (gsapAvailable()) {
+      var setMouseX = tiles.map(function (t) { return gsap.quickTo(t.el, '--mouse-x', { duration: 0.22, ease: 'power2.out' }); });
+      var setMouseY = tiles.map(function (t) { return gsap.quickTo(t.el, '--mouse-y', { duration: 0.22, ease: 'power2.out' }); });
+      var setWash = tiles.map(function (t) { return gsap.quickTo(t.el, '--spot-opacity', { duration: 0.32, ease: 'power2.out' }); });
+      var setTiltX = tiles.map(function (t) { return gsap.quickTo(t.el, '--tilt-x', { duration: 0.55, ease: 'power3.out' }); });
+      var setTiltY = tiles.map(function (t) { return gsap.quickTo(t.el, '--tilt-y', { duration: 0.55, ease: 'power3.out' }); });
+      var setLift = tiles.map(function (t) { return gsap.quickTo(t.el, '--lift', { duration: 0.55, ease: 'power3.out' }); });
+      var setArrowX = tiles.map(function (t) { return t.arrow ? gsap.quickTo(t.arrow, '--arrow-x', { duration: 0.4, ease: 'power3.out' }) : null; });
+      var setArrowY = tiles.map(function (t) { return t.arrow ? gsap.quickTo(t.arrow, '--arrow-y', { duration: 0.4, ease: 'power3.out' }) : null; });
+      var setArrowScale = tiles.map(function (t) { return t.arrow ? gsap.quickTo(t.arrow, '--arrow-scale', { duration: 0.4, ease: 'power3.out' }) : null; });
+
+      step = function () {
+        /* GSAP drives its own ticker, so this runs once per pointer event and
+           the easing happens from there. */
+        for (var i = 0; i < tiles.length; i++) {
+          var t = tiles[i];
+          setMouseX[i](t.mouseX.toFixed(1) + 'px');
+          setMouseY[i](t.mouseY.toFixed(1) + 'px');
+          setWash[i](t.wash.toFixed(3));
+          setTiltX[i](t.tiltX.toFixed(2) + 'deg');
+          setTiltY[i](t.tiltY.toFixed(2) + 'deg');
+          setLift[i](t.lift.toFixed(2) + 'px');
+          if (setArrowX[i]) {
+            setArrowX[i](t.arrowX.toFixed(2) + 'px');
+            setArrowY[i](t.arrowY.toFixed(2) + 'px');
+            setArrowScale[i](t.arrowScale.toFixed(3));
+          }
+        }
+      };
+    } else {
+      var EASE = 0.18;
+      var EPS = 0.05;   /* px / deg / alpha: below this, call it settled */
+
+      function follow(cur, target) {
+        var next = cur + (target - cur) * EASE;
+        if (Math.abs(target - next) > EPS) settling = true;
+        return next;
+      }
+
+      var settling = false;
+
+      step = function () {
+        settling = false;
+
+        for (var i = 0; i < tiles.length; i++) {
+          var t = tiles[i];
+
+          t.cMouseX = follow(t.cMouseX, t.mouseX);
+          t.cMouseY = follow(t.cMouseY, t.mouseY);
+          t.cWash = follow(t.cWash, t.wash);
+          t.cTiltX = follow(t.cTiltX, t.tiltX);
+          t.cTiltY = follow(t.cTiltY, t.tiltY);
+          t.cLift = follow(t.cLift, t.lift);
+          t.cArrowX = follow(t.cArrowX, t.arrowX);
+          t.cArrowY = follow(t.cArrowY, t.arrowY);
+          t.cArrowScale = follow(t.cArrowScale, t.arrowScale);
+
+          var s = t.el.style;
+          s.setProperty('--mouse-x', t.cMouseX.toFixed(1) + 'px');
+          s.setProperty('--mouse-y', t.cMouseY.toFixed(1) + 'px');
+          s.setProperty('--spot-opacity', (t.cWash * WASH_MAX).toFixed(3));
+          s.setProperty('--tilt-x', t.cTiltX.toFixed(2) + 'deg');
+          s.setProperty('--tilt-y', t.cTiltY.toFixed(2) + 'deg');
+          s.setProperty('--lift', t.cLift.toFixed(2) + 'px');
+
+          if (t.arrow) {
+            var a = t.arrow.style;
+            a.setProperty('--arrow-x', t.cArrowX.toFixed(2) + 'px');
+            a.setProperty('--arrow-y', t.cArrowY.toFixed(2) + 'px');
+            a.setProperty('--arrow-scale', t.cArrowScale.toFixed(3));
+          }
+        }
+
+        /* Keep looping only while something is still converging, so an idle
+           cursor costs no frames at all. */
+        raf = settling ? requestAnimationFrame(step) : null;
+      };
+    }
+
+    function schedule() {
+      if (!raf) raf = requestAnimationFrame(step);
+    }
+
+    /* --- pointer input ------------------------------------------------
+       One listener on the section, not one per card: proximity by
+       definition has to be measured before the cursor arrives. */
+
+    var section = document.getElementById('features') || document.body;
+
+    section.addEventListener('pointermove', function (e) {
+      px = e.clientX;
+      py = e.clientY;
+      solve(px + scrollX, py + scrollY);
+      schedule();
+    }, { passive: true });
+
+    /* Leaving the section is the reliable signal that the cursor has left the
+       card field entirely, so it is what ramps everything back to rest. */
+    section.addEventListener('pointerleave', function () {
+      rest();
+      schedule();
+    });
+
+    /* --- rect cache invalidation --------------------------------------
+       The cards move with the page; the cursor does not. Re-measuring and
+       re-solving together is what keeps the wash pinned to the surface
+       instead of smearing as the layout moves underneath a still pointer. */
+
+    function invalidate() {
+      measure();
+      if (px > OFFSCREEN) solve(px + scrollX, py + scrollY);
+      schedule();
+    }
+
+    window.addEventListener('scroll', invalidate, { passive: true });
+    window.addEventListener('resize', invalidate, { passive: true });
+
+    if (typeof ResizeObserver === 'function') {
+      var ro = new ResizeObserver(function () { invalidate(); });
+      for (var i = 0; i < tiles.length; i++) ro.observe(tiles[i].el);
+    }
+
+    /* Font loading reflows the tiles, which invalidates every cached rect. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(invalidate);
+    }
+
+    measure();
+  })();
+
+  /* ---------------------------------------------------------------
      Hero video — decoration only, with a manual play/pause control.
 
      There is deliberately no autoplay attribute on the element. Playback is
