@@ -3555,3 +3555,11 @@ summary,
   }
 }
 
+/* ---------- hero video: failure path ------------------------------------
+   .hero-media sits at opacity 0 until JS adds .is-ready. That must not apply
+   to the failure states: with the plate hidden there, a refused autoplay or a
+   dead file leaves the bare gradient instead of the poster. .is-fallback keeps
+   the plate visible so hero-dusk.jpg reads as the backdrop. */
+.hero-media.is-fallback {
+  opacity: 1;
+}

@@ -1077,7 +1077,11 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     var raf = null;
     var step;
 
-    if (gsapAvailable()) {
+    /* Probe GSAP from window, not from the reveal IIFE's gsapAvailable() helper:
+       that helper is declared in a sibling closure, so calling it from here threw
+       a ReferenceError that killed the rest of this script -- including the hero
+       video IIFE below. This block only ever calls gsap.quickTo, so probe that. */
+    if (!window.__gsapFailed && window.gsap && typeof window.gsap.quickTo === 'function') {
       var setMouseX = tiles.map(function (t) { return gsap.quickTo(t.el, '--mouse-x', { duration: 0.22, ease: 'power2.out' }); });
       var setMouseY = tiles.map(function (t) { return gsap.quickTo(t.el, '--mouse-y', { duration: 0.22, ease: 'power2.out' }); });
       var setWash = tiles.map(function (t) { return gsap.quickTo(t.el, '--spot-opacity', { duration: 0.32, ease: 'power2.out' }); });
@@ -1258,6 +1262,24 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       video.classList.add('is-ready');
     }
 
+    /* Failure path. The plate must stay visible on every state where playback
+       never lands -- otherwise the plate's own opacity:0 hides the poster too
+       and the visitor is left with the bare gradient. Hiding the button is
+       honest here: there is nothing to pause or resume. */
+    function fallback() {
+      video.classList.add('is-fallback');
+      paint(false);
+      if (toggle) toggle.hidden = true;
+    }
+
+    /* Deliberate no-autoplay paths. Same visible result as fallback() -- the
+       poster is the hero -- but the button stays, because the visitor is still
+       allowed to start the clip by hand. Only a genuine failure hides it. */
+    function showPoster() {
+      video.classList.add('is-fallback');
+      paint(false);
+    }
+
     function start() {
       var attempt = video.play();
       if (attempt && typeof attempt.then === 'function') {
@@ -1266,7 +1288,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
           paint(true);
         }).catch(function () {
           /* Autoplay refused, or the codec is unsupported: the poster stays. */
-          paint(false);
+          fallback();
         });
       } else {
         /* Older engines return undefined and either play or silently do not. */
@@ -1298,8 +1320,8 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
 
     /* --- autoplay gate -------------------------------------------------- */
 
-    if (reduceMotion && reduceMotion.matches) return;
-    if (saveData()) return;
+    if (reduceMotion && reduceMotion.matches) { showPoster(); return; }
+    if (saveData()) { showPoster(); return; }
 
     if (video.readyState >= 2) {
       start();
@@ -1313,10 +1335,25 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
        the fallback — dropping it would leave the bare gradient, which is a
        worse picture than the frame the visitor would have got. The button
        hides itself in that case, because there is nothing to play. */
-    video.addEventListener('error', function () {
-      video.classList.add('is-fallback');
-      if (toggle) toggle.hidden = true;
-    }, { once: true });
+    video.addEventListener('error', fallback, { once: true });
+
+    /* A <source> that 404s or has an undecodable codec does not always surface
+       on the video element. Listen on the sources too, otherwise the failure is
+       silent and the safety timer below is the only thing that catches it. */
+    Array.prototype.forEach.call(video.querySelectorAll('source'), function (src) {
+      src.addEventListener('error', fallback, { once: true });
+    });
+
+    /* Safety net. canplay can be slow or never arrive on a stalled connection,
+       and until it does the plate is at opacity 0 -- so the visitor would stare
+       at the bare gradient for as long as the wait lasts. Three seconds is
+       enough for a first frame on any connection worth serving video on; after
+       that the poster becomes the hero and the video, if it ever arrives, still
+       fades in over it. */
+    setTimeout(function () {
+      if (video.readyState >= 2) start();
+      else fallback();
+    }, 3000);
 
     /* preload="none" in the markup is what makes the two early returns above
        worth having: nothing is fetched until we already know we are allowed
