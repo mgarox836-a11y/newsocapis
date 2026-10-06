@@ -104,11 +104,30 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       preloaderEl = null;
     }
 
+    /* --- scroll lock: ONE place releases it ---------------------------
+       The lock is html.is-locked (overflow:hidden). It must come off as soon
+       as nothing is capturing input any more -- which is the moment the
+       curtain starts lifting, since .preloader.is-done sets pointer-events:none
+       in the same frame. Waiting for tl.onComplete held the page locked a
+       further ~2.1s after the hero was already on screen and fully interactive.
+
+       Deliberately does NOT call finish(): is-entered is what pins the CSS
+       entrance (html.css-entrance:not(.is-entered)), so adding it here would
+       freeze the text mid-flight. Teardown stays on cleanup()'s schedule.
+
+       Idempotent: extra calls are no-ops. */
+    var unlocked = false;
+    function unlock() {
+      if (unlocked) return;
+      unlocked = true;
+      docEl.classList.remove('is-locked');
+    }
+
     /* teardown — never keeps the overlay in the layout or scroll locked */
     function cleanup() {
       removePreloader();
       finish();
-      docEl.classList.remove('is-locked');
+      unlock();
     }
 
     /* hero/reveal choreography — plays when the curtain starts to part */
@@ -243,15 +262,32 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
         if (preloaderEl) preloaderEl.classList.add('is-done');
         window.requestAnimationFrame(reveal);
         /* curtain clears; GSAP onComplete / CSS timeout will call cleanup */
+
+        /* The curtain is lifting and the hero is on screen, so scroll can
+           open. The 800ms grace is the curtain's own 0.7s slide (style.css
+           .preloader transition) plus a frame of slack -- after it the hero
+           has been readable for a moment and any scroll attempt is honoured
+           instead of dropped. Not tied to tl.onComplete, so it holds whether
+           the timeline is still playing, the CSS fallback is running, or
+           SplitText threw. Idempotent, so cleanup() landing later is a no-op. */
+        window.setTimeout(unlock, 800);
       }
 
       /* hard failsafe — never leaves the overlay locked in place (extended for GSAP timeline) */
       window.setTimeout(cleanup, 4000);
+      /* Backstop for the lock alone: 4000ms is cleanup()'s ceiling, but if
+         runPreloader threw before handoff was ever reached the lock would
+         otherwise stay. Kept under the 4s budget. */
+      window.setTimeout(unlock, 3900);
 
       requestAnimationFrame(tick);
     }
 
-    docEl.classList.add('is-locked');
+    /* Reduced motion gets no lock at all: the curtain still plays (its timing
+       is untouched) but there is no reason to ever hold the page hostage for
+       an entrance the visitor asked not to see. */
+    var lockPage = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (lockPage) docEl.classList.add('is-locked');
     try {
       runPreloader();
     } catch (e) {
