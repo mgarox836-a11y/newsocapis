@@ -68,6 +68,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
       '.hero-display .spl-char',
       '.hero-sub',
       '.hero-sub .spl-word',
+      '.hero-panel',
       '.hero-paths li',
       '.nav-inner .brand',
       '.nav-menu .nav-link',
@@ -215,6 +216,7 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
           tl.from('.hero-sub', { y: 22, opacity: 0, filter: 'blur(6px)', duration: 0.7, ease: 'power3.out' }, 0.80);
         }
 
+        tl.from('.hero-panel', { y: 18, opacity: 0, duration: 0.55, ease: 'power3.out' }, 0.85);
         tl.from('.hero-paths li', { y: 14, opacity: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07 }, 0.90);
         tl.from('.footer .brand, .footer-links li', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out', stagger: 0.04 }, 1.12);
       } catch (err) {
@@ -1245,158 +1247,6 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     }
 
     measure();
-  })();
-
-  /* ---------------------------------------------------------------
-     Hero video — decoration only, with a manual play/pause control.
-
-     There is deliberately no autoplay attribute on the element. Playback is
-     started from here, so a browser with JS disabled, a save-data connection,
-     or prefers-reduced-motion never decodes a single frame and simply keeps
-     the poster. That is also why the fade-in is class-driven rather than a
-     CSS media query: the class only lands once play() has actually resolved,
-     so a rejected autoplay promise leaves the gradient underneath visible
-     instead of a black video plate.
-
-     The button in the bottom strip is the one place a visitor can override
-     that decision, so it has to work in every state the autoplay guard can
-     leave behind -- poster only (save-data), poster only (reduced motion, where
-     the media query above also stops the scroll cue), playing, paused by the
-     visitor, and a file that never decoded at all. It is wired before the two
-     early returns for exactly that reason: on the paths where they return, the
-     video is present and paused, and a control claiming to pause something that
-     is already paused would be a lie.
-     --------------------------------------------------------------- */
-  (function () {
-    var video = document.querySelector('[data-hero-video]');
-    if (!video) return;
-
-    var toggle = document.querySelector('[data-video-toggle]');
-    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    function saveData() {
-      var c = navigator.connection;
-      return !!(c && c.saveData);
-    }
-
-    /* --- the control --------------------------------------------------- */
-
-    /* aria-label has to describe the action, not the state, so it flips with
-       the button rather than describing what is currently on screen. */
-    function paint(playing) {
-      if (!toggle) return;
-      toggle.classList.toggle('is-paused', !playing);
-      toggle.setAttribute('aria-label', playing ? 'Pause background video' : 'Play background video');
-      toggle.setAttribute('aria-pressed', playing ? 'false' : 'true');
-    }
-
-    function isPlaying() {
-      return !video.paused && !video.ended && video.readyState > 2;
-    }
-
-    function reveal() {
-      video.classList.add('is-ready');
-    }
-
-    /* Failure path. The plate must stay visible on every state where playback
-       never lands -- otherwise the plate's own opacity:0 hides the poster too
-       and the visitor is left with the bare gradient. Hiding the button is
-       honest here: there is nothing to pause or resume. */
-    function fallback() {
-      video.classList.add('is-fallback');
-      paint(false);
-      if (toggle) toggle.hidden = true;
-    }
-
-    /* Deliberate no-autoplay paths. Same visible result as fallback() -- the
-       poster is the hero -- but the button stays, because the visitor is still
-       allowed to start the clip by hand. Only a genuine failure hides it. */
-    function showPoster() {
-      video.classList.add('is-fallback');
-      paint(false);
-    }
-
-    function start() {
-      var attempt = video.play();
-      if (attempt && typeof attempt.then === 'function') {
-        attempt.then(function () {
-          reveal();
-          paint(true);
-        }).catch(function () {
-          /* Autoplay refused, or the codec is unsupported: the poster stays. */
-          fallback();
-        });
-      } else {
-        /* Older engines return undefined and either play or silently do not. */
-        reveal();
-        paint(isPlaying());
-      }
-    }
-
-    if (toggle) {
-      /* Pause is the resting icon, so anything that has not started yet — the
-         poster-only paths and the failure path — is painted as paused. */
-      paint(false);
-
-      toggle.addEventListener('click', function () {
-        if (isPlaying()) {
-          video.pause();
-          paint(false);
-          return;
-        }
-        start();
-      });
-
-      /* Keep the icon honest when something outside this script pauses the
-         video, e.g. a browser pausing background tabs. */
-      ['play', 'pause', 'ended'].forEach(function (evt) {
-        video.addEventListener(evt, function () { paint(isPlaying()); });
-      });
-    }
-
-    /* --- autoplay gate -------------------------------------------------- */
-
-    if (reduceMotion && reduceMotion.matches) { showPoster(); return; }
-    if (saveData()) { showPoster(); return; }
-
-    if (video.readyState >= 2) {
-      start();
-      return;
-    }
-
-    /* Wait until enough of the file has decoded before spending a play() call. */
-    video.addEventListener('canplay', start, { once: true });
-    /* A missing or undecodable file must not surface as an error state. The
-       poster is a still of the same dusk scene, so it stays put and becomes
-       the fallback — dropping it would leave the bare gradient, which is a
-       worse picture than the frame the visitor would have got. The button
-       hides itself in that case, because there is nothing to play. */
-    video.addEventListener('error', fallback, { once: true });
-
-    /* A <source> that 404s or has an undecodable codec does not always surface
-       on the video element. Listen on the sources too, otherwise the failure is
-       silent and the safety timer below is the only thing that catches it. */
-    Array.prototype.forEach.call(video.querySelectorAll('source'), function (src) {
-      src.addEventListener('error', fallback, { once: true });
-    });
-
-    /* Safety net. canplay can be slow or never arrive on a stalled connection,
-       and until it does the plate is at opacity 0 -- so the visitor would stare
-       at the bare gradient for as long as the wait lasts. Three seconds is
-       enough for a first frame on any connection worth serving video on; after
-       that the poster becomes the hero and the video, if it ever arrives, still
-       fades in over it. */
-    setTimeout(function () {
-      if (video.readyState >= 2) start();
-      else fallback();
-    }, 3000);
-
-    /* preload="none" in the markup is what makes the two early returns above
-       worth having: nothing is fetched until we already know we are allowed
-       to play, so a save-data visitor pays zero bytes for a video they will
-       never see. Listeners are attached before load() so canplay cannot be
-       missed. */
-    video.load();
   })();
 
   /* ---------------------------------------------------------------

@@ -130,13 +130,25 @@
   --color-cerulean-ink: #0076ad;
   --surface-vivid-blue: #0081c0;
 
-  /* Hero surface — the warm dusk gradient is the final artwork, not a
-     stand-in. Four stops, light at the top fading to dusk at the bottom,
-     which is what puts the frosted card on the dark end of the range. */
-  --hero-dusk-a: #f4b183;
-  --hero-dusk-b: #c96f9b;
-  --hero-dusk-c: #6b4a8f;
-  --hero-dusk-d: #2b2b52;
+  /* Hero sky — the illustrated teal-to-warm band, and the only coloured
+     surface in the system. DESIGN.md's own hero token is `#0c8c5`, a
+     five-digit hex no browser will parse, so the stops are taken from the
+     Refero reference instead: deep teal at the crown, mint through the
+     middle, warm cream on the horizon, and back down to teal under the
+     panel so a white surface has something to sit against. */
+  --hero-sky-a: #0a3a41;
+  --hero-sky-b: #10605c;
+  --hero-sky-c: #63a98a;
+  --hero-sky-d: #f2ddaa;
+  /* how far the floating panel hangs over the hero's bottom edge */
+  --hero-panel-overlap: 56px;
+  /* The panel has to separate from a dark sky above and a light parchment
+     below, so it carries more than DESIGN.md's whisper shadow. The tint is
+     the sky's own deep teal rather than neutral black. */
+  --hero-panel-shadow: 0 32px 64px -28px rgba(6, 42, 44, 0.55);
+  /* the floor under the panel — deeper than the horizon so a white surface
+     has a hard edge to sit against */
+  --hero-sky-floor: #0b4340;
 
   /* Atmospheric card artwork. Kept as a variable so the <img>-less
      background-image pair can be swapped without touching the component, and
@@ -148,6 +160,12 @@
   --diagram-border: #dee2de;
   --diagram-line: #b4b8b4;
   --radius-diagram: 16px;
+
+  /* DESIGN.md accents — the hero is the only consumer. Mint Green is the
+     single chromatic spark; the two grays are the panel's hairlines. */
+  --color-mint-green: #0c8c5e;
+  --color-mist-gray: #f2f2f2;
+  --color-cloud-gray: #dddddd;
 
   /* Liquid-glass navbar. Tuned off the Dusk/Signal family already in the
      palette so no new accent hue is introduced. */
@@ -396,13 +414,13 @@ button {
 .nav[data-theme='media'] .nav-inner {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0.08) 100%
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.06) 100%
   );
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.3);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
-    0 12px 32px -10px rgba(23, 23, 23, 0.4);
+    0 1px 0 0 rgba(255, 255, 255, 0.4) inset,
+    0 8px 24px -12px rgba(6, 42, 44, 0.32);
 }
 
 /* ---- state: light (over paper) ----
@@ -1254,75 +1272,108 @@ button {
 }
 
 /* ---------- 7. HERO ----------
-   Full-bleed 100svh dusk. Three stacked layers, back to front:
-     1. .hero            — layered dusk gradient, the fallback artwork
-     2. .hero-media      — the video, cover-fitted above it
-     3. .hero::after     — grain + legibility scrim
-   The card is small and pinned bottom-left so the footage keeps the frame.
-   vh comes first as a fallback for engines without svh; svh is what stops
-   mobile browser chrome from cropping the card on scroll. */
-/* ---------- 7. HERO ----------
-   Centred composition on a full-bleed dusk plate. There is no glass card any
-   more: the video IS the surface and the type sits directly on it, so the
-   frame is never boxed in. .hero is a three-part column — eyebrow, centred
-   stage, bottom strip — spread with space-between, and the stage itself takes
-   the slack so its contents sit on the vertical centre of the room that is
-   left over.
-   Selectors the entrance timeline depends on are unchanged: .hero-display
-   .block, .hero-sub and .hero-paths li. */
+   Full-bleed illustrated sky. Four stacked layers, back to front:
+     1. .hero        — layered teal-to-warm gradient, the base artwork
+     2. .hero-sky    — inline SVG cumulus, drifting on three timings
+     3. .hero::after — legibility pool behind the type + a deep base
+     4. content      — centred stage, then the strip, then the panel
+   There is no media plate any more: the sky is drawn entirely in CSS and
+   SVG, so nothing downloads, nothing can 404, and nothing has to wait on a
+   play() promise. assets/hero.{mp4,webm} and hero-dusk.jpg stay on disk,
+   unreferenced. vh comes first as a fallback for engines without svh; svh
+   is what stops mobile browser chrome from cropping the panel on scroll.
+
+   The panel hangs over the hero's bottom edge, so the hero needs a z-index:
+   .figure-band below carries a transform from the scroll reveal, which makes
+   it its own stacking context painted later in tree order. Without this one
+   declaration the panel would be painted underneath it. */
 .hero {
   position: relative;
+  z-index: 1;
   isolation: isolate;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  overflow: hidden;
-  /* top clears the floating pill, bottom is the strip's own breathing room */
+  /* the panel's overhang has to be paid back to the document flow, or the
+     parchment margin would close over its bottom edge */
+  margin-bottom: var(--hero-panel-overlap);
+  /* top clears the floating nav pill; the panel supplies the bottom */
   padding-top: var(--nav-clearance);
-  padding-bottom: clamp(16px, 3vh, 32px);
-  background-color: var(--color-dusk);
+  background-color: var(--hero-sky-b);
   background-image:
-    radial-gradient(120% 78% at 18% 6%, rgba(244, 177, 131, 0.5) 0%, rgba(244, 177, 131, 0) 58%),
-    radial-gradient(96% 62% at 82% 96%, rgba(43, 43, 82, 0.92) 0%, rgba(43, 43, 82, 0) 62%),
+    /* warm bloom sitting in the cloud band, so the cream reads as lit */
+    radial-gradient(95% 38% at 50% 68%, rgba(246, 221, 166, 0.5) 0%, rgba(246, 221, 166, 0) 70%),
+    /* deeper corners: keeps the white panel separated at both ends */
+    radial-gradient(110% 54% at 8% 100%, rgba(6, 42, 44, 0.6) 0%, rgba(6, 42, 44, 0) 58%),
+    radial-gradient(110% 54% at 92% 100%, rgba(6, 42, 44, 0.55) 0%, rgba(6, 42, 44, 0) 58%),
     linear-gradient(
       180deg,
-      var(--hero-dusk-a) 0%,
-      var(--hero-dusk-b) 34%,
-      var(--hero-dusk-c) 68%,
-      var(--hero-dusk-d) 100%
+      var(--hero-sky-a) 0%,
+      var(--hero-sky-b) 34%,
+      var(--hero-sky-c) 62%,
+      var(--hero-sky-d) 84%,
+      var(--hero-sky-floor) 100%
     );
 }
 
-/* Video plate. object-fit cover keeps the 16:9 source full-bleed at any ratio
-   without letterboxing, and the object-position shifts per breakpoint so the
-   interesting part of the frame (the lit horizon) stays in view instead of
-   being cropped to sky on tall phones. */
-.hero-media {
+/* Illustrated clouds. Each layer is wider than the hero and offset by half
+   its own excess, so a slow horizontal drift never exposes an edge. The
+   clouds are decorative: aria-hidden in the markup, and every word on the
+   page is real DOM text. */
+.hero-sky {
   position: absolute;
   inset: 0;
   z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 42%;
+  overflow: hidden;
   pointer-events: none;
-  /* browsers keep decoding a hidden video otherwise */
-  opacity: 0;
-  transition: opacity 900ms var(--ease-signature);
 }
 
-/* Only fade in once JS confirms the file actually decoded. If play() rejects
-   or the fetch fails, [data-hero-video] never lands and the gradient stands
-   alone — no black plate, no half-faded frame. With no autoplay attribute the
-   poster attribute is what shows until then, so a JS-blocked or reduced-motion
-   browser still shows the poster and never fetches a frame. */
-.hero-media.is-ready {
+.hero-cloud {
+  position: absolute;
+  left: -22%;
+  width: 144%;
+  height: auto;
+  /* a touch of softness so the vector edges read as paint, not as a shape */
+  filter: blur(0.6px);
+  will-change: transform;
+  animation: sky-drift linear infinite;
+}
+
+/* Far band: high, small, slowest. Mid band: the big centre mass. Low band:
+   widest and slowest of all, sitting on the warm horizon. */
+.hero-cloud-c {
+  top: 30%;
+  opacity: 0.65;
+  animation-duration: 200s;
+}
+
+.hero-cloud-a {
+  top: 38%;
   opacity: 1;
+  animation-duration: 140s;
 }
 
-/* legibility wash + film grain. Sits above the video, below the content. */
+.hero-cloud-b {
+  top: 52%;
+  opacity: 0.95;
+  animation-duration: 240s;
+}
+
+@keyframes sky-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-12%, 0, 0);
+  }
+}
+
+/* Legibility pool. The cream cloud band sits directly behind the type, and
+   white on cream is nowhere near AA, so the stack gets its own dark pool
+   rather than relying on the whole sky being dark. The base wash also
+   anchors the white panel and the strip copy above it. */
 .hero::after {
   content: '';
   position: absolute;
@@ -1330,29 +1381,26 @@ button {
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(23, 23, 23, 0.3) 0%, rgba(23, 23, 23, 0) 30%),
-    linear-gradient(0deg, rgba(23, 23, 23, 0.46) 0%, rgba(23, 23, 23, 0) 48%);
+    radial-gradient(64% 46% at 50% 34%, rgba(6, 42, 44, 0.62) 0%, rgba(6, 42, 44, 0.3) 58%, rgba(6, 42, 44, 0) 80%),
+    linear-gradient(0deg, rgba(6, 42, 44, 0.42) 0%, rgba(6, 42, 44, 0) 26%);
 }
 
-/* Grain is drawn as its own element so the scrim above stays a plain two-stop
-   gradient — mixing an SVG turbulence data-URI into the same background list
-   would tie the noise to the scrim's own alpha ramp. */
+/* Grain is drawn as its own element so the scrim above stays a plain
+   gradient pair — mixing a turbulence data-URI into the same background
+   list would tie the noise to the scrim's own alpha ramp. */
 .hero-grain {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.045;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* The left-aligned asymmetric block. flex:1 plus justify-content:center still
-   puts the eyebrow/headline/subtext/CTA stack on the vertical centre of
-   whatever room the nav padding and the bottom strip leave behind — the change
-   is on the horizontal axis only. align-items:flex-start stops the column from
-   centring its children, so the eyebrow, headline, subtext and CTAs all hang
-   off the same left edge as the page gutter and the nav brand, and the width
-   caps below leave the right half of the screen deliberately empty. */
+/* Centred stack. flex:1 takes whatever room the strip and the panel leave
+   behind, and centres the four rows on the vertical centre of that room —
+   which is the same job it did when the type was left-aligned, on the other
+   axis now. */
 .hero-stage {
   position: relative;
   z-index: 2;
@@ -1360,63 +1408,64 @@ button {
   width: 100%;
   max-width: var(--page-max-width);
   margin-inline: auto;
-  padding-inline: var(--gutter-inline);
+  padding: clamp(24px, 4vh, 48px) var(--gutter-inline) clamp(16px, 2.5vh, 28px);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: var(--spacing-24);
-  text-align: left;
+  text-align: center;
 }
 
-/* 1. Eyebrow — small glass pill with a dot */
+/* 1. Eyebrow — small pill, mint dot per DESIGN.md's eyebrow label */
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-8);
-  padding: 6px 14px 6px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 5px 14px 5px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 50px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: #f9faf7;
-  font-size: 13px;
+  font-size: var(--text-caption);
   font-weight: var(--font-weight-medium);
   line-height: 1.3;
   letter-spacing: 0.005em;
   white-space: nowrap;
 }
 
-@supports (backdrop-filter: blur(10px)) {
+@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .hero-eyebrow {
     -webkit-backdrop-filter: blur(10px) saturate(1.2);
     backdrop-filter: blur(10px) saturate(1.2);
   }
 }
 
+/* The one chromatic dot in the hero. DESIGN.md names Mint Green for exactly
+   this: decorative dots in eyebrow labels. */
 .hero-eyebrow-dot {
   width: 6px;
   height: 6px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #41a1cf;
-  box-shadow: 0 0 0 3px rgba(65, 161, 207, 0.22);
+  background: var(--color-mint-green);
+  box-shadow: 0 0 0 3px rgba(12, 140, 94, 0.28);
 }
 
-/* 2. Headline — one sentence per line, solid white, soft shadow so it holds up
-   against the bright part of the dusk sky. Left-aligned so the three lines
-   stack hard against the page gutter and the right half of the viewport stays
-   open; the 650px cap is the measure ceiling that keeps that true if the copy
-   ever gets a longer line. Each .block is its own line, so the cap never
-   re-wraps a sentence out of the stagger order. */
+/* 2. Headline — DESIGN.md's display step: Inter 57/1.1/-1.14px at weight
+   600, centred. Each .block is its own line so the cap never re-wraps a
+   sentence out of the stagger order. */
 .hero-display {
+  font-family: var(--font-af);
+  font-weight: var(--font-weight-semibold);
+  font-size: clamp(34px, 4.6vw, var(--text-display));
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
   color: #fff;
-  font-size: clamp(36px, 5.4vw, 68px);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  text-align: left;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
-  max-width: 650px;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(6, 42, 44, 0.35);
+  max-width: 18ch;
+  text-wrap: balance;
   overflow-wrap: break-word;
   /* room for descenders (g, y, p, q) so the char reveal never crops them */
   padding: 0.08em 0 0.16em;
@@ -1441,91 +1490,213 @@ button {
   backface-visibility: hidden;
 }
 
-/* 3. Subtext — solid colour, left-aligned under the headline. 600px rather
-   than the old 52ch: the serif body needs a tighter measure than a 68px
-   headline does, and it keeps this line from reaching for the open right side
-   of the composition. */
+/* 3. Subtext — DESIGN.md's hero subtext: 18px at 80% white, centred. */
 .hero-sub {
-  max-width: 600px;
-  color: #f9faf7;
-  font-size: clamp(16px, 1.1vw, 18px);
-  line-height: 1.55;
-  letter-spacing: var(--tracking-subheading);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.22);
+  max-width: 52ch;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-body);
+  text-shadow: 0 2px 18px rgba(6, 42, 44, 0.35);
 }
 
-/* 4. CTA row — buttons sit directly under the headline, on the same left edge,
-   instead of straddling the measure. */
+/* 4. CTA row — centred under the headline. */
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: var(--spacing-12) var(--spacing-16);
 }
 
-/* Primary CTA as liquid glass over the dusk footage. Two layers do the work:
-   a vertical white gradient for the lit top edge, and a 14% Signal Blue plate
-   underneath so the primary action still reads as the accent without a solid
-   blue box. The blue that used to be a 1px #41a1cf stroke is now the faintest
-   part of the glass instead of its outline — over moving video a hard blue
-   border read as a solid rectangle, and blue-on-dusk label copy sat at 2.70:1.
-   The 1px hairline is what a real glass edge catches, so the border is white
-   alpha, and the inset highlight gives the surface a top-lit rim. */
+/* Primary CTA — DESIGN.md's single filled button, inverted for a dark sky:
+   Paper White surface, Ink Black label, 4px radius. The reference hero does
+   the same, and it is the only pairing that clears AA against the clouds. */
 .btn-outline {
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%),
-    rgba(65, 161, 207, 0.14);
-  color: #f9faf7;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
-}
-
-/* Safari only shipped -webkit-backdrop-filter, so the unprefixed-only @supports
-   test skipped the blur entirely on versions before 18 and left a flat panel.
-   Test both. */
-@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
-  .btn-outline {
-    -webkit-backdrop-filter: blur(12px) saturate(1.25);
-    backdrop-filter: blur(12px) saturate(1.25);
-  }
+  border: 1px solid #ffffff;
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+  color: var(--color-ink-black);
+  box-shadow: 0 2px 4px 0 rgba(6, 42, 44, 0.3);
 }
 
 .btn-outline:hover,
 .btn-outline:focus-visible {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%),
-    rgba(65, 161, 207, 0.22);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--color-mist-gray);
+  color: var(--color-ink-black);
+  border-color: var(--color-ink-black);
 }
 
-/* The arrow keeps Signal Blue: it is the one place the hue still carries the
-   button's identity, and as an icon it clears the 3:1 non-text floor easily. */
 .btn-outline .btn-arrow {
-  color: #41a1cf;
+  color: var(--color-mint-green);
 }
 
-/* Ghost secondary — text only, scrolls to Features */
+/* Ghost secondary — text only, scrolls to Features. It sits on the sky, so
+   it keeps a 1px white hairline to carry its boundary off the clouds. */
 .btn-ghost {
-  border: 1px solid transparent;
-  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-md);
   background: transparent;
-  color: #f9faf7;
+  color: #ffffff;
   box-shadow: none;
 }
 
 .btn-ghost:hover,
 .btn-ghost:focus-visible {
   color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
-/* 5. Destination cards — 3 across on desktop, capped at the page width so the
-   row shares the same axis as everything else on the site. */
+/* ---------- HERO PANEL ----------
+   DESIGN.md's Documentation Product Card: opaque white, 24px radius, a
+   whisper shadow plus the float lift the dark sky and the light parchment
+   both need. It hangs over the hero's bottom edge. Mint Green appears here
+   and nowhere else in the hero — the active sidebar row and the active tab
+   underline — which is precisely the role DESIGN.md assigns it. */
+.hero-panel {
+  position: relative;
+  z-index: 3;
+  width: calc(100% - var(--gutter-inline) * 2);
+  max-width: calc(var(--page-max-width) - 80px);
+  margin-inline: auto;
+  margin-bottom: calc(-1 * var(--hero-panel-overlap));
+  padding: var(--card-padding);
+  border-radius: var(--radius-3xl);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-sm-2), var(--hero-panel-shadow);
+}
+
+.hero-panel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  padding-bottom: var(--spacing-16);
+  border-bottom: 1px solid var(--color-mist-gray);
+}
+
+.hero-panel-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: var(--color-ink-black);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.hero-panel-mark {
+  fill: var(--color-mint-green);
+  stroke: var(--color-mint-green);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.hero-panel-meta {
+  margin: 0;
+  color: var(--color-ash);
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-caption);
+}
+
+.hero-panel-body {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) 168px;
+  gap: var(--spacing-24);
+  padding-top: var(--spacing-16);
+}
+
+/* Sidebar — DESIGN.md's Sidebar Navigation Item: 16px, 6px vertical padding,
+   8px indent, faint mint wash on the active row. */
+.hero-panel-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.hero-panel-nav {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  color: var(--color-ink-black);
+  font-size: 16px;
+  line-height: 1.33;
+  text-decoration: none;
+  transition: background-color var(--dur) var(--ease-signature);
+}
+
+.hero-panel-nav:hover,
+.hero-panel-nav:focus-visible {
+  background: var(--color-mist-gray);
+}
+
+.hero-panel-nav.is-active {
+  background: rgba(12, 140, 94, 0.08);
+  color: var(--color-mint-green);
+}
+
+.hero-panel-main {
+  min-width: 0;
+}
+
+.hero-panel-tabs {
+  display: flex;
+  gap: var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+  border-bottom: 1px solid var(--color-mist-gray);
+}
+
+.hero-panel-tab {
+  padding-bottom: 8px;
+  border-bottom: 2px solid transparent;
+  color: var(--color-ash);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+.hero-panel-tab.is-active {
+  border-bottom-color: var(--color-mint-green);
+  color: var(--color-ink-black);
+}
+
+/* On this page — the right-hand TOC. */
+.hero-panel-toc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-left: var(--spacing-16);
+  border-left: 1px solid var(--color-mist-gray);
+}
+
+.hero-panel-toc-title {
+  margin: 0 0 2px;
+  color: var(--color-ash);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+}
+
+.hero-panel-toc-link {
+  color: var(--color-ash);
+  font-size: 14px;
+  line-height: 1.33;
+  text-decoration: none;
+}
+
+.hero-panel-toc-link:hover,
+.hero-panel-toc-link:focus-visible {
+  color: var(--color-mint-green);
+}
+
+/* 5. Destination cards — 3 across inside the panel. White on white is the
+   panel's own surface; separation comes from the 1px Cloud Gray outline
+   DESIGN.md specifies for card surfaces, never a heavy shadow. */
 .hero-paths {
   width: 100%;
   display: grid;
@@ -1536,55 +1707,34 @@ button {
   padding: 0;
 }
 
-/* Destination cards — liquid glass, not solid plates. Over the dusk footage a
-   filled background reads as a black rectangle whatever colour it is, so the
-   surface is a 10% white film and the depth comes from three cheap layers
-   instead: the blur behind it, the 1px white hairline a real glass edge
-   catches, and the inset top highlight that makes the panel look lit from
-   above. --glass-edge is the shared token; the 28% alpha here is its
-   over-media equivalent. */
 .hero-dest {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: center;
+  align-items: start;
   gap: var(--spacing-12);
   height: 100%;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
-  color: #f9faf7;
+  border: 1px solid var(--color-cloud-gray);
+  border-radius: var(--radius-2xl);
+  background: var(--color-paper);
+  color: var(--color-ink-black);
   text-align: left;
   text-decoration: none;
   transition:
     background-color var(--dur) var(--ease-signature),
     border-color var(--dur) var(--ease-signature),
-    box-shadow var(--dur) var(--ease-signature),
     transform var(--dur) var(--ease-signature);
-}
-
-/* Both properties are tested, not just the unprefixed one: Safari only shipped
-   -webkit-backdrop-filter, so a unprefixed-only @supports skipped the blur
-   there and left the cards as flat 10% rectangles with no glass at all. */
-@supports ((backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px))) {
-  .hero-dest {
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    backdrop-filter: blur(14px) saturate(1.2);
-  }
 }
 
 .hero-dest:hover,
 .hero-dest:focus-visible {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--color-mist-gray);
+  border-color: var(--color-mint-green);
   transform: translateY(-2px);
 }
 
-/* The icon chip is a second, thinner pane of the same glass, so the glyph
-   looks suspended inside the card rather than printed on it. */
+/* The icon chip is a second, lighter pane of the same card, so the glyph
+   looks suspended inside it rather than printed on it. */
 .hero-dest-icon {
   display: inline-flex;
   align-items: center;
@@ -1592,18 +1742,10 @@ button {
   width: 38px;
   height: 38px;
   flex: 0 0 auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
-  color: #f9faf7;
-}
-
-@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .hero-dest-icon {
-    -webkit-backdrop-filter: blur(10px) saturate(1.2);
-    backdrop-filter: blur(10px) saturate(1.2);
-  }
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-mist-gray);
+  background: var(--color-mist-gray);
+  color: var(--color-ink-black);
 }
 
 .hero-dest-text {
@@ -1617,44 +1759,46 @@ button {
   font-size: 15px;
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--color-ink-black);
 }
 
 .hero-dest-label {
   font-size: 13px;
   line-height: 1.4;
-  color: rgba(249, 250, 247, 0.78);
+  color: var(--color-ash);
 }
 
 .hero-dest-arrow {
   display: inline-flex;
   align-self: start;
-  color: rgba(249, 250, 247, 0.7);
+  color: var(--color-ash);
   transition: transform var(--dur) var(--ease-signature);
 }
 
 .hero-dest:hover .hero-dest-arrow,
 .hero-dest:focus-visible .hero-dest-arrow {
+  color: var(--color-mint-green);
   transform: translate(2px, -2px);
 }
 
-/* 6. Bottom strip — caption left, scroll cue centred, video toggle right.
-   Grid rather than flex so the middle cue stays optically centred no matter
-   how wide the caption and the button are. */
+/* 6. Bottom strip — caption left, scroll cue centred. Grid rather than flex
+   so the cue stays optically centred no matter how wide the caption is. It
+   sits on the sky, directly above the panel. */
 .hero-strip {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: var(--page-max-width);
   margin-inline: auto;
-  padding-inline: var(--gutter-inline);
+  padding: 0 var(--gutter-inline) var(--spacing-16);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--spacing-16);
-  font-size: 13px;
+  font-size: var(--text-caption);
   line-height: 1.4;
-  color: rgba(249, 250, 247, 0.86);
+  letter-spacing: var(--tracking-caption);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .hero-figcaption {
@@ -1699,53 +1843,9 @@ button {
   }
 }
 
-.hero-videotoggle {
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #f9faf7;
-  cursor: pointer;
-  transition:
-    background-color var(--dur) var(--ease-signature),
-    border-color var(--dur) var(--ease-signature);
-}
-
-@supports (backdrop-filter: blur(10px)) {
-  .hero-videotoggle {
-    -webkit-backdrop-filter: blur(10px) saturate(1.2);
-    backdrop-filter: blur(10px) saturate(1.2);
-  }
-}
-
-.hero-videotoggle:hover,
-.hero-videotoggle:focus-visible {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.hero-videotoggle-icon {
-  display: block;
-  width: 11px;
-  height: 12px;
-  background: currentColor;
-  /* two bars = pause; the .is-paused state swaps to a triangle via clip-path */
-  clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
-}
-
-.hero-videotoggle.is-paused .hero-videotoggle-icon {
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-}
-
-/* Reduced motion: the cue stops moving and the video never starts, so there
-   is nothing to animate. Both are handled in CSS here and in script.js for
-   the playback decision. */
+/* Reduced motion: the cue stops moving, so there is nothing to animate. Both
+   the cue and the cloud drift are handled in CSS here; the playback decision
+   that used to sit beside them in script.js went away with the video. */
 /* Reduced motion stops the travel animations but keeps every element exactly
    where it belongs — nothing is hidden and nothing jumps, because a visitor
    who asks for less motion still needs the same information on screen. */
@@ -1781,14 +1881,21 @@ button {
   .hero-dest-arrow {
     transition: none;
   }
+
+  /* The clouds stop drifting but stay exactly where they are — the picture
+     is the picture, and a visitor who asks for less motion still gets it. */
+  .hero-cloud {
+    animation: none;
+  }
 }
 
 /* ---------- hero height tiers ----------
-   The stage has to fit inside 100svh at every height, so the optional rows
-   are dropped by viewport height rather than by width. */
+   The stage, the strip and the panel have to fit inside 100svh at every
+   height, so the optional rows are dropped by viewport height rather than
+   by width. */
 
 /* 600-720px tall: the caption and the card descriptions go, the icons and
-   titles stay. */
+   titles stay, and the panel loses its sidebar and TOC columns. */
 @media (max-height: 719px) and (min-height: 600px) {
   .hero-figcaption,
   .hero-dest-label {
@@ -1803,14 +1910,23 @@ button {
   .hero-stage {
     gap: var(--spacing-16);
   }
+
+  .hero-panel-body {
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: var(--spacing-16);
+  }
+
+  .hero-panel-toc {
+    display: none;
+  }
 }
 
-/* Under 600px tall — a phone on its side. Eyebrow, destination cards and the
-   caption all step aside; the headline, subtext and CTA carry the screen on
-   clamp()s that are driven by viewport height. */
+/* Under 600px tall — a phone on its side. Eyebrow, panel and the caption all
+   step aside; the headline, subtext and CTA carry the screen on clamp()s that
+   are driven by viewport height. */
 @media (max-height: 599px) {
   .hero-eyebrow,
-  .hero-paths,
+  .hero-panel,
   .hero-figcaption {
     display: none;
   }
@@ -1834,77 +1950,39 @@ button {
   }
 }
 
-/* Mobile portrait — the destination cards become one scroll-snap row so the
-   hero keeps its full set of links without the page ever scrolling sideways.
-   x is the only axis that scrolls here, and only inside the row itself. */
-@media (max-width: 720px) and (min-height: 600px) {
-  .hero-paths {
-    display: flex;
-    grid-template-columns: none;
-    gap: var(--spacing-8);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    /* bleed to the screen edges so the row reads as scrollable */
-    margin-inline: calc(var(--gutter-inline) * -1);
-    padding-inline: var(--gutter-inline);
-  }
-
-  .hero-paths::-webkit-scrollbar {
-    display: none;
-  }
-
-  .hero-paths li {
-    flex: 0 0 auto;
-    scroll-snap-align: center;
-  }
-
-  .hero-dest {
-    grid-template-columns: auto auto;
-    padding: 12px;
-  }
-
-  .hero-dest-label {
-    display: none;
-  }
-
-  .hero-dest-arrow {
-    display: none;
-  }
-}
-
 @media (max-width: 940px) {
   .hero-display {
     max-width: 100%;
   }
 }
 
-/* Tall phones: bias the crop upward so the type sits over the horizon band
-   rather than over empty foreground. */
+/* Tall phones: lift the cloud band so the type sits over clean teal instead
+   of the brightest part of the horizon. */
 @media (max-aspect-ratio: 3 / 4) {
-  .hero-media {
-    object-position: 50% 34%;
+  .hero-cloud-c {
+    top: 34%;
   }
 
-  .hero-media:not(.is-ready) {
-    background-position: 50% 34%;
+  .hero-cloud-a {
+    top: 42%;
+  }
+
+  .hero-cloud-b {
+    top: 58%;
   }
 }
 
 /* ---------- hero: phones and small tablets (single-column, full-width) ----------
    Everything below is mobile-only and sits at the end of the hero's own cascade
-   so it overrides the 36px/52ch/row defaults above without touching desktop. The
+   so it overrides the desktop defaults above without touching desktop. The
    height tiers further down the file (max-height 719/620/580) still land after
    this block, so a phone on its side keeps its own smaller type scale. */
 
-/* Container. 6rem clears the floating nav pill (its bottom edge sits near 66px
-   on mobile), 4rem keeps the destination row off the home indicator. Inline
-   padding is the only gutter here -- the stage's own is zeroed below so the
-   two never stack into a 40px margin on a 390px screen. */
+/* Container. The stage's inline padding is zeroed below so the hero's own
+   gutter and the stage's never stack into a 40px margin on a 390px screen. */
 @media (max-width: 768px) {
   .hero {
-    padding: 6rem 1.5rem 4rem;
+    padding: 6rem 1.5rem 0;
   }
 
   .hero-stage {
@@ -1913,19 +1991,16 @@ button {
   }
 
   /* 1. Headline -- fluid, so it scales with the phone instead of sitting on the
-        36px floor clamp() would otherwise pin it to. */
+        34px floor clamp() would otherwise pin it to. */
   .hero-display {
-    font-size: clamp(2rem, 8vw, 4rem);
+    font-size: clamp(2rem, 8vw, 3rem);
     line-height: 1.12;
     letter-spacing: -0.02em;
     max-width: 100%;
     padding: 0.08em 0 0.14em;
   }
 
-  /* 2. Subtext -- full column width and flush left, matching the headline. The
-        old 90% + margin:auto was the optical centring that the left-aligned
-        layout removes; on a phone a ragged right edge on body copy reads as
-        deliberate, and the measure is already narrow enough. */
+  /* 2. Subtext -- full measure, centred under the headline. */
   .hero-sub {
     max-width: 100%;
     margin: 0;
@@ -1934,18 +2009,16 @@ button {
   }
 
   /* 3. CTAs stack. Two side-by-side buttons at 390px left each one ~140px wide
-        and 39px tall -- under the 44px touch-target floor and hard to hit.
-        margin-inline:0 (not auto) keeps the button column on the same left
-        edge as the eyebrow and headline above it. */
+        and 39px tall -- under the 44px touch-target floor and hard to hit. */
   .hero-actions {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 1rem;
     width: 100%;
     max-width: 30rem;
-    margin-inline: 0;
+    margin-inline: auto;
   }
 
   /* min-height above the 44px touch-target floor, and past the 50px the arrow
@@ -1958,63 +2031,60 @@ button {
     justify-content: center;
   }
 
-  /* 4. The primary CTA needs nothing here any more. It used to carry its own
-        glass recipe in this block because the desktop rule was still the solid
-        #41a1cf box; now that the base .btn-outline is liquid glass on every
-        width, a second copy here would only strip the Signal Blue tint on
-        phones and leave the CTA looking different from the same button on
-        desktop. Ghost still needs its hairline, because a transparent border
-        on a 48px-tall full-width row reads as an unpressable gap. */
+  /* 4. Ghost keeps its hairline everywhere: a transparent border on a
+        full-width row reads as an unpressable gap against the sky. */
   .hero-actions .btn-ghost {
-    border-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.55);
   }
 
   .hero-actions .btn-ghost:hover,
   .hero-actions .btn-ghost:focus-visible {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
     color: #fff;
   }
 
-  /* 5. Scroll cue out. It sat in the bottom strip directly under the CTA row,
-        so on a phone it read as a third button and competed with the video
-        toggle. The strip keeps its 3-column grid, so hiding the centre item
-        leaves the toggle alone in the end column. */
+  /* 5. Scroll cue out. On a phone it read as a third button under the CTA
+        row. The strip keeps its 3-column grid, so the caption stays left. */
   .hero-scrollcue {
     display: none;
   }
 
-  .hero-videotoggle {
-    width: 44px;
-    height: 44px;
+  /* 6. The panel collapses to one column: the sidebar and the TOC step aside
+        and the three destination cards stack. The panel itself already spans
+        the hero's gutter, so it lines up with the headline above it. */
+  .hero-panel {
+    width: 100%;
+    padding: var(--spacing-16);
+    border-radius: var(--radius-2xl);
   }
 
-  /* 6. Poster plate stays centred and cover-fitted on a portrait screen; the
-        video's own object-position keeps its horizon bias from above. */
-  .hero-media {
-    background-position: center center;
-    background-size: cover;
-    background-repeat: no-repeat;
+  .hero-panel-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-16);
   }
 
-  .hero-media:not(.is-ready) {
-    background-position: center center;
+  .hero-panel-side,
+  .hero-panel-toc {
+    display: none;
   }
 
-  /* The destination row bleeds off-screen by the same amount the hero pads in.
-     align-self: stretch is what makes the bleed real: the base width:100% plus
-     a negative margin leaves the item narrower than the column, so a centred
-     flex item only ever reaches half the intended inset. */
-  .hero-paths {
-    align-self: stretch;
-    width: auto;
-    margin-inline: -1.5rem;
-    padding-inline: 1.5rem;
+  .hero-panel-tabs {
+    gap: var(--spacing-12);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .hero-panel-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-panel-tab {
+    white-space: nowrap;
   }
 
   /* The strip's own inline gutter is dropped for the same reason the stage's
-     was -- otherwise the caption and the video toggle sit 40px in while the
-     headline sits 24px in, and the toggle no longer lines up with the column
-     it belongs to. */
+     was -- otherwise the caption sits 40px in while the headline sits 24px
+     in, and it no longer lines up with the column it belongs to. */
   .hero-strip {
     padding-inline: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -2023,11 +2093,10 @@ button {
 
 /* Short phones (portrait, <=700px tall). The four stage gaps cost 80px at 20px
    each, which is the difference between a hero that fits one screen and one
-   that pushes the destination row and the video toggle below the fold -- at
-   375x667 the full-size version came out 704px tall against a 667px screen. */
+   that pushes the panel below the fold. */
 @media (max-width: 768px) and (max-height: 700px) {
   .hero {
-    padding: 5rem 1.5rem 3rem;
+    padding: 5rem 1.5rem 0;
   }
 
   /* 8vw alone would put a 61px headline on a 768x600 landscape tablet, where
@@ -2557,6 +2626,11 @@ html.css-entrance:not(.is-entered) .hero-display .block:nth-child(3) {
 
 html.css-entrance:not(.is-entered) .hero-sub {
   animation: en-lift 0.7s var(--ent-soft) 0.72s backwards;
+}
+
+/* the floating panel lands with the destination cards it holds */
+html.css-entrance:not(.is-entered) .hero-panel {
+  animation: en-settle 0.6s var(--ent-soft) 0.85s backwards;
 }
 
 html.css-entrance:not(.is-entered) .hero-paths li:nth-child(1) {
@@ -3157,24 +3231,22 @@ html.js .preloader {
   }
 }
 
-/* M4b: HERO under 500px height - hide cards as requested (mobile landscape) */
+/* M4b: HERO under 500px height - hide the panel as requested (mobile
+   landscape); nothing else can fit a viewport that short. */
 @media (max-height: 499px) {
-  .hero-paths {
+  .hero-panel {
     display: none;
   }
 }
 
-/* M4c: ensure 500-719px cards are glassy as before.
-   Kept in step with the base .hero-dest glass recipe above (0.28 hairline) —
-   this rule exists to re-assert it after the M4 compact-card block, not to
-   define a second, dimmer variant of the glass. box-shadow is intentionally
-   not repeated: the base value still applies, so the band keeps the same lit
-   top edge as every other width. */
+/* M4c: the compact tier above re-asserts the card surface. Opaque white with
+   the Cloud Gray hairline, matching the base recipe — a translucent card
+   would print the panel's own body straight through its background. */
 @media (max-height: 719px) and (min-height: 500px) {
   .hero-dest {
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-2xl);
+    border: 1px solid var(--color-cloud-gray);
+    background: var(--color-paper);
   }
 }
 
@@ -3188,7 +3260,7 @@ html.js .preloader {
 /* M6: HERO - tighten vertical spacing for short viewports (1366x575) */
 @media (max-height: 620px) {
   .hero {
-    padding-block: clamp(70px, 14vh, 120px) clamp(20px, 6vh, 40px);
+    padding-block: clamp(70px, 14vh, 120px) 0;
   }
   .hero-stage {
     gap: clamp(10px, 3vh, var(--spacing-16));
@@ -3383,14 +3455,9 @@ html.js .preloader {
   }
 
   /* The two hero CTAs were 38px and 33px side by side -- uneven as well as
-     small. A shared min-height lands them on one line. */
+      small. A shared min-height lands them on one line. */
   .hero-actions .btn {
     min-height: 44px;
-  }
-
-  .hero-videotoggle {
-    width: 44px;
-    height: 44px;
   }
 
   .pill.section-cta-button {
@@ -3421,51 +3488,11 @@ summary,
 }
 
 /* ============ R3: DESTINATION CARDS STACK ON MOBILE ============
-   The three destination cards (Instagram / TikTok / Free web tools) were the
-   only thing on the page actually falling off the right edge on a phone.
-   Measured at 390x844 the row is a horizontal scroll-snap carousel: scrollWidth
-   511 inside a 390px row, with "Free web tools" sitting at x309->r487 -- half
-   of it past the screen edge. Below 720px wide AND under 600px tall the row
-   stayed a 3-column grid and the cards shrank to 85px wide instead.
-
-   They are now one per row. What changed, and nothing else:
-
-   1. AXIS. .hero-paths went from the carousel's `display:flex` (and the base's
-      `grid-template-columns: repeat(3, minmax(0,1fr))`, style.css:1502) to
-      `display:grid; grid-template-columns: 1fr` -- one column, three rows.
-   2. SCROLL. The carousel's `overflow-x:auto` + `scroll-snap-type: x mandatory`
-      are cancelled. x no longer scrolls anywhere, so no card can be half
-      outside the viewport.
-   3. BLEED. The carousel pulled the row past the gutter with
-      `margin-inline: calc(var(--gutter-inline) * -1); padding-inline:
-      var(--gutter-inline)`. That bleed exists so a scrollable row can reach the
-      screen edge; with the cards stacked it would just push them off-axis, so
-      it goes to 0. The 1.5rem side padding the row needs now comes from
-      .hero's own `padding: 6rem 1.5rem 4rem` (style.css:1854), which is the
-      same gutter the headline and the CTA row already sit on -- so the cards
-      align to one left edge instead of hanging past it.
-   4. FULL WIDTH. Each <li> and each .hero-dest takes width:100% of that
-      column. The carousel had `flex: 0 0 auto` and `scroll-snap-align: center`
-      on the li, both of which are meaningless once each row is one card.
-
-   Card visuals are untouched: same glass, same 1px white-alpha border, same
-   16px radius, same icons, same 16px internal padding. Only the row's layout
-   axis changed.
-
-   The height guard is deliberate, and its lower bound is 500px rather than
-   600px for a reason. Two rules hide or reshape this row by HEIGHT:
-   `max-height: 499px` (style.css:3054) hides it entirely so a landscape phone
-   still fits one screen, and M4 at `max-height: 719px and min-height: 500px`
-   (style.css:3032) forces it BACK to `grid-template-columns: repeat(3, 1fr)`.
-   A bare `max-width: 768px` block lands later in the file with equal
-   specificity, so it would win both -- putting the cards back on landscape
-   phones and leaving 320x568 at three 85px-wide columns. Anchoring to
-   `min-height: 500px` keeps M4's collapse below 500px intact while overriding
-   its 3-column tier everywhere a phone actually shows the cards.
-
-   Stacking costs ~160px of vertical room (64px of row becomes 224px), so that
-   height is taken back from the gaps between the stage's four rows and the
-   hero's bottom padding -- never from the cards' own proportions. */
+   The three destination cards (Instagram / TikTok / Free web tools) live
+   inside the hero panel now; below 768px they stack one per row so nothing
+   falls off a narrow screen. The panel's own padding supplies the gutter,
+   so the old carousel bleed and the 3rem hero padding it required are both
+   gone -- the panel keeps its 56px overhang onto the parchment margin. */
 @media (max-width: 768px) and (min-height: 500px) {
   .hero-paths {
     display: grid;
@@ -3490,10 +3517,6 @@ summary,
 
   .hero-stage {
     row-gap: var(--spacing-12);
-  }
-
-  .hero {
-    padding-bottom: 3rem;
   }
 }
 /* ---------- NAV: brand left / menu centre / CTA right ----------
@@ -3553,13 +3576,4 @@ summary,
   .nav-contact {
     margin-left: auto;
   }
-}
-
-/* ---------- hero video: failure path ------------------------------------
-   .hero-media sits at opacity 0 until JS adds .is-ready. That must not apply
-   to the failure states: with the plate hidden there, a refused autoplay or a
-   dead file leaves the bare gradient instead of the poster. .is-fallback keeps
-   the plate visible so hero-dusk.jpg reads as the backdrop. */
-.hero-media.is-fallback {
-  opacity: 1;
 }

@@ -83,25 +83,63 @@
 
   <main id="main">
 
-    <!-- ============ HERO — video over a layered dusk fallback ============
-         The video is decoration, not content: it is muted, looping, inline
-         and carries no audio track, and every word on the page lives in the
-         DOM as real text below. The layered gradient behind it is a complete
-         artwork in its own right, so a blocked video, a failed fetch, or a
-         data-saver browser all land on the same dusk the design specifies. -->
+    <!-- ============ HERO — illustrated sky, no photo or video ============
+         The backdrop is decoration, not content: layered CSS gradients plus
+         inline SVG cumulus, so there is nothing to download, nothing to fail
+         and no frame of motion to decode. Every word on the page lives in the
+         DOM as real text below, and the clouds carry aria-hidden. The old
+         assets/hero.{mp4,webm} + hero-dusk.jpg stay on disk, unreferenced. -->
     <section id="hero" class="hero" data-nav="media" data-no-reveal>
-      <video class="hero-media" muted loop playsinline preload="none" poster="assets/hero-dusk.jpg" aria-hidden="true" tabindex="-1" data-hero-video>
-        <source src="assets/hero.mp4" type="video/mp4" />
-        <source src="assets/hero.webm" type="video/webm" />
-      </video>
+      <div class="hero-sky" aria-hidden="true">
+        <svg class="hero-cloud hero-cloud-c" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice" focusable="false">
+          <defs>
+            <linearGradient id="cloud-c" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fdf3d8" />
+              <stop offset="0.6" stop-color="#f4ddA4" />
+              <stop offset="1" stop-color="#e6c388" />
+            </linearGradient>
+            <path id="cumulus-c" d="M40 190C18 186 8 166 22 150 10 132 26 112 48 116 48 90 74 72 100 82 112 52 154 44 176 68 192 46 232 48 244 74 272 62 306 80 308 108 334 106 352 128 344 150 358 164 350 186 328 190L40 190Z" />
+          </defs>
+          <use href="#cumulus-c" fill="url(#cloud-c)" transform="translate(30 150)" />
+          <use href="#cumulus-c" fill="url(#cloud-c)" transform="translate(470 180) scale(0.75)" />
+          <use href="#cumulus-c" fill="url(#cloud-c)" transform="translate(820 140) scale(1.15)" />
+        </svg>
+
+        <svg class="hero-cloud hero-cloud-a" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice" focusable="false">
+          <defs>
+            <linearGradient id="cloud-a" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff6e0" />
+              <stop offset="0.55" stop-color="#f8e2ac" />
+              <stop offset="1" stop-color="#e0b97e" />
+            </linearGradient>
+            <path id="cumulus-a" d="M36 196C12 192 2 170 18 152 4 132 22 110 46 114 44 84 74 64 102 76 114 42 160 34 184 60 202 36 246 40 258 68 288 54 324 74 326 104 354 102 372 126 362 150 378 166 368 190 344 196L36 196Z" />
+          </defs>
+          <use href="#cumulus-a" fill="url(#cloud-a)" transform="translate(-20 170) scale(1.2)" />
+          <use href="#cumulus-a" fill="url(#cloud-a)" transform="translate(420 200) scale(0.9)" />
+          <use href="#cumulus-a" fill="url(#cloud-a)" transform="translate(900 160) scale(1.3)" />
+          <use href="#cumulus-a" fill="#fffaf0" fill-opacity="0.5" transform="translate(180 120) scale(0.5)" />
+        </svg>
+
+        <svg class="hero-cloud hero-cloud-b" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice" focusable="false">
+          <defs>
+            <linearGradient id="cloud-b" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fbecc9" />
+              <stop offset="0.6" stop-color="#eed49b" />
+              <stop offset="1" stop-color="#d6b072" />
+            </linearGradient>
+            <path id="cumulus-b" d="M44 188C24 184 14 164 28 148 16 130 32 112 52 116 52 92 76 74 100 84 112 56 150 48 172 70 188 50 226 52 238 76 264 66 296 82 298 108 322 106 340 128 332 148 346 162 338 184 318 188L44 188Z" />
+          </defs>
+          <use href="#cumulus-b" fill="url(#cloud-b)" transform="translate(120 190) scale(1.05)" />
+          <use href="#cumulus-b" fill="url(#cloud-b)" transform="translate(560 210) scale(0.8)" />
+          <use href="#cumulus-b" fill="url(#cloud-b)" transform="translate(880 185) scale(1.2)" />
+        </svg>
+      </div>
 
       <div class="hero-grain" aria-hidden="true"></div>
 
-      <!-- Centred composition. The old bottom-left glass card is gone: the
-           video is the surface, the type sits directly on it. Every selector
-           the entrance timeline targets is reused verbatim — .hero-display
-           .block, .hero-sub and .hero-paths li — so the SplitText
-           choreography is untouched. -->
+      <!-- Centred composition. Every selector the entrance timeline targets
+           is reused verbatim — .hero-display .block, .hero-sub and
+           .hero-paths li — so the SplitText choreography is untouched. -->
       <div class="hero-stage">
         <p class="hero-eyebrow">
           <span class="hero-eyebrow-dot" aria-hidden="true"></span>
@@ -128,84 +166,126 @@
             <span class="btn-label">Explore features</span>
           </a>
         </div>
-
-        <!-- Destination cards. Descriptions are lifted verbatim from the
-             matching tiles in the Features band, so nothing here is a new
-             claim and no number is invented. -->
-        <ul class="hero-paths">
-          <li>
-            <a class="hero-dest" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
-              <span class="hero-dest-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle cx="17.1" cy="6.9" r="0.9" fill="currentColor" stroke="none" />
-                </svg>
-              </span>
-              <span class="hero-dest-text">
-                <span class="hero-dest-title">Instagram</span>
-                <span class="hero-dest-label">Daily stories, photos, and highlights.</span>
-              </span>
-              <span class="hero-dest-arrow" aria-hidden="true">
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
-              </span>
-            </a>
-          </li>
-          <li>
-            <a class="hero-dest" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">
-              <span class="hero-dest-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14.2 3.3v10.4a3.7 3.7 0 1 1-3.1-3.65" />
-                  <path d="M14.2 3.3c.35 2.4 1.95 3.85 4.3 4.05" />
-                </svg>
-              </span>
-              <span class="hero-dest-text">
-                <span class="hero-dest-title">TikTok</span>
-                <span class="hero-dest-label">Short videos, trends, and gameplay clips.</span>
-              </span>
-              <span class="hero-dest-arrow" aria-hidden="true">
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
-              </span>
-            </a>
-          </li>
-          <li>
-            <a class="hero-dest" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
-              <span class="hero-dest-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2.6" y="8" width="18.8" height="12" rx="2.4" />
-                  <path d="M8.6 8V6.3A2.3 2.3 0 0 1 10.9 4h2.2a2.3 2.3 0 0 1 2.3 2.3V8" />
-                  <path d="M2.6 13h18.8" />
-                </svg>
-              </span>
-              <span class="hero-dest-text">
-                <span class="hero-dest-title">Free web tools</span>
-                <span class="hero-dest-label">A growing set of free online tools for everyday quick tasks.</span>
-              </span>
-              <span class="hero-dest-arrow" aria-hidden="true">
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
-              </span>
-            </a>
-          </li>
-        </ul>
       </div>
 
       <div class="hero-strip">
-        <p class="hero-figcaption">Fig. 0 — Dusk over the city.</p>
+        <p class="hero-figcaption">Fig. 0 &mdash; Cloud garden over the tools.</p>
 
         <a class="hero-scrollcue" href="#features" aria-label="Scroll to the next section">
           <span class="hero-scrollcue-text">Scroll</span>
           <span class="hero-scrollcue-line" aria-hidden="true"></span>
         </a>
+      </div>
 
-        <button class="hero-videotoggle" type="button" data-video-toggle aria-label="Pause background video">
-          <span class="hero-videotoggle-icon" aria-hidden="true" data-video-icon></span>
-        </button>
+      <!-- ============ HERO PANEL — the product, floating over the boundary ============
+           DESIGN.md's "Documentation Product Card": an opaque white surface, 24px
+           radius, a whisper shadow, and the only place Mint Green marks an
+           active state. It hangs over the bottom edge of the hero into the
+           parchment margin below. The three destinations keep their original
+           links and their original copy, so nothing here is a new claim. -->
+      <div class="hero-panel">
+        <div class="hero-panel-bar">
+          <span class="hero-panel-brand">
+            <svg class="hero-panel-mark" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <circle cx="12" cy="9.6" r="3.4" />
+              <path d="M12 2.6v1.9M12 14.7v1.9M4.9 9.6h1.9M17.2 9.6h1.9M7.1 4.7l1.3 1.3M15.6 13.2l1.3 1.3M16.9 4.7l-1.3 1.3M8.4 13.2l-1.3 1.3" />
+              <path d="M2.6 19.4h18.8M5.2 19.4l3.4-4.8 2.9 3.8 2.4-3.3 4.9 4.3" />
+            </svg>
+            Newsocapis
+          </span>
+
+          <p class="hero-panel-meta">3 destinations</p>
+        </div>
+
+        <div class="hero-panel-body">
+          <nav class="hero-panel-side" aria-label="Panel sections">
+            <a class="hero-panel-nav is-active" href="#features" aria-current="true">Overview</a>
+            <a class="hero-panel-nav" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a class="hero-panel-nav" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a>
+            <a class="hero-panel-nav" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Free web tools</a>
+          </nav>
+
+          <div class="hero-panel-main">
+            <div class="hero-panel-tabs" role="presentation">
+              <span class="hero-panel-tab is-active">Overview</span>
+              <span class="hero-panel-tab">Instagram</span>
+              <span class="hero-panel-tab">TikTok</span>
+              <span class="hero-panel-tab">Free web tools</span>
+            </div>
+
+            <!-- Destination cards. Descriptions are lifted verbatim from the
+                 matching tiles in the Features band, so nothing here is a new
+                 claim and no number is invented. -->
+            <ul class="hero-paths">
+              <li>
+                <a class="hero-dest" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">
+                  <span class="hero-dest-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" />
+                      <circle cx="12" cy="12" r="4" />
+                      <circle cx="17.1" cy="6.9" r="0.9" fill="currentColor" stroke="none" />
+                    </svg>
+                  </span>
+                  <span class="hero-dest-text">
+                    <span class="hero-dest-title">Instagram</span>
+                    <span class="hero-dest-label">Daily stories, photos, and highlights.</span>
+                  </span>
+                  <span class="hero-dest-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a class="hero-dest" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">
+                  <span class="hero-dest-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.2 3.3v10.4a3.7 3.7 0 1 1-3.1-3.65" />
+                      <path d="M14.2 3.3c.35 2.4 1.95 3.85 4.3 4.05" />
+                    </svg>
+                  </span>
+                  <span class="hero-dest-text">
+                    <span class="hero-dest-title">TikTok</span>
+                    <span class="hero-dest-label">Short videos, trends, and gameplay clips.</span>
+                  </span>
+                  <span class="hero-dest-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a class="hero-dest" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">
+                  <span class="hero-dest-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2.6" y="8" width="18.8" height="12" rx="2.4" />
+                      <path d="M8.6 8V6.3A2.3 2.3 0 0 1 10.9 4h2.2a2.3 2.3 0 0 1 2.3 2.3V8" />
+                      <path d="M2.6 13h18.8" />
+                    </svg>
+                  </span>
+                  <span class="hero-dest-text">
+                    <span class="hero-dest-title">Free web tools</span>
+                    <span class="hero-dest-label">A growing set of free online tools for everyday quick tasks.</span>
+                  </span>
+                  <span class="hero-dest-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3 M5 3h8v8" /></svg>
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="hero-panel-toc">
+            <p class="hero-panel-toc-title">On this page</p>
+            <a class="hero-panel-toc-link" href="https://www.instagram.com/apisaseli/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a class="hero-panel-toc-link" href="https://www.tiktok.com/@apis999fps" target="_blank" rel="noopener noreferrer">TikTok</a>
+            <a class="hero-panel-toc-link" href="https://toolapis.vercel.app/" target="_blank" rel="noopener noreferrer">Free web tools</a>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ============ FIG. 1 — the parchment margin between hero and content ============ -->
     <div class="figure-band shell" data-nav="light">
-      <p class="fig-caption" data-reveal>Fig. 1 &mdash; Dusk fading to paper. No picture and nothing pinned; the page stays still and the light does the work.</p>
+      <p class="fig-caption" data-reveal>Fig. 1 &mdash; Cloud fading to paper. No picture and nothing pinned; the page stays still and the light does the work.</p>
     </div>
 
     <!-- ============ FEATURES ============ -->
