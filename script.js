@@ -573,6 +573,17 @@ if (START_AT_TOP_ON_LOAD && startAtTopFresh) {
     window.addEventListener('resize', scheduleTheme);
     themeFromPoint();
 
+    /* Settle the theme whenever it could have been read against a not-yet
+       final layout: web fonts land after first paint, and a freshly finished
+       scroll is the moment a media/light mistake would be visible. Both
+       re-read the same point and no-op when nothing changed. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(themeFromPoint);
+    }
+    if ('onscrollend' in window) {
+      window.addEventListener('scrollend', themeFromPoint, { passive: true });
+    }
+
     /* --- sliding active indicator ---------------------------------------
        One absolutely positioned .nav-active lives inside .nav-menu. script.js
        only writes two custom properties -- the active link's offset and width

@@ -1,66 +1,66 @@
 /* =============================================================================
-   Newsocapis — General Intelligence Company surface
-   Tokens per DESIGN.md (Quick Start block, verbatim). Plain CSS. No
-   frameworks, no build step. Instrument Serif (display) + Inter (UI) load
-   from Google Fonts — see index.html font links.
+   Newsocapis — Mintlify light surface
+   Tokens per DESIGN.md "Mintlify — Style Reference" (Quick Start block).
+   Plain CSS. No frameworks, no build step. Inter is the only family and
+   loads from Google Fonts — see index.html font links.
    ============================================================================= */
 
 /* ---------- 1. TOKENS ---------- */
 :root {
-  /* Colors */
-  --color-parchment: #fefffc;
+  /* Colors — near-total monochrome with a single chromatic spark. Old names
+     are kept as aliases so component rules recolor globally. */
+  --color-parchment: #ffffff;
   --color-paper: #ffffff;
-  --color-linen: #f9faf7;
-  --color-ink-black: #171717;
-  --color-graphite: #2c2c2c;
-  --color-charcoal: #444141;
-  --color-ash: #646464;
-  --color-fog: #b4b8b4;
-  --color-mist: #dee2de;
-  --color-twilight: #282834;
-  --color-dusk: #1f1f29;
-  --color-signal-blue: #41a1cf;
-  /* Signal Blue lifted for dark surfaces. The base hue is only 2.70:1 against
-     the dusk hero card, so the primary button's outline needs this tint to
-     stay visible (4.25:1) without abandoning the blue identity. */
-  --color-signal-blue-light: #7ec8ec;
-  --color-cerulean: #0081c0;
+  --color-linen: #f2f2f2;
+  --color-ink-black: #08090a;
+  --color-graphite: #08090a;
+  --color-charcoal: #000000;
+  --color-ash: #5c5c5c;
+  --color-fog: #dddddd;
+  --color-mist: #f2f2f2;
+  --color-twilight: #08090a;
+  --color-dusk: #08090a;
+  --color-signal-blue: #0c8c5e;
+  /* Mint Green is the only accent, in both roles — it is never a large fill. */
+  --color-signal-blue-light: #0c8c5e;
+  --color-cerulean: #0c8c5e;
 
-  /* Typography — Font Families */
-  --font-ppmondwest: 'Instrument Serif', 'Newsreader', ui-serif, Georgia,
-    'Times New Roman', serif;
-  --font-af: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system,
+  /* Typography — Inter is the universal typeface. No display face; the
+     --font-ppmondwest alias is retained so existing call-sites render Inter. */
+  --font-ppmondwest: 'Inter', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-af: 'Inter', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Typography — Scale */
+  /* Typography — Scale (DESIGN.md type scale) */
   --text-caption: 13px;
-  --leading-caption: 1.3;
+  /* Neutral here: caption is used on meta text. Uppercase eyebrows add their
+     own +0.05em in the component rules. */
+  --leading-caption: 1.5;
   --tracking-caption: -0.13px;
   --text-body-sm: 15px;
   --leading-body-sm: 1;
   --tracking-body-sm: -0.15px;
-  --text-subheading: 18px;
+  --text-subheading: 20px;
   --leading-subheading: 1.3;
-  --tracking-subheading: -0.18px;
-  /* 16px body step: DESIGN.md's Quick Start block stops at 15/18px, but the
-     component examples specify "body text in af 16px weight 400, #444141" and
-     the Do's pair body copy with line-height 1.5. Named here so long-form
-     paragraphs render at the documented size instead of borrowing a step. */
+  --tracking-subheading: -0.2px;
   --text-body: 16px;
   --leading-body: 1.5;
-  --tracking-body: -0.15px;
-  --text-heading-sm: 27px;
-  --leading-heading-sm: 1.5;
-  --tracking-heading-sm: -1.08px;
+  --tracking-body: -0.16px;
+  --text-heading-sm: 24px;
+  --leading-heading-sm: 1.33;
+  --tracking-heading-sm: -0.24px;
   --text-heading: 40px;
-  --leading-heading: 1.1;
-  --tracking-heading: -0.8px;
+  --leading-heading: 1.15;
+  --tracking-heading: -0.4px;
   --text-heading-lg: 48px;
-  --leading-heading-lg: 1.1;
-  --tracking-heading-lg: -0.96px;
-  --text-display: 54px;
+  --leading-heading-lg: 1.15;
+  --tracking-heading-lg: -0.48px;
+  --text-display: 57px;
   --leading-display: 1.1;
-  --tracking-display: -1.08px;
+  --tracking-display: -1.14px;
 
   /* Typography — Weights */
   --font-weight-regular: 400;
@@ -86,11 +86,11 @@
   --page-max-width: 1200px;
   /* inter-section rhythm — one source of truth, scaled across breakpoints;
      each .section pads by half of this so content-to-content gap = 1 full gap */
-  --section-gap: clamp(72px, 9vw, 108px);
+  --section-gap: clamp(64px, 7vw, 96px);
   /* headline-to-substatement gap inside one block (e.g. Clarity/CTA) */
   --stack-gap: clamp(12px, 1.5vw, 20px);
-  --card-padding: 16px;
-  --element-gap: 8px;
+  --card-padding: 24px;
+  --element-gap: 12px;
 
   /* Border Radius */
   --radius-md: 4px;
@@ -100,10 +100,10 @@
   --radius-3xl: 24px;
   --radius-full: 50.496px;
 
-  /* Named Radii */
-  --radius-nav: 50px;
-  --radius-cards: 12px;
-  --radius-buttons: 8px;
+  /* Named Radii — the system is square: 4px controls, 16px cards, 24px shells */
+  --radius-nav: 0px;
+  --radius-cards: 16px;
+  --radius-buttons: 4px;
   --radius-large-surfaces: 24px;
 
   /* Layout gutter + anchor clearance. Both are single-source: the shell owns
@@ -112,23 +112,20 @@
   --nav-clearance: 104px;
 
   /* Shadows */
-  --shadow-sm: rgba(0, 0, 0, 0.15) 0px 2px 6px 0px;
-  --shadow-subtle: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 4px 5px 0px;
-  --shadow-subtle-2: rgb(222, 226, 222) 0px 0px 0px 1px;
-  --shadow-subtle-3: rgba(0, 0, 0, 0.06) 0px 2px 2px 0px, rgba(0, 0, 0, 0.04) 0px 0px 0px 5px;
-  --shadow-sm-2: rgba(0, 0, 0, 0.05) 0px 1px 8px 0px;
+  /* Shadows — whispered, never declared. DESIGN.md's two elevation tokens,
+     plus hairline rings where the old theme used soft lifts. */
+  --shadow-sm: lab(2.42579 -0.165291 -0.470081 / 0.03) 0px 2px 4px 0px;
+  --shadow-subtle: lab(100 0 0 / 0.05) 0px 2px 4px 0px;
+  --shadow-subtle-2: 0 0 0 1px var(--color-mist-gray);
+  --shadow-subtle-3: lab(100 0 0 / 0.05) 0px 2px 4px 0px;
+  --shadow-sm-2: lab(100 0 0 / 0.05) 0px 2px 4px 0px;
 
   /* Surfaces */
-  --surface-parchment-canvas: #fefffc;
+  --surface-parchment-canvas: #ffffff;
   --surface-paper-card: #ffffff;
-  --surface-linen-wash: #f9faf7;
-  /* Cerulean, deepened to the minimum depth at which white body copy clears
-     WCAG AA (5.01:1). #0081c0 leaves white text at 4.28:1 — fine for the 48px
-     display headline (large text needs 3:1) but short of the 4.5:1 required
-     for the 18px subtext. Only for cerulean surfaces that carry body copy;
-     --color-cerulean / --surface-vivid-blue stay #0081c0 elsewhere. */
-  --color-cerulean-ink: #0076ad;
-  --surface-vivid-blue: #0081c0;
+  --surface-linen-wash: #f2f2f2;
+  --color-cerulean-ink: #0c8c5e;
+  --surface-vivid-blue: #0c8c5e;
 
   /* Hero sky — the illustrated teal-to-warm band, and the only coloured
      surface in the system. DESIGN.md's own hero token is `#0c8c5`, a
@@ -157,8 +154,8 @@
   /* Diagram figure cards — white, hairline Mist border, soft sm-2 lift.
      Same recipe as DESIGN.md's content card, scaled to a figure. */
   --surface-diagram-card: #ffffff;
-  --diagram-border: #dee2de;
-  --diagram-line: #b4b8b4;
+  --diagram-border: #f2f2f2;
+  --diagram-line: #dddddd;
   --radius-diagram: 16px;
 
   /* DESIGN.md accents — the hero is the only consumer. Mint Green is the
@@ -214,16 +211,15 @@ body {
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01' on, 'cv11' on;
   text-rendering: optimizeLegibility;
 }
 
-/* Display serif — DESIGN.md: weight 400 at every size, liga off, tight
-   tracking. The serif does the work; never bold it. */
+/* Headings — Inter semibold. DESIGN.md: no display face, ss01/cv11 on. */
 h1, h2, h3, .hero-display, .section-display {
   font-family: var(--font-ppmondwest);
-  font-weight: var(--font-weight-regular);
-  font-feature-settings: 'liga' 0;
-  font-variant-ligatures: none;
+  font-weight: var(--font-weight-semibold);
+  font-feature-settings: 'ss01' on, 'cv11' on;
 }
 
 /* Scroll lock during the preloader phase (html.is-locked, set by script.js).
@@ -240,7 +236,6 @@ a {
 
 h1, h2, h3, h4, p {
   margin: 0;
-  font-weight: var(--font-weight-regular);
 }
 
 ul, ol {
@@ -717,24 +712,19 @@ button {
   scale: 0.96;
 }
 
-/* ---------- PRIMARY OUTLINED CTA — "Open the tools" ----------
-   DESIGN.md: the chromatic border IS the identity. Transparent fill, 1px
-   Signal Blue, no shadow. Arrow in a hairline circle at the right edge.
-   Button radius is 8px (--radius-lg) per the Components spec. */
+/* ---------- PRIMARY FILLED CTA — "Open the tools" ----------
+   DESIGN.md's single dark filled button variant: Ink Black surface, Paper
+   White label, 4px radius. */
 .pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-8);
-  padding: 8px 12px 8px 14px;
-  /* Cerulean outline: Signal Blue is 2.9:1 on the parchment/white band the
-     CTA sits on, under the 3:1 floor for a control boundary */
-  border: 1px solid var(--color-cerulean);
-  border-radius: var(--radius-lg);
-  background: transparent;
-  /* DESIGN.md assigns Charcoal to button text; Signal Blue stays the border.
-     #41a1cf as a label is 2.9:1 on the white CTA band. */
-  color: var(--color-charcoal);
+  padding: 8px 16px;
+  border: 1px solid var(--color-ink-black);
+  border-radius: var(--radius-buttons);
+  background: var(--color-ink-black);
+  color: var(--color-paper);
   font-size: 15px;
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.01em;
@@ -747,10 +737,9 @@ button {
     border-color var(--dur) var(--ease-signature);
 }
 
-/* hover fills with the deepened cerulean — white on #41a1cf is 2.91:1,
-   below the 4.5:1 floor for a 15px label */
 .pill:hover {
-  background: var(--color-cerulean-ink);
+  background: #000000;
+  border-color: #000000;
   color: var(--color-paper);
 }
 
@@ -796,7 +785,7 @@ button {
   gap: var(--spacing-8);
   padding: 8px 12px 8px 14px;
   border: 1px solid transparent;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-buttons);
   background: transparent;
   font-size: 15px;
   font-weight: var(--font-weight-medium);
@@ -1417,28 +1406,19 @@ button {
   text-align: center;
 }
 
-/* 1. Eyebrow — small pill, mint dot per DESIGN.md's eyebrow label */
+/* 1. Eyebrow — DESIGN.md's eyebrow label: 13px, +0.05em, uppercase, with the
+   one decorative Mint dot. No pill, no glass. */
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-8);
-  padding: 5px 14px 5px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 50px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #f9faf7;
+  color: #ffffff;
   font-size: var(--text-caption);
   font-weight: var(--font-weight-medium);
   line-height: 1.3;
-  letter-spacing: 0.005em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
-}
-
-@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .hero-eyebrow {
-    -webkit-backdrop-filter: blur(10px) saturate(1.2);
-    backdrop-filter: blur(10px) saturate(1.2);
-  }
 }
 
 /* The one chromatic dot in the hero. DESIGN.md names Mint Green for exactly
@@ -1514,10 +1494,10 @@ button {
    the same, and it is the only pairing that clears AA against the clouds. */
 .btn-outline {
   border: 1px solid #ffffff;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-buttons);
   background: var(--color-paper);
   color: var(--color-ink-black);
-  box-shadow: 0 2px 4px 0 rgba(6, 42, 44, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-outline:hover,
@@ -1562,7 +1542,7 @@ button {
   margin-inline: auto;
   margin-bottom: calc(-1 * var(--hero-panel-overlap));
   padding: var(--card-padding);
-  border-radius: var(--radius-3xl);
+  border-radius: var(--radius-cards);
   background: var(--color-paper);
   box-shadow: var(--shadow-sm-2), var(--hero-panel-shadow);
 }
@@ -1678,7 +1658,7 @@ button {
   color: var(--color-ash);
   font-size: var(--text-caption);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--tracking-caption);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -2247,8 +2227,7 @@ section[id] {
   line-height: var(--leading-subheading);
   letter-spacing: var(--tracking-subheading);
   font-family: var(--font-ppmondwest);
-  font-weight: var(--font-weight-regular);
-  font-feature-settings: 'liga' 0;
+  font-weight: var(--font-weight-semibold);
 }
 
 .flow-label {
@@ -2272,10 +2251,16 @@ section[id] {
   isolation: isolate;
   overflow: hidden;
   border-radius: var(--radius-large-surfaces);
-  background-color: var(--surface-vivid-blue);
+  background-color: var(--hero-sky-a);
+  background-image: url('assets/atmos-1600.jpg');
+  background-size: cover;
+  background-position: center;
   color: var(--color-paper);
   padding: clamp(48px, 8vw, 104px);
 }
+
+/* The old teal->mint SVG gradient (atmos-sky) has been retired in favour of the
+   photo as a CSS background-image; hiding it lets the image show through. */
 
 /* A real <img>, not a background-image. A CSS background cannot carry a
    srcset, so the browser was locked to the single 2000px file and had to
@@ -2283,6 +2268,7 @@ section[id] {
    to match the device. No filter, no transform and no will-change sit on this
    element or its parent -- the softness was resolution, never a blur. */
 .atmospheric-media {
+  display: none;
   position: absolute;
   inset: 0;
   z-index: -2;
@@ -2464,9 +2450,7 @@ section[id] {
 .footer-statement {
   color: var(--color-graphite);
   font-family: var(--font-ppmondwest);
-  font-weight: var(--font-weight-regular);
-  font-feature-settings: 'liga' 0;
-  font-variant-ligatures: none;
+  font-weight: var(--font-weight-semibold);
   font-size: clamp(36px, 5.2vw, 64px);
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -2804,8 +2788,7 @@ html.js .preloader {
 
 .tile-title {
   font-family: var(--font-ppmondwest);
-  font-weight: var(--font-weight-regular);
-  font-feature-settings: 'liga' 0;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--text-heading-sm);
   line-height: var(--leading-heading-sm);
   letter-spacing: var(--tracking-heading-sm);
@@ -2894,9 +2877,9 @@ html.js .preloader {
   pointer-events: none;
   background: radial-gradient(
     var(--spot-size) circle at var(--mouse-x) var(--mouse-y),
-    rgba(0, 129, 192, 0.10) 0%,
-    rgba(0, 129, 192, 0.05) 35%,
-    rgba(0, 129, 192, 0) 70%
+    rgba(12, 140, 94, 0.10) 0%,
+    rgba(12, 140, 94, 0.05) 35%,
+    rgba(12, 140, 94, 0) 70%
   );
   /* No CSS transition on opacity: script.js lerps --spot-opacity itself, and
      a transition underneath it would double-ease the ramp. */
@@ -2954,7 +2937,7 @@ html.js .preloader {
     90deg,
     var(--color-cerulean) 0%,
     var(--color-cerulean) 72%,
-    rgba(0, 128, 192, 0) 100%
+    rgba(12, 140, 94, 0) 100%
   );
 }
 
@@ -3575,5 +3558,257 @@ summary,
 
   .nav-contact {
     margin-left: auto;
+  }
+}
+
+/* =============================================================================
+   14. MINTLIFY NAV — flat white bar
+   Overrides the liquid-glass material above with DESIGN.md's bar: transparent
+   over the dark hero, white over content, no bottom border, no blur, no
+   specular rim. Every JS hook is untouched (data-theme, data-pointer,
+   .nav-active sliding indicator, .burger, .nav-menu-panel, nav-panel-in).
+   The old glass rules remain in place but are fully shadowed here.
+   ============================================================================= */
+.nav {
+  background: transparent;
+  transition: background-color var(--dur) var(--ease-signature);
+}
+
+.nav[data-theme='light'] {
+  background: var(--color-paper);
+}
+
+.nav-inner {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  /* w-full + max-w-7xl-ish + mx-auto: the bar always spans the gutter width,
+     is capped at --page-max-width, and is optically centred on every screen.
+     One symmetric gutter pads both ends at every width — the old build used a
+     fixed 6px on desktop and a different clamp on mobile, so resizing across
+     tablet made the two groups look off-axis. */
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding: 12px var(--gutter-inline);
+}
+
+/* Never let nav text re-wrap on narrow tablets — wrap causes unpredictable
+   reflow that makes the brand/menu groups look unbalanced. */
+.brand-name,
+.nav-link,
+.nav-contact {
+  white-space: nowrap;
+}
+
+.nav-inner::before,
+.nav-inner::after {
+  content: none;
+}
+
+.nav[data-theme='media'] {
+  --nav-fg: #ffffff;
+  --nav-bubble: rgba(255, 255, 255, 0.16);
+  --nav-bubble-fg: #ffffff;
+  --nav-cta-bg: #ffffff;
+  --nav-cta-fg: #08090a;
+}
+
+.nav[data-theme='light'] {
+  --nav-fg: #000000;
+  --nav-bubble: rgba(12, 140, 94, 0.10);
+  --nav-bubble-fg: var(--color-mint-green);
+  --nav-cta-bg: #08090a;
+  --nav-cta-fg: #ffffff;
+}
+
+/* The theme-specific glass washes collapse to nothing (light stays flat white). */
+.nav[data-theme='media'] .nav-inner,
+.nav[data-theme='light'] .nav-inner {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+@supports (backdrop-filter: url("#lg-displace") blur(2px)) {
+  .nav-inner {
+    backdrop-filter: none;
+  }
+}
+
+/* Over the dark hero the bar must never let scrolled content read through it:
+   a translucent dark blur, not full transparency. Later in source than the
+   collapse rule, so it wins on equal specificity. */
+.nav[data-theme='media'] .nav-inner {
+  background: rgba(9, 18, 18, 0.42);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 10px 30px -12px rgba(6, 42, 44, 0.35);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+
+/* Mint Green mark, current-colour wordmark. */
+.brand-glyph {
+  stroke: var(--color-mint-green);
+}
+
+.brand-name {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.nav-link {
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: var(--radius-buttons);
+  font-size: 14px;
+  color: var(--nav-fg, var(--color-charcoal));
+}
+
+.nav-link:hover {
+  color: var(--nav-fg, var(--color-charcoal));
+}
+
+.nav-link.is-active,
+.nav[data-theme='media'] .nav-link.is-active,
+.nav[data-theme='light'] .nav-link.is-active {
+  color: var(--nav-bubble-fg, var(--color-ink-black));
+}
+
+.nav-active {
+  border-radius: var(--radius-buttons);
+  background: var(--nav-bubble, transparent);
+}
+
+/* Never leave an unmeasured indicator parked at 0,0 where it could paint a
+   stray pale box before script.js places it. */
+.nav-active:not(.is-shown) {
+  visibility: hidden;
+}
+
+/* The one filled button variant — Ink Black surface, white label. */
+.nav-contact,
+.nav[data-theme='media'] .nav-contact,
+.nav[data-theme='light'] .nav-contact {
+  height: 36px;
+  margin-left: var(--spacing-16);
+  padding: 8px 16px;
+  border-radius: var(--radius-buttons);
+  background: var(--nav-cta-bg);
+  color: var(--nav-cta-fg);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+}
+
+.nav-contact:hover {
+  background: var(--nav-cta-bg);
+  color: var(--nav-cta-fg);
+  opacity: 0.88;
+}
+
+@media (max-width: 1023px) {
+  .nav {
+    background: transparent;
+    padding-inline: 0;
+    align-items: stretch;
+  }
+
+  .nav[data-theme='light'] {
+    background: var(--color-paper);
+  }
+
+  /* Closed: a full-width bar, transparent over the hero, white over content. */
+  .nav .nav-inner {
+    width: 100%;
+    max-width: var(--page-max-width);
+    min-height: 0;
+    margin-inline: auto;
+    padding: 12px var(--gutter-inline);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    justify-content: space-between;
+  }
+
+  /* Open: the bar becomes the dropdown surface. */
+  .nav.is-open .nav-inner,
+  .nav[data-theme='media'].is-open .nav-inner,
+  .nav[data-theme='light'].is-open .nav-inner {
+    background: var(--color-paper);
+    border: 1px solid var(--color-mist-gray);
+    border-radius: 0 0 var(--radius-cards) var(--radius-cards);
+    box-shadow: var(--shadow-subtle);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* The old mobile panel set its own --m-* tokens on .nav-menu-panel, which
+     inheritance resolves before .nav-inner. Re-declare them here (same element,
+     later in source) so the drawer reads dark-on-white with a mint active. */
+  .nav[data-theme='media'].is-open .nav-menu-panel,
+  .nav[data-theme='light'].is-open .nav-menu-panel {
+    --m-link-fg: #000000;
+    --m-link-fg-hover: var(--color-mint-green);
+    --m-link-shadow: none;
+    --m-link-fg-active: var(--color-mint-green);
+    --m-pill-bg: rgba(12, 140, 94, 0.10);
+    --m-cta-fg: #ffffff;
+    --m-cta-hover-bg: #000000;
+    --m-focus-color: var(--color-mint-green);
+  }
+
+  .nav.is-open .nav-inner .brand,
+  .nav.is-open .nav-inner .burger {
+    color: #000000;
+  }
+
+  .nav.is-open .nav-menu.nav-menu-panel {
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .nav.is-open .nav-inner .nav-link.is-active {
+    border-radius: var(--radius-buttons) !important;
+    width: auto;
+    align-self: flex-start;
+  }
+
+  .nav.is-open .nav-menu-panel .nav-link.is-active::before {
+    border-radius: var(--radius-buttons) !important;
+    box-shadow: none !important;
+    background: rgba(12, 140, 94, 0.10) !important;
+  }
+
+  .nav.is-open .nav-inner .nav-contact {
+    border-radius: var(--radius-buttons) !important;
+    background: var(--color-ink-black) !important;
+    color: #ffffff !important;
+    width: auto;
+    align-self: flex-start;
+    margin-left: 0;
+  }
+
+  .nav.is-open .nav-inner .nav-contact:hover {
+    background: #000000 !important;
+  }
+
+  .nav.is-open .nav-inner .burger {
+    border-radius: var(--radius-buttons) !important;
+  }
+
+  @supports (backdrop-filter: url("#lg-displace") blur(2px)) {
+    .nav[data-theme='light'].is-open .nav-inner,
+    .nav.is-open .nav-inner {
+      backdrop-filter: none;
+    }
   }
 }
