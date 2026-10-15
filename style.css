@@ -139,12 +139,8 @@
   --hero-sky-d: #f2ddaa;
   /* how far the floating panel hangs over the hero's bottom edge */
   --hero-panel-overlap: 56px;
-  /* The panel has to separate from a dark sky above and a light parchment
-     below, so it carries more than DESIGN.md's whisper shadow. The tint is
-     the sky's own deep teal rather than neutral black. */
-  --hero-panel-shadow: 0 32px 64px -28px rgba(6, 42, 44, 0.55);
-  /* the floor under the panel — deeper than the horizon so a white surface
-     has a hard edge to sit against */
+  /* the floor under the panel — deeper than the horizon, so the sky still has
+     depth where the paper fade has not yet reached it */
   --hero-sky-floor: #0b4340;
 
   /* Atmospheric card artwork. Kept as a variable so the <img>-less
@@ -1367,7 +1363,11 @@ button {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 1;
+  /* 0, not 1: .hero-paper (also a child, z-index 1) has to paint above this
+     scrim so the paper fade can whiten the sky. The generated ::after is the
+     last child, so at equal z-index it would otherwise land on top of the
+     fade and re-darken the bottom edge. */
+  z-index: 0;
   pointer-events: none;
   background:
     radial-gradient(64% 46% at 50% 34%, rgba(6, 42, 44, 0.62) 0%, rgba(6, 42, 44, 0.3) 58%, rgba(6, 42, 44, 0) 80%),
@@ -1384,6 +1384,81 @@ button {
   pointer-events: none;
   opacity: 0.045;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Paper fade — the hero dissolves into the page canvas instead of stopping at
+   a hard edge. Stops are --color-paper (#fff) with an alpha ramp only, so the
+   white can never drift from the page background. The bottom-centre ellipse
+   keeps the sides in the sky, and the linear layer whitens the final rows
+   full-width so no square edge survives at the hero's bottom. Above the sky,
+   below the type and the panel. */
+.hero-paper {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 1;
+  height: clamp(260px, 34vw, 460px);
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 42% 30% at 50% 100%,
+      #ffffff 0%,
+      #ffffff 30%,
+      rgba(255, 255, 255, 0.85) 55%,
+      rgba(255, 255, 255, 0.45) 78%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0) 52%,
+      #ffffff 100%
+    );
+}
+
+/* Tablet: a narrower ellipse, so the sky stays at the sides while the band
+   of white still clears the (near full-width) panel's lower half. */
+@media (max-width: 1023px) {
+  .hero-paper {
+    height: clamp(220px, 40vw, 400px);
+    background:
+      radial-gradient(
+        ellipse 46% 30% at 50% 100%,
+        #ffffff 0%,
+        #ffffff 30%,
+        rgba(255, 255, 255, 0.85) 55%,
+        rgba(255, 255, 255, 0.45) 78%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 52%,
+        #ffffff 100%
+      );
+  }
+}
+
+/* Phone: the fade is dominated by the vertical run (a wide ellipse), so the
+   sky reads only across the top and a little at each edge. */
+@media (max-width: 767px) {
+  .hero-paper {
+    height: clamp(200px, 58vw, 360px);
+    background:
+      radial-gradient(
+        ellipse 80% 32% at 50% 100%,
+        #ffffff 0%,
+        #ffffff 30%,
+        rgba(255, 255, 255, 0.9) 55%,
+        rgba(255, 255, 255, 0.5) 78%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 48%,
+        #ffffff 100%
+      );
+  }
 }
 
 /* Centred stack. flex:1 takes whatever room the strip and the panel leave
@@ -1544,7 +1619,26 @@ button {
   padding: var(--card-padding);
   border-radius: var(--radius-cards);
   background: var(--color-paper);
-  box-shadow: var(--shadow-sm-2), var(--hero-panel-shadow);
+  /* Dissolve: the bottom ~40% of the card fades into the canvas and its side
+     edges melt, so no bottom border, radius or halo is ever visible. Two mask
+     layers intersected — vertical (the main dissolve) x horizontal (the side
+     melt). Shadows on a masked element are clipped, so the heavy float shadow
+     is gone; the whisper lift that is left reads at top/sides only. */
+  --panel-fade: linear-gradient(to bottom, #000 0, #000 58%, rgba(0, 0, 0, 0.6) 76%, transparent 96%);
+  --panel-fade-x: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
+  -webkit-mask-image: var(--panel-fade), var(--panel-fade-x);
+  mask-image: var(--panel-fade), var(--panel-fade-x);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  box-shadow: var(--shadow-sm-2);
+}
+
+/* Focus inside the fade zone is rare, but if a keyboard user lands there the
+   mask would soften the focus ring, so it is dropped for the whole card while
+   focus is inside. */
+.hero-panel:focus-within {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .hero-panel-bar {
@@ -2113,6 +2207,16 @@ section[id] {
   border-block: 1px solid var(--color-mist);
 }
 
+/* The hero dissolves into Features, so that band drops its top hairline — the
+   one line that read as a hard separator between the two. Its own bottom
+   hairline (and #visit's borders) stay. */
+#features.band--paper {
+  border-top: 0;
+  /* tighter than the band default so the fade, the Fig. 1 note and the
+     heading read as one vertical run rather than two blocks */
+  padding-top: var(--spacing-24);
+}
+
 .band-inner {
   max-width: var(--page-max-width);
   margin-inline: auto;
@@ -2160,7 +2264,7 @@ section[id] {
 }
 
 .figure-band {
-  padding-top: var(--spacing-48);
+  padding-top: var(--spacing-16);
 }
 
 .figure-band .fig-caption {
