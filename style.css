@@ -137,11 +137,9 @@
   --hero-sky-b: #10605c;
   --hero-sky-c: #63a98a;
   --hero-sky-d: #f2ddaa;
-  /* how far the floating panel hangs over the hero's bottom edge */
-  --hero-panel-overlap: 56px;
-  /* the floor under the panel — deeper than the horizon, so the sky still has
-     depth where the paper fade has not yet reached it */
-  --hero-sky-floor: #0b4340;
+  /* the warm floor at the foot of the sky, behind the panel — the paper fade
+     takes it from here to white, so the sides never read as a hard band */
+  --hero-sky-e: #f7ecd2;
 
   /* Atmospheric card artwork. Kept as a variable so the <img>-less
      background-image pair can be swapped without touching the component, and
@@ -308,7 +306,7 @@ button {
 /* Anchors land below the floating pill rather than under it. --nav-clearance
    is the pill's height plus its top offset, so this tracks the nav without
    hard-coding a second number that can drift. */
-:where(section, .figure-band) {
+:where(section) {
   scroll-margin-top: var(--nav-clearance);
 }
 
@@ -1257,50 +1255,81 @@ button {
 }
 
 /* ---------- 7. HERO ----------
-   Full-bleed illustrated sky. Four stacked layers, back to front:
-     1. .hero        — layered teal-to-warm gradient, the base artwork
-     2. .hero-sky    — inline SVG cumulus, drifting on three timings
-     3. .hero::after — legibility pool behind the type + a deep base
-     4. content      — centred stage, then the strip, then the panel
-   There is no media plate any more: the sky is drawn entirely in CSS and
-   SVG, so nothing downloads, nothing can 404, and nothing has to wait on a
-   play() promise. assets/hero.{mp4,webm} and hero-dusk.jpg stay on disk,
-   unreferenced. vh comes first as a fallback for engines without svh; svh
-   is what stops mobile browser chrome from cropping the panel on scroll.
+   One stage. Everything the hero is made of lives inside .hero-stage:
+     1. .hero-stage__sky   the illustrated teal-to-warm gradient, the drifting
+                           cumulus and the legibility pool, over the WHOLE stage
+                           so the sky runs behind the copy AND the panel
+     2. .hero-stage__copy  eyebrow, headline, subtext, CTAs and scroll cue
+     3. .hero-panel        the product card, floating on the sky
+     4. .hero-stage__paper the fade that dissolves sky and panel into the page
+     5. .hero-grain        film grain over the whole thing
+   There is no media plate any more: the sky is drawn entirely in CSS and SVG,
+   so nothing downloads, nothing can 404, and nothing has to wait on a play()
+   promise. svh is what stops mobile browser chrome from cropping the panel on
+   scroll. */
 
-   The panel hangs over the hero's bottom edge, so the hero needs a z-index:
-   .figure-band below carries a transform from the scroll reveal, which makes
-   it its own stacking context painted later in tree order. Without this one
-   declaration the panel would be painted underneath it. */
 .hero {
   position: relative;
-  z-index: 1;
+  z-index: 1;   /* the stage's sky paints over the sections that follow, whose
+                   reveal transforms make them their own stacking contexts */
+  isolation: isolate;
+}
+
+/* The stage is the one full-height box. The copy takes the room the panel
+   leaves; the sky and the paper are absolute over it. */
+.hero-stage {
+  position: relative;
   isolation: isolate;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   align-items: center;
-  /* the panel's overhang has to be paid back to the document flow, or the
-     parchment margin would close over its bottom edge */
-  margin-bottom: var(--hero-panel-overlap);
-  /* top clears the floating nav pill; the panel supplies the bottom */
-  padding-top: var(--nav-clearance);
+  /* top clears the floating nav pill; the bottom pad sets the panel's distance
+     from the stage's foot, and with #features' own top pad it lands the
+     panel-to-heading gap near the 80px DESIGN.md rhythm */
+  padding: var(--nav-clearance) 0 clamp(56px, 7svh, 88px);
+  overflow: visible;
+}
+
+/* Sky — the base artwork, absolute over the whole stage. This is what lets the
+   copy and the panel share one scene: the teal-to-warm gradient runs edge to
+   edge behind both, and the low floor stays warm rather than dark so the paper
+   fade reads as haze, not as a cut. */
+.hero-stage__sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
   background-color: var(--hero-sky-b);
   background-image:
     /* warm bloom sitting in the cloud band, so the cream reads as lit */
-    radial-gradient(95% 38% at 50% 68%, rgba(246, 221, 166, 0.5) 0%, rgba(246, 221, 166, 0) 70%),
-    /* deeper corners: keeps the white panel separated at both ends */
-    radial-gradient(110% 54% at 8% 100%, rgba(6, 42, 44, 0.6) 0%, rgba(6, 42, 44, 0) 58%),
-    radial-gradient(110% 54% at 92% 100%, rgba(6, 42, 44, 0.55) 0%, rgba(6, 42, 44, 0) 58%),
+    radial-gradient(95% 38% at 50% 64%, rgba(246, 221, 166, 0.5) 0%, rgba(246, 221, 166, 0) 70%),
+    /* deeper corners: keeps a white panel separated at both ends */
+    radial-gradient(120% 60% at 8% 96%, rgba(6, 42, 44, 0.55) 0%, rgba(6, 42, 44, 0) 62%),
+    radial-gradient(120% 60% at 92% 96%, rgba(6, 42, 44, 0.5) 0%, rgba(6, 42, 44, 0) 62%),
     linear-gradient(
       180deg,
       var(--hero-sky-a) 0%,
       var(--hero-sky-b) 34%,
       var(--hero-sky-c) 62%,
       var(--hero-sky-d) 84%,
-      var(--hero-sky-floor) 100%
+      var(--hero-sky-e) 100%
     );
+}
+
+/* Legibility pool. The cream cloud band sits behind the type, and white on
+   cream is nowhere near AA, so the stack gets its own dark pool rather than a
+   darker sky. It lives inside the sky layer, under the paper, the copy and the
+   panel. */
+.hero-stage__sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(64% 46% at 50% 32%, rgba(6, 42, 44, 0.62) 0%, rgba(6, 42, 44, 0.3) 58%, rgba(6, 42, 44, 0) 80%),
+    linear-gradient(0deg, rgba(6, 42, 44, 0.42) 0%, rgba(6, 42, 44, 0) 26%);
 }
 
 /* Illustrated clouds. Each layer is wider than the hero and offset by half
@@ -1320,8 +1349,10 @@ button {
   left: -22%;
   width: 144%;
   height: auto;
-  /* a touch of softness so the vector edges read as paint, not as a shape */
-  filter: blur(0.6px);
+  /* softness so the vector edges read as paint, not as a shape; the extra
+     blur also dissolves the flat cumulus bottoms where they meet the bright
+     cream horizon (they read as a hard band at 0.6px) */
+  filter: blur(3px);
   will-change: transform;
   animation: sky-drift linear infinite;
 }
@@ -1330,19 +1361,19 @@ button {
    widest and slowest of all, sitting on the warm horizon. */
 .hero-cloud-c {
   top: 30%;
-  opacity: 0.65;
+  opacity: 0.45;
   animation-duration: 200s;
 }
 
 .hero-cloud-a {
   top: 38%;
-  opacity: 1;
+  opacity: 0.7;
   animation-duration: 140s;
 }
 
 .hero-cloud-b {
   top: 52%;
-  opacity: 0.95;
+  opacity: 0.66;
   animation-duration: 240s;
 }
 
@@ -1355,124 +1386,108 @@ button {
   }
 }
 
-/* Legibility pool. The cream cloud band sits directly behind the type, and
-   white on cream is nowhere near AA, so the stack gets its own dark pool
-   rather than relying on the whole sky being dark. The base wash also
-   anchors the white panel and the strip copy above it. */
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* 0, not 1: .hero-paper (also a child, z-index 1) has to paint above this
-     scrim so the paper fade can whiten the sky. The generated ::after is the
-     last child, so at equal z-index it would otherwise land on top of the
-     fade and re-darken the bottom edge. */
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(64% 46% at 50% 34%, rgba(6, 42, 44, 0.62) 0%, rgba(6, 42, 44, 0.3) 58%, rgba(6, 42, 44, 0) 80%),
-    linear-gradient(0deg, rgba(6, 42, 44, 0.42) 0%, rgba(6, 42, 44, 0) 26%);
-}
-
 /* Grain is drawn as its own element so the scrim above stays a plain
    gradient pair — mixing a turbulence data-URI into the same background
-   list would tie the noise to the scrim's own alpha ramp. */
+   list would tie the noise to the scrim's own alpha ramp. It sits above the
+   paper, below the copy and the panel. */
 .hero-grain {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   opacity: 0.045;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Paper fade — the hero dissolves into the page canvas instead of stopping at
-   a hard edge. Stops are --color-paper (#fff) with an alpha ramp only, so the
-   white can never drift from the page background. The bottom-centre ellipse
-   keeps the sides in the sky, and the linear layer whitens the final rows
-   full-width so no square edge survives at the hero's bottom. Above the sky,
-   below the type and the panel. */
-.hero-paper {
+/* Paper fade — the stage dissolves into the page canvas instead of stopping at
+   a hard edge. Stops are #fff with an alpha ramp only, so the white can never
+   drift from the page background (--color-paper is #fff). The bottom-centre
+   ellipse keeps the sky at the sides while the panel's lower half clears; the
+   linear layer whitens the final rows full-width so no square edge survives at
+   the stage's bottom. Above the sky, below the grain, the copy and the panel.
+   It is anchored to the stage bottom, so its height is the length of the fade. */
+.hero-stage__paper {
   position: absolute;
   inset: auto 0 0 0;
   z-index: 1;
-  height: clamp(260px, 34vw, 460px);
+  height: clamp(300px, 46svh, 560px);
   pointer-events: none;
   background:
     radial-gradient(
-      ellipse 42% 30% at 50% 100%,
+      ellipse 54% 44% at 50% 100%,
       #ffffff 0%,
-      #ffffff 30%,
-      rgba(255, 255, 255, 0.85) 55%,
-      rgba(255, 255, 255, 0.45) 78%,
+      #ffffff 22%,
+      rgba(255, 255, 255, 0.9) 46%,
+      rgba(255, 255, 255, 0.5) 70%,
       rgba(255, 255, 255, 0) 100%
     ),
     linear-gradient(
       to bottom,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0) 52%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(255, 255, 255, 0.85) 84%,
       #ffffff 100%
     );
 }
 
-/* Tablet: a narrower ellipse, so the sky stays at the sides while the band
-   of white still clears the (near full-width) panel's lower half. */
+/* Tablet: a narrower ellipse, so the sky stays at the sides while the band of
+   white still clears the (near full-width) panel's lower half. */
 @media (max-width: 1023px) {
-  .hero-paper {
-    height: clamp(220px, 40vw, 400px);
+  .hero-stage__paper {
+    height: clamp(260px, 48svh, 460px);
     background:
       radial-gradient(
-        ellipse 46% 30% at 50% 100%,
+        ellipse 60% 42% at 50% 100%,
         #ffffff 0%,
-        #ffffff 30%,
-        rgba(255, 255, 255, 0.85) 55%,
-        rgba(255, 255, 255, 0.45) 78%,
+        #ffffff 20%,
+        rgba(255, 255, 255, 0.9) 44%,
+        rgba(255, 255, 255, 0.5) 70%,
         rgba(255, 255, 255, 0) 100%
       ),
       linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0) 52%,
+        rgba(255, 255, 255, 0) 56%,
+        rgba(255, 255, 255, 0.85) 84%,
         #ffffff 100%
       );
   }
 }
 
-/* Phone: the fade is dominated by the vertical run (a wide ellipse), so the
-   sky reads only across the top and a little at each edge. */
+/* Phone: the fade is dominated by the vertical run (a wide ellipse), so the sky
+   reads only across the top and a little at each edge. */
 @media (max-width: 767px) {
-  .hero-paper {
-    height: clamp(200px, 58vw, 360px);
+  .hero-stage__paper {
+    height: clamp(240px, 52svh, 420px);
     background:
       radial-gradient(
-        ellipse 80% 32% at 50% 100%,
+        ellipse 84% 36% at 50% 100%,
         #ffffff 0%,
-        #ffffff 30%,
-        rgba(255, 255, 255, 0.9) 55%,
-        rgba(255, 255, 255, 0.5) 78%,
+        #ffffff 24%,
+        rgba(255, 255, 255, 0.92) 50%,
+        rgba(255, 255, 255, 0.55) 74%,
         rgba(255, 255, 255, 0) 100%
       ),
       linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0) 48%,
+        rgba(255, 255, 255, 0) 54%,
+        rgba(255, 255, 255, 0.88) 84%,
         #ffffff 100%
       );
   }
 }
 
-/* Centred stack. flex:1 takes whatever room the strip and the panel leave
-   behind, and centres the four rows on the vertical centre of that room —
-   which is the same job it did when the type was left-aligned, on the other
-   axis now. */
-.hero-stage {
+/* The copy. flex:1 takes whatever room the panel leaves, and centres the rows
+   (including the scroll cue) on the vertical centre of that room. */
+.hero-stage__copy {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   flex: 1 1 auto;
   width: 100%;
   max-width: var(--page-max-width);
   margin-inline: auto;
-  padding: clamp(24px, 4vh, 48px) var(--gutter-inline) clamp(16px, 2.5vh, 28px);
+  padding: clamp(16px, 2.5vh, 28px) var(--gutter-inline) var(--spacing-16);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1604,27 +1619,25 @@ button {
 }
 
 /* ---------- HERO PANEL ----------
-   DESIGN.md's Documentation Product Card: opaque white, 24px radius, a
-   whisper shadow plus the float lift the dark sky and the light parchment
-   both need. It hangs over the hero's bottom edge. Mint Green appears here
-   and nowhere else in the hero — the active sidebar row and the active tab
-   underline — which is precisely the role DESIGN.md assigns it. */
+   DESIGN.md's Documentation Product Card: opaque white, 16px radius, a whisper
+   shadow. It is a flex child of .hero-stage, so it sits on the sky with sky
+   visible at both sides (about 68vw wide, 16% of sky per side at 1440). Mint
+   Green appears here and nowhere else in the hero — the active sidebar row and
+   the active tab underline — which is the role DESIGN.md assigns it. */
 .hero-panel {
   position: relative;
-  z-index: 3;
-  width: calc(100% - var(--gutter-inline) * 2);
-  max-width: calc(var(--page-max-width) - 80px);
-  margin-inline: auto;
-  margin-bottom: calc(-1 * var(--hero-panel-overlap));
+  z-index: 4;
+  flex: 0 0 auto;
+  width: min(100% - var(--gutter-inline) * 2, clamp(640px, 68vw, 1040px));
   padding: var(--card-padding);
   border-radius: var(--radius-cards);
   background: var(--color-paper);
-  /* Dissolve: the bottom ~40% of the card fades into the canvas and its side
-     edges melt, so no bottom border, radius or halo is ever visible. Two mask
-     layers intersected — vertical (the main dissolve) x horizontal (the side
-     melt). Shadows on a masked element are clipped, so the heavy float shadow
-     is gone; the whisper lift that is left reads at top/sides only. */
-  --panel-fade: linear-gradient(to bottom, #000 0, #000 58%, rgba(0, 0, 0, 0.6) 76%, transparent 96%);
+  /* Dissolve: the bottom ~40% of the card fades into the sky/canvas and its
+     side edges melt, so no bottom border, radius or halo is ever visible. Two
+     mask layers intersected — vertical (the main dissolve) x horizontal (the
+     side melt). The box-shadow is masked with the element, so its lower half
+     dissolves too and no halo survives under the card. */
+  --panel-fade: linear-gradient(to bottom, #000 0, #000 60%, rgba(0, 0, 0, 0.6) 78%, transparent 98%);
   --panel-fade-x: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
   -webkit-mask-image: var(--panel-fade), var(--panel-fade-x);
   mask-image: var(--panel-fade), var(--panel-fade-x);
@@ -1855,40 +1868,17 @@ button {
   transform: translate(2px, -2px);
 }
 
-/* 6. Bottom strip — caption left, scroll cue centred. Grid rather than flex
-   so the cue stays optically centred no matter how wide the caption is. It
-   sits on the sky, directly above the panel. */
-.hero-strip {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: var(--page-max-width);
-  margin-inline: auto;
-  padding: 0 var(--gutter-inline) var(--spacing-16);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--spacing-16);
-  font-size: var(--text-caption);
-  line-height: 1.4;
-  letter-spacing: var(--tracking-caption);
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.hero-figcaption {
-  margin: 0;
-  justify-self: start;
-}
-
+/* 6. Scroll cue — the last row of the copy stack. It sits on the sky, so it
+   carries its own light colour now that the bottom strip is gone. */
 .hero-scrollcue {
-  justify-self: center;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  color: inherit;
+  color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
   font-size: 13px;
+  letter-spacing: var(--tracking-caption);
 }
 
 .hero-scrollcue-line {
@@ -1971,7 +1961,6 @@ button {
 /* 600-720px tall: the caption and the card descriptions go, the icons and
    titles stay, and the panel loses its sidebar and TOC columns. */
 @media (max-height: 719px) and (min-height: 600px) {
-  .hero-figcaption,
   .hero-dest-label {
     display: none;
   }
@@ -1981,7 +1970,7 @@ button {
     gap: var(--spacing-8);
   }
 
-  .hero-stage {
+  .hero-stage__copy {
     gap: var(--spacing-16);
   }
 
@@ -2000,8 +1989,7 @@ button {
    are driven by viewport height. */
 @media (max-height: 599px) {
   .hero-eyebrow,
-  .hero-panel,
-  .hero-figcaption {
+  .hero-panel {
     display: none;
   }
 
@@ -2015,7 +2003,7 @@ button {
     margin: 0;
   }
 
-  .hero-stage {
+  .hero-stage__copy {
     gap: var(--spacing-12);
   }
 
@@ -2052,15 +2040,10 @@ button {
    height tiers further down the file (max-height 719/620/580) still land after
    this block, so a phone on its side keeps its own smaller type scale. */
 
-/* Container. The stage's inline padding is zeroed below so the hero's own
-   gutter and the stage's never stack into a 40px margin on a 390px screen. */
+/* The copy owns the gutter on desktop; on a phone it keeps that gutter while
+   the panel narrows to match, so both line up on the same column. */
 @media (max-width: 768px) {
-  .hero {
-    padding: 6rem 1.5rem 0;
-  }
-
-  .hero-stage {
-    padding-inline: 0;
+  .hero-stage__copy {
     gap: var(--spacing-20);
   }
 
@@ -2118,16 +2101,15 @@ button {
   }
 
   /* 5. Scroll cue out. On a phone it read as a third button under the CTA
-        row. The strip keeps its 3-column grid, so the caption stays left. */
+        row. */
   .hero-scrollcue {
     display: none;
   }
 
-  /* 6. The panel collapses to one column: the sidebar and the TOC step aside
-        and the three destination cards stack. The panel itself already spans
-        the hero's gutter, so it lines up with the headline above it. */
+  /* 6. The panel collapses to one column, keeping the same gutter as the copy
+        so it lines up with the headline above it. */
   .hero-panel {
-    width: 100%;
+    width: calc(100% - var(--gutter-inline) * 2);
     padding: var(--spacing-16);
     border-radius: var(--radius-2xl);
   }
@@ -2155,31 +2137,19 @@ button {
   .hero-panel-tab {
     white-space: nowrap;
   }
-
-  /* The strip's own inline gutter is dropped for the same reason the stage's
-     was -- otherwise the caption sits 40px in while the headline sits 24px
-     in, and it no longer lines up with the column it belongs to. */
-  .hero-strip {
-    padding-inline: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
 }
 
 /* Short phones (portrait, <=700px tall). The four stage gaps cost 80px at 20px
    each, which is the difference between a hero that fits one screen and one
    that pushes the panel below the fold. */
 @media (max-width: 768px) and (max-height: 700px) {
-  .hero {
-    padding: 5rem 1.5rem 0;
-  }
-
   /* 8vw alone would put a 61px headline on a 768x600 landscape tablet, where
      the height is the scarce axis. min() lets the shorter of the two win. */
   .hero-display {
     font-size: clamp(2rem, min(6vw, 8.5vh), 3.25rem);
   }
 
-  .hero-stage {
+  .hero-stage__copy {
     gap: var(--spacing-12);
   }
 
@@ -2212,9 +2182,9 @@ section[id] {
    hairline (and #visit's borders) stay. */
 #features.band--paper {
   border-top: 0;
-  /* tighter than the band default so the fade, the Fig. 1 note and the
-     heading read as one vertical run rather than two blocks */
-  padding-top: var(--spacing-24);
+  /* tighter than the band default so the stage's fade and the heading read as
+     one vertical run — with the stage's bottom pad this is the ~80px gap */
+  padding-top: var(--spacing-16);
 }
 
 .band-inner {
@@ -2253,7 +2223,8 @@ section[id] {
 }
 
 /* ---------- FIGURE CAPTION ----------
-   The journal voice: a small ash note sitting in the parchment margin. */
+   The journal voice: a small ash note. In the Features head it sits under the
+   subtext, out of the hero's fade zone; elsewhere it opens a figure block. */
 .fig-caption {
   max-width: 52ch;
   margin-top: var(--spacing-40);
@@ -2263,12 +2234,8 @@ section[id] {
   letter-spacing: var(--tracking-caption);
 }
 
-.figure-band {
-  padding-top: var(--spacing-16);
-}
-
-.figure-band .fig-caption {
-  margin-top: 0;
+.section-head .fig-caption {
+  margin-top: var(--spacing-16);
 }
 
 @media (max-width: 940px) {
@@ -3346,10 +3313,10 @@ html.js .preloader {
 
 /* M6: HERO - tighten vertical spacing for short viewports (1366x575) */
 @media (max-height: 620px) {
-  .hero {
-    padding-block: clamp(70px, 14vh, 120px) 0;
-  }
   .hero-stage {
+    padding-top: clamp(70px, 14vh, 120px);
+  }
+  .hero-stage__copy {
     gap: clamp(10px, 3vh, var(--spacing-16));
   }
 }
@@ -3365,9 +3332,9 @@ html.js .preloader {
   }
 }
 
-/* M8: 500-719px tier - hero stage gap smaller */
+/* M8: 500-719px tier - hero copy gap smaller */
 @media (max-height: 719px) and (min-height: 500px) {
-  .hero-stage {
+  .hero-stage__copy {
     gap: clamp(10px, 3vh, var(--spacing-16));
   }
 }
@@ -3386,36 +3353,6 @@ html.js .preloader {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-}
-
-/* M3a: HERO BOTTOM STRIP - keep columns when hiding caption (tier 1) */
-@media (max-height: 719px) and (min-height: 600px) {
-  .hero-figcaption {
-    visibility: hidden;
-    display: block;
-    height: 0;
-    overflow: hidden;
-  }
-}
-
-/* M3b: HERO BOTTOM STRIP - keep columns when hiding caption (tier 2) */
-@media (max-height: 599px) {
-  .hero-figcaption {
-    visibility: hidden;
-    display: block;
-    height: 0;
-    overflow: hidden;
-  }
-}
-
-/* M3c: HERO BOTTOM STRIP - keep columns when hiding caption (tier 3) */
-@media (max-width: 720px) and (min-height: 600px) {
-  .hero-figcaption {
-    visibility: hidden;
-    display: block;
-    height: 0;
-    overflow: hidden;
   }
 }
 
@@ -3577,9 +3514,8 @@ summary,
 /* ============ R3: DESTINATION CARDS STACK ON MOBILE ============
    The three destination cards (Instagram / TikTok / Free web tools) live
    inside the hero panel now; below 768px they stack one per row so nothing
-   falls off a narrow screen. The panel's own padding supplies the gutter,
-   so the old carousel bleed and the 3rem hero padding it required are both
-   gone -- the panel keeps its 56px overhang onto the parchment margin. */
+   falls off a narrow screen. The panel keeps the hero's gutter, so it lines
+   up with the headline above it. */
 @media (max-width: 768px) and (min-height: 500px) {
   .hero-paths {
     display: grid;
@@ -3602,7 +3538,7 @@ summary,
     width: 100%;
   }
 
-  .hero-stage {
+  .hero-stage__copy {
     row-gap: var(--spacing-12);
   }
 }
