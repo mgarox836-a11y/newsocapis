@@ -1,0 +1,107 @@
+/* =============================================================================
+   Newsocapis — design tokens
+   Source: DESIGN.md "MindMarket — Style Reference" (CSS Custom Properties).
+   Only the four base colours are used structurally; blue, coral, yellow and
+   lilac are decorative accents, one per component.
+   ============================================================================= */
+
+:root {
+  /* ---------- Colour ---------- */
+  --color-fresh-grass: #8ed462;
+  --color-cream-paper: #f5f1e4;
+  --color-ink-black: #2c2e2a;
+  --color-pure-white: #ffffff;
+  --color-sandstone: #e0dbce;
+  --color-stone-gray: #80827f;
+  --color-hairline-mist: #d5d5d4;
+  --color-pure-ink: #000000;
+  --color-sky-pop: #2ba0ff;
+  --color-coral-pop: #ff705d;
+  --color-sunshine-pop: #f5e211;
+  --color-lilac-pop: #c9b8f0;
+
+  /* ---------- Type ---------- */
+  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --text-body-sm: 15px;
+  --leading-body-sm: 1.5;
+  --text-body-lg: 18px;
+  --leading-body-lg: 1.5;
+  --text-subheading: 20px;
+  --leading-subheading: 1.25;
+  --text-heading-sm: 30px;
+  --leading-heading-sm: 1.2;
+  --text-heading: clamp(34px, 4vw, 53px);
+  --leading-heading: 1.15;
+  --tracking-heading: -0.04em;
+  --text-heading-lg: clamp(44px, 6vw, 81px);
+  --leading-heading-lg: 1.05;
+  --tracking-heading-lg: -0.06em;
+  --text-display: clamp(64px, 11.5vw, 144px);
+  --leading-display: 0.95;
+  --tracking-display: -0.06em;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  /* ---------- Spacing ---------- */
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
+  --spacing-20: 20px;
+  --spacing-60: 60px;
+  --spacing-136: 136px;
+  --spacing-216: 216px;
+
+  /* ---------- Layout ---------- */
+  --page-max-width: 1200px;
+  --section-gap: clamp(80px, 9vw, 120px);
+  --card-padding: 21px;
+  --element-gap: 17px;
+
+  /* ---------- Radius ---------- */
+  --radius-lg: 10px;
+  --radius-2xl: 20px;
+  --radius-3xl: 25.5px;
+  --radius-full: 50px;
+  --radius-full-2: 63.75px;
+  --radius-nav: 50px;
+  --radius-cards: 50px;
+  --radius-small: 10px;
+  --radius-buttons: 50px;
+  --radius-illustration-containers: 63.75px;
+
+  /* ---------- Surfaces ---------- */
+  --surface-cream-paper: #f5f1e4;
+  --surface-pure-white: #ffffff;
+  --surface-sandstone: #e0dbce;
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur: 300ms;
+  --dur-slow: 600ms;
+}
+
+/* Below 480px the 64px display floor overflows a 360px viewport. The brief
+   allows this one override: 48px floor, 13vw growth, 64px ceiling. */
+@media (max-width: 479px) {
+  :root {
+    --text-display: clamp(48px, 13vw, 64px);
+  }
+}
+
+/* Short desktop viewports need a smaller display so the three-line hero and
+   its illustration can share one screen without clipping. */
+@media (min-width: 1024px) and (max-height: 1000px) {
+  :root {
+    --text-display: clamp(64px, 8.2vw, 118px);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  :root {
+    --text-display: clamp(64px, 6.2vw, 90px);
+  }
+}

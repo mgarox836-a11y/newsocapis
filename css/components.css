@@ -1,0 +1,433 @@
+/* =============================================================================
+   Newsocapis — components
+   Floating pill nav, buttons, chips, menu overlay and shared card surfaces.
+   ============================================================================= */
+
+/* ---------- Scroll progress (kept from the old page) ---------- */
+#scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 260;
+  height: 3px;
+  pointer-events: none;
+}
+
+#scroll-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--color-fresh-grass);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* ---------- Floating pill nav ---------- */
+.nav {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  z-index: 200;
+  width: min(var(--page-max-width), calc(100% - 40px));
+  transform: translateX(-50%);
+}
+
+.nav-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+  padding: 8px 8px 8px 12px;
+  border-radius: var(--radius-nav);
+  background: var(--color-pure-white);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--color-fresh-grass);
+  color: var(--color-ink-black);
+}
+
+.brand-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.nav-links {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-link {
+  padding: 10px 15px;
+  border-radius: var(--radius-buttons);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  transition: background-color var(--dur) var(--ease-out);
+}
+
+.nav-link:hover,
+.nav-link[aria-current='true'] {
+  background: var(--color-cream-paper);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-toggle {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--color-fresh-grass);
+  color: var(--color-ink-black);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.menu-toggle:hover {
+  transform: rotate(90deg);
+}
+
+.menu-toggle-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-toggle-lines span {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 20px;
+  border-radius: var(--radius-buttons);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  transition: translate var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out);
+}
+
+.btn:hover {
+  translate: 0 -3px;
+}
+
+.btn:active {
+  translate: 0 -1px;
+}
+
+.btn-light {
+  background: var(--color-pure-white);
+  color: var(--color-ink-black);
+}
+
+.btn-ghost {
+  background: var(--color-cream-paper);
+  color: var(--color-ink-black);
+}
+
+.btn-outline {
+  border: 1.5px solid var(--color-ink-black);
+  background: transparent;
+  color: var(--color-ink-black);
+}
+
+.btn-coral {
+  background: var(--color-coral-pop);
+  color: var(--color-ink-black);
+}
+
+.btn-yellow {
+  background: var(--color-sunshine-pop);
+  color: var(--color-ink-black);
+}
+
+.btn-blue {
+  background: var(--color-sky-pop);
+  color: var(--color-ink-black);
+}
+
+.btn-lg {
+  min-height: 58px;
+  padding: 16px 28px;
+  font-size: 17px;
+}
+
+.btn-dot {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--color-fresh-grass);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.btn:hover .btn-dot {
+  transform: scale(1.35);
+}
+
+.btn-dot--blue {
+  background: var(--color-sky-pop);
+}
+
+.btn-dot--coral {
+  background: var(--color-coral-pop);
+}
+
+.btn-dot--yellow {
+  background: var(--color-sunshine-pop);
+}
+
+.btn-dot--lilac {
+  background: var(--color-lilac-pop);
+}
+
+.btn-arrow {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.btn:hover .btn-arrow {
+  transform: translate(2px, -2px);
+}
+
+.btn-arrow svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Chips and inline links ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: var(--radius-small);
+  background: var(--color-cream-paper);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.inline-link {
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--color-stone-gray);
+  font-size: inherit;
+  font-weight: var(--font-weight-medium);
+  transition: border-color var(--dur) var(--ease-out);
+}
+
+.inline-link:hover {
+  border-color: var(--color-ink-black);
+}
+
+/* ---------- Shared card ---------- */
+.card {
+  border-radius: var(--radius-cards);
+  background: var(--color-pure-white);
+  padding: var(--card-padding);
+}
+
+/* ---------- Fullscreen menu overlay ---------- */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  background: var(--color-cream-paper);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 420ms var(--ease-out), visibility 0s linear 420ms;
+}
+
+.menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 420ms var(--ease-out), visibility 0s;
+}
+
+.menu-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  width: min(var(--page-max-width), calc(100% - clamp(32px, 8vw, 96px)));
+  min-height: 100%;
+  margin-inline: auto;
+  padding: 24px 0 36px;
+}
+
+.menu-overlay-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.menu-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 20px;
+  border-radius: var(--radius-buttons);
+  background: var(--color-fresh-grass);
+  color: var(--color-ink-black);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.menu-close:hover {
+  transform: rotate(-4deg);
+}
+
+.menu-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(24px, 5vh, 64px);
+}
+
+.menu-link {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 28px);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-hairline-mist);
+  font-size: clamp(40px, 8vw, 92px);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.05;
+  letter-spacing: -0.06em;
+  transition: padding-left var(--dur) var(--ease-out);
+}
+
+.menu-link:first-child {
+  border-top: 1px solid var(--color-hairline-mist);
+}
+
+.menu-link:hover {
+  padding-left: 12px;
+}
+
+.menu-index {
+  width: 24px;
+  flex: none;
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--color-stone-gray);
+}
+
+.menu-overlay-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 20px;
+}
+
+.menu-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 15px;
+}
+
+/* ---------- Responsive nav ---------- */
+@media (max-width: 960px) {
+  .nav-links {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav {
+    top: 12px;
+    width: calc(100% - 24px);
+  }
+
+  .nav-inner {
+    min-height: 58px;
+    padding: 6px 6px 6px 10px;
+  }
+
+  .nav-cta {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .brand-mark svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .menu-toggle {
+    width: 42px;
+    height: 42px;
+  }
+
+  .menu-overlay-inner {
+    padding: 16px 0 24px;
+  }
+
+  .menu-overlay-foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
