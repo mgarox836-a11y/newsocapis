@@ -1,6 +1,6 @@
 /* =============================================================================
    Newsocapis — base
-   Reset, cream canvas, typography, focus and reduced-motion baseline.
+   Reset, cream canvas, typography and focus styles.
    ============================================================================= */
 
 *,
@@ -226,14 +226,4 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* ---------- Reduced motion ---------- */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+/* Motion is intentionally always on, even when the OS asks to reduce it. */

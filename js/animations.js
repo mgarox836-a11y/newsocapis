@@ -1,13 +1,12 @@
 /* Newsocapis — scroll choreography.
    Desktop (≥1024px) gets the pinned feature deck, blob morph and parallax.
-   Below that the page uses simple fade/slide reveals. Reduced motion exits
-   before any tween is created, leaving the static layout intact. */
+   Below that the page uses simple fade/slide reveals. Animations run for every
+   client, regardless of the OS motion preference. */
 
 (function () {
   'use strict';
 
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion || !window.gsap) return;
+  if (!window.gsap) return;
 
   var gsap = window.gsap;
   var ScrollTrigger = window.ScrollTrigger;

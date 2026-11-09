@@ -1,16 +1,15 @@
 /* Newsocapis — boot, smooth scroll, progress and anchor routing.
-   Lenis is optional: without it (or with reduced motion) the page falls back to
-   native scrolling and every link still works. */
+   Lenis is optional: without it the page falls back to native scrolling and
+   every link still works. Motion is always on, regardless of OS settings. */
 
 (function () {
   'use strict';
 
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var lenis = null;
   var gsap = window.gsap;
   var ScrollTrigger = window.ScrollTrigger;
 
-  if (!reduceMotion && window.Lenis) {
+  if (window.Lenis) {
     lenis = new window.Lenis({
       duration: 1.1,
       easing: function (t) {
@@ -63,9 +62,9 @@
         duration: 1.1
       });
     } else if (target === document.body) {
-      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     if (window.history.pushState) {
@@ -93,7 +92,6 @@
   /* ---------- Public handle ---------- */
   window.NEWSOCAPIS = {
     lenis: lenis,
-    reduceMotion: reduceMotion,
     scrollTo: scrollTo
   };
 
